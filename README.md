@@ -167,29 +167,4 @@ FFmpeg is required for merging high-definition video streams and converting audi
 
 If FFmpeg is not installed, FluxMedia will notify you in the main header and fall back to single-file downloads (usually limited to 720p or native audio formats).
 
----
 
-## 🌐 How to Upload to GitHub
-
-Since we installed Git on your machine, the project is configured and ready to be uploaded to your GitHub repository. Follow these commands in your terminal to create the link and push the code:
-
-### 1. Create a Repository on GitHub
-1. Go to [GitHub](https://github.com/) and log in.
-2. Click **New** repository.
-3. Set the repository name to `fluxmedia`.
-4. Leave it public (since it's open-source) and do **not** initialize it with a README, license, or gitignore (we already have these).
-
-### 2. Connect and Push Local Code
-Run these commands in your Command Prompt/terminal inside the project directory:
-
-```cmd
-:: 1. Add your remote GitHub repository
-git remote add origin https://github.com/<your-github-username>/fluxmedia.git
-
-:: 2. Rename default branch to main
-git branch -M main
-
-:: 3. Push to GitHub (this will prompt you to log in)
-git push -u origin main
-```
-*(Replace `<your-github-username>` with your actual GitHub account username.)*
