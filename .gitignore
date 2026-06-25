@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Project-specific runtime data and logs
+*.log
+config.json
+history.json
+
+# Default download folder
+downloads/
