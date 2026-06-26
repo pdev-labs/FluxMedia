@@ -47,7 +47,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.3.1"
+    CURRENT_VERSION = "1.3.2"
 
 LATEST_VERSION = None
 
@@ -1301,6 +1301,11 @@ def operation_update_ytdlp():
             console.print("[bold red][FAILED] Failed to update yt-dlp.[/bold red]")
             console.print(f"[dim]{result.stderr}[/dim]")
             logger.error(f"yt-dlp upgrade command failed with output: {result.stderr}")
+            if platform.system() == "Windows" and any(err in result.stderr for err in ["WinError 32", "PermissionError", "WinError 5", "Access is denied"]):
+                console.print("\n[bold yellow]💡 Tip for Windows Users:[/bold yellow]")
+                console.print("yt-dlp files are currently locked because they are in use by FluxMedia.")
+                console.print("Please exit the application and update yt-dlp from your terminal by running:")
+                console.print("  [bold cyan]pip install -U yt-dlp[/bold cyan]\n")
     except Exception as e:
         console.print(f"[bold red][FAILED] Error running update: {e}[/bold red]")
         logger.error(f"Error updating yt-dlp: {e}")
@@ -1911,6 +1916,41 @@ def reset_failed_tasks():
         console.print("[yellow]No failed tasks found in the queue.[/yellow]")
     Prompt.ask("\nPress Enter to continue...")
 
+def view_completed_queue_tasks():
+    """Displays only the completed tasks in the download queue."""
+    print_header()
+    console.print("\n[bold cyan]=== COMPLETED QUEUE DOWNLOADS ===[/bold cyan]\n")
+    
+    queue = load_queue()
+    completed_items = [item for item in queue if item.get("status") == "Completed"]
+    
+    if not completed_items:
+        console.print("[yellow]No completed tasks found in the queue.[/yellow]")
+        Prompt.ask("\nPress Enter to continue...")
+        return
+        
+    table = Table(title="Completed Queue Downloads", border_style="green")
+    table.add_column("ID", justify="center", style="bold cyan")
+    table.add_column("Type", justify="center", style="magenta")
+    table.add_column("Title / URL", justify="left", max_width=45, style="white")
+    table.add_column("Destination Directory", justify="left", max_width=45, style="dim white")
+    table.add_column("Quality", justify="center", style="green")
+    table.add_column("Added At", justify="center", style="dim gray")
+    
+    for item in completed_items:
+        display_title = item.get("title") or item["url"]
+        dest_dir = item.get("dest_dir", "N/A")
+        table.add_row(
+            str(item["id"]),
+            item["type"],
+            display_title,
+            dest_dir,
+            item["quality"],
+            item["added_at"]
+        )
+    console.print(table)
+    Prompt.ask("\nPress Enter to continue...")
+
 def operation_download_queue(config: Dict[str, Any]):
     """Provides a management interface for the download queue / batch manager."""
     while True:
@@ -1960,10 +2000,11 @@ def operation_download_queue(config: Dict[str, Any]):
         console.print("3. Add Audio to Queue")
         console.print("4. Remove Item from Queue")
         console.print("5. Clear Finished Tasks")
-        console.print("6. Reset Failed Tasks to Pending")
-        console.print("7. Return to Main Menu")
+        console.print("6. View Completed Queue Tasks")
+        console.print("7. Reset Failed Tasks to Pending")
+        console.print("8. Return to Main Menu")
         
-        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5", "6", "7"], default="7")
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5", "6", "7", "8"], default="8")
         
         if choice == "1":
             process_download_queue(config)
@@ -1976,8 +2017,10 @@ def operation_download_queue(config: Dict[str, Any]):
         elif choice == "5":
             clear_finished_queue()
         elif choice == "6":
-            reset_failed_tasks()
+            view_completed_queue_tasks()
         elif choice == "7":
+            reset_failed_tasks()
+        elif choice == "8":
             break
 
 def operation_update_fluxmedia():
