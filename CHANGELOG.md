@@ -4,6 +4,13 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.4.2] - 2026-06-27
+### Fixed
+- **LAN Share Server TCP Reuse**: Configured `TCPServer.allow_reuse_address = True` in the local QR server, preventing `Address already in use` socket errors on quick consecutive restarts.
+- **Offline LAN IP Adapter Scans**: Upgraded `get_local_ip()` to scan active network adapters locally if external pings to Google DNS fail (e.g. offline mobile hotspots), avoiding incorrect `127.0.0.1` fallbacks.
+
+---
+
 ## [v1.4.1] - 2026-06-27
 ### Added
 - **Detailed OS-specific Troubleshooting FAQ Guides**: Expanded the interactive Troubleshooting Guide menu with options covering Windows-specific PATH setup/MSVC/long paths, macOS Gatekeeper/Homebrew setup, Linux keyring locks/missing pip packages, and Termux wake locks/C dependencies compilation.
