@@ -1473,7 +1473,44 @@ def operation_share_via_qr(config: Dict[str, Any]):
             def log_message(self, format, *args):
                 logger.info(f"HTTP Server Access: {format % args}")
                 
-        with socketserver.TCPServer(("", port), SilentHandler) as httpd:
+        # Dynamically allocate an open port starting from 8000
+        httpd = None
+        max_attempts = 20
+        for attempt in range(max_attempts):
+            try:
+                httpd = socketserver.TCPServer(("", port), SilentHandler)
+                break
+            except OSError:
+                port += 1
+                
+        if not httpd:
+            console.print("[bold red]Error: Could not allocate an open port for the share server.[/bold red]")
+            Prompt.ask("\nPress Enter to return...")
+            return
+            
+        share_url = f"http://{local_ip}:{port}"
+        # Regenerate QR if port changed
+        if port != 8000:
+            console.print(f"[yellow]Port 8000 was busy. Switched to port {port}.[/yellow]")
+            console.print(f"🔗 LAN Link: [bold green]{share_url}[/bold green]\n")
+            qr = qrcode.QRCode(version=1, border=1)
+            qr.add_data(share_url)
+            qr.make(fit=True)
+            console.print("[bold white]Scan this updated QR code:[/bold white]")
+            try:
+                matrix = qr.get_matrix()
+                for r in range(len(matrix)):
+                    row_str = ""
+                    for c in range(len(matrix[r])):
+                        if matrix[r][c]:
+                            row_str += "██"
+                        else:
+                            row_str += "  "
+                    console.print(row_str, style="white on black" if sys.platform.startswith("win") else "black on white")
+            except Exception:
+                qr.print_ascii(invert=True)
+                
+        with httpd:
             try:
                 httpd.serve_forever()
             except KeyboardInterrupt:
