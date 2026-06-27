@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.4.4] - 2026-06-27
+### Added
+- **Educational Disclaimer Notice**: Appended a prominent and explicit educational notice to the top of `README.md` to outline terms of use and creator permissions across the GitHub frontpage and PyPI page.
+
+---
+
 ## [v1.4.3] - 2026-06-27
 ### Fixed
 - **Unused Theme Settings**: Resolved the issue where changing themes in the Configuration Settings menu had no visual effect on the CLI layout. Defined dynamic color themes (Dark/Classic, Ocean, Sunset, and Forest) and mapped them directly into the responsive logo and header console grids.
