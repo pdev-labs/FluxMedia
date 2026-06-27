@@ -244,7 +244,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.4.0"
+    CURRENT_VERSION = "1.4.1"
 
 LATEST_VERSION = None
 
@@ -1644,11 +1644,17 @@ def operation_troubleshooting_guide():
         console.print("6. Slow download speeds or network throttling")
         console.print("7. Age-restricted videos or HTTP 403 Forbidden errors")
         console.print("8. Parse Error / ExtractorError / Unsupported URL")
-        console.print("9. Return to Main Menu")
+        console.print("9. Windows-specific issues (PATH setup, MSVC, Long Paths)")
+        console.print("10. macOS-specific issues (Gatekeeper, Homebrew setup)")
+        console.print("11. Linux-specific issues (Keyring locks, Missing Pip)")
+        console.print("12. Termux-specific issues (Wake locks, Compilers)")
+        console.print("13. Return to Main Menu")
         
-        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 10)], default="9")
+        console.print("\n[dim]🔗 Detailed troubleshooting guide online: https://github.com/pdev-labs/FluxMedia-py#troubleshooting[/dim]\n")
         
-        if choice == "9":
+        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 14)], default="13")
+        
+        if choice == "13":
             break
             
         print_header()
@@ -1728,6 +1734,47 @@ def operation_troubleshooting_guide():
                 "   [cyan]pip install -U yt-dlp[/cyan]\n"
                 "2. Alternatively, use Updates Manager (Option 11) inside the application."
             )
+        elif choice == "9":
+            title = "Windows-specific Issues"
+            help_text = (
+                "[bold yellow]1. Python not found / command error:[/bold yellow]\n"
+                "Ensure Python is added to environment variables. Reinstall Python and check the [bold]'Add Python to PATH'[/bold] box.\n\n"
+                "[bold yellow]2. C++ Redistributable Errors:[/bold yellow]\n"
+                "yt-dlp may require MSVC binaries. Download Microsoft C++ build tools from Microsoft.\n\n"
+                "[bold yellow]3. Enable Long Paths (Windows Limit):[/bold yellow]\n"
+                "If paths over 260 characters fail, run PowerShell as Administrator and run:\n"
+                "  [cyan]Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\FileSystem' -Name 'LongPathsEnabled' -Value 1[/cyan]"
+            )
+        elif choice == "10":
+            title = "macOS-specific Issues"
+            help_text = (
+                "[bold yellow]1. Gatekeeper / Binary quarantine blocking:[/bold yellow]\n"
+                "If macOS blocks custom yt-dlp or FFmpeg binaries, allow them in System Settings ➔ Security, or clear quarantine via Terminal:\n"
+                "  [cyan]xattr -d com.apple.quarantine $(which ffmpeg)[/cyan]\n\n"
+                "[bold yellow]2. Homebrew packages not found:[/bold yellow]\n"
+                "Make sure brew paths are set in your zsh profile:\n"
+                "  [cyan]echo 'eval \"$(/opt/homebrew/bin/brew shellenv)\"' >> ~/.zprofile[/cyan]"
+            )
+        elif choice == "11":
+            title = "Linux-specific Issues"
+            help_text = (
+                "[bold yellow]1. Python Pip missing:[/bold yellow]\n"
+                "Install standard tools on Debian/Ubuntu/Mint:\n"
+                "  [cyan]sudo apt update && sudo apt install python3-pip python3-venv[/cyan]\n\n"
+                "[bold yellow]2. D-Bus Keyring errors on credential storage:[/bold yellow]\n"
+                "If keyring errors fail configuration saves, bypass the system keyring backend in terminal:\n"
+                "  [cyan]export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring[/cyan]"
+            )
+        elif choice == "12":
+            title = "Termux (Android)-specific Issues"
+            help_text = (
+                "[bold yellow]1. Download halts in background (Wake lock):[/bold yellow]\n"
+                "Termux halts active network sockets when the screen is off. Run this command to keep it active:\n"
+                "  [cyan]termux-wake-lock[/cyan]\n\n"
+                "[bold yellow]2. C Dependency installation compiler errors:[/bold yellow]\n"
+                "If packages fail to compile, download standard tools:\n"
+                "  [cyan]pkg install build-essential python-clang[/cyan]"
+            )
             
         console.print(Panel(
             help_text,
@@ -1735,6 +1782,7 @@ def operation_troubleshooting_guide():
             border_style="cyan",
             padding=(1, 2)
         ))
+        console.print("\n[dim]For full guides, visit: https://github.com/pdev-labs/FluxMedia-py#troubleshooting[/dim]")
         Prompt.ask("\nPress Enter to return to Troubleshooting menu...")
 
 
