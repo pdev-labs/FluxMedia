@@ -244,7 +244,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.4.1"
+    CURRENT_VERSION = "1.4.2"
 
 LATEST_VERSION = None
 
@@ -1413,7 +1413,7 @@ def operation_trim_and_download_video(config: Dict[str, Any]):
 
 
 def get_local_ip() -> str:
-    """Gets the active local IP address of this device on the network."""
+    """Gets the active local IP address of this device on the network, with adapters scanning fallback."""
     import socket
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1422,6 +1422,15 @@ def get_local_ip() -> str:
         s.close()
         return ip
     except Exception:
+        try:
+            # Fallback to scanning hostname adapters
+            host_name = socket.gethostname()
+            ips = socket.gethostbyname_ex(host_name)[2]
+            for ip_addr in ips:
+                if not ip_addr.startswith("127."):
+                    return ip_addr
+        except Exception:
+            pass
         return "127.0.0.1"
 
 
@@ -1491,6 +1500,7 @@ def operation_share_via_qr(config: Dict[str, Any]):
         # Dynamically allocate an open port starting from 8000
         httpd = None
         max_attempts = 20
+        socketserver.TCPServer.allow_reuse_address = True
         for attempt in range(max_attempts):
             try:
                 httpd = socketserver.TCPServer(("", port), SilentHandler)
