@@ -95,6 +95,7 @@ def verify_and_install_requirements():
         {"name": "rich", "import_name": "rich", "type": "Python Package", "desc": "Terminal formatting & styling (essential)", "essential": True},
         {"name": "requests", "import_name": "requests", "type": "Python Package", "desc": "Checking updates & internet (essential)", "essential": True},
         {"name": "yt-dlp", "import_name": "yt_dlp", "type": "Python Package", "desc": "Core downloader engine (essential)", "essential": True},
+        {"name": "qrcode", "import_name": "qrcode", "type": "Python Package", "desc": "Generating QR codes for file sharing (recommended)", "essential": False},
         {"name": "ffmpeg", "import_name": None, "type": "System Binary", "desc": "Audio extraction, merging format streams, embedding subtitles (recommended)", "essential": False}
     ]
     
@@ -608,24 +609,58 @@ def prompt_destination_dir(default_dir: str) -> Optional[str]:
 
 def get_format_string(quality: str, ffmpeg_available: bool) -> str:
     """Gets format mapping string optimized for the environment."""
-    if not ffmpeg_available:
-        if quality == "1080p":
-            return "best[height<=1080]/best"
-        elif quality == "720p":
-            return "best[height<=720]/best"
-        elif quality == "480p":
-            return "best[height<=480]/best"
+    if quality == "best":
+        return "bestvideo+bestaudio/best" if ffmpeg_available else "best"
+        
+    height = None
+    if quality == "8k":
+        height = 4320
+    elif quality == "4k":
+        height = 2160
+    elif quality.endswith("p"):
+        try:
+            height = int(quality[:-1])
+        except ValueError:
+            pass
+            
+    if height is not None:
+        if ffmpeg_available:
+            return f"bestvideo[height<={height}]+bestaudio/best[height<={height}]/best"
         else:
-            return "best"
-    else:
-        if quality == "1080p":
-            return "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
-        elif quality == "720p":
-            return "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
-        elif quality == "480p":
-            return "bestvideo[height<=480]+bestaudio/best[height<=480]/best"
-        else:
-            return "bestvideo+bestaudio/best"
+            return f"best[height<={height}]/best"
+            
+    return "bestvideo+bestaudio/best" if ffmpeg_available else "best"
+
+def prompt_video_quality() -> str:
+    """Prompts the user to select video quality from 8K down to 144p, returning the quality string."""
+    console.print("\n[bold]Select Video Quality:[/bold]")
+    console.print("1. 8K (4320p)")
+    console.print("2. 4K (2160p)")
+    console.print("3. 1440p (2K)")
+    console.print("4. 1080p (FHD)")
+    console.print("5. 720p (HD)")
+    console.print("6. 480p (SD)")
+    console.print("7. 360p")
+    console.print("8. 240p")
+    console.print("9. 144p")
+    console.print("10. Best Quality (Default)")
+    
+    choices = [str(i) for i in range(1, 11)]
+    choice = Prompt.ask("Choose an option", choices=choices, default="10")
+    
+    q_map = {
+        "1": "8k",
+        "2": "4k",
+        "3": "1440p",
+        "4": "1080p",
+        "5": "720p",
+        "6": "480p",
+        "7": "360p",
+        "8": "240p",
+        "9": "144p",
+        "10": "best"
+    }
+    return q_map[choice]
 
 class RichProgressHook:
     """Custom progress hook for binding yt-dlp logs with Rich Progress bars."""
@@ -840,20 +875,7 @@ def operation_download_video(config: Dict[str, Any]):
     if not check_internet():
         console.print("[bold yellow]Warning: Internet check failed. Proceeding anyway...[/bold yellow]")
 
-    console.print("\n[bold]Select Video Quality:[/bold]")
-    console.print("1. 1080p (FHD)")
-    console.print("2. 720p (HD)")
-    console.print("3. 480p (SD)")
-    console.print("4. Best Available (Recommended)")
-    quality_choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
-    
-    quality_map = {
-        "1": "1080p",
-        "2": "720p",
-        "3": "480p",
-        "4": "best"
-    }
-    selected_quality = quality_map[quality_choice]
+    selected_quality = prompt_video_quality()
     
     dest_dir = prompt_destination_dir(config["download_dir"])
     if not dest_dir:
@@ -1284,6 +1306,269 @@ def operation_download_subtitles(config: Dict[str, Any]):
     send_desktop_notification("FluxMedia - Subtitles Complete", f"Subtitles download completed for: {title}.")
     handle_post_download_options(config, dest_dir)
 
+
+def parse_time_to_seconds(time_str: str) -> Optional[float]:
+    """Parses time string formats (HH:MM:SS, MM:SS, or seconds) into float seconds."""
+    time_str = time_str.strip()
+    if not time_str:
+        return None
+    try:
+        if time_str.isdigit():
+            return float(time_str)
+        if "." in time_str and time_str.replace(".", "", 1).isdigit():
+            return float(time_str)
+        
+        parts = time_str.split(":")
+        if len(parts) == 2:  # MM:SS
+            m, s = int(parts[0]), float(parts[1])
+            return m * 60 + s
+        elif len(parts) == 3:  # HH:MM:SS
+            h, m, s = int(parts[0]), int(parts[1]), float(parts[2])
+            return h * 3600 + m * 60 + s
+    except Exception:
+        pass
+    return None
+
+
+def operation_trim_and_download_video(config: Dict[str, Any]):
+    """Prompts for a URL, selects quality, start/end time segments, and downloads the trimmed video."""
+    print_header()
+    console.print("\n[bold cyan]=== TRIM & DOWNLOAD VIDEO ===[/bold cyan]\n")
+    
+    url_input = Prompt.ask("Enter video URL").strip()
+    url = normalize_and_validate_url(url_input)
+    if not url:
+        console.print("[bold red]Error: Invalid URL format.[/bold red]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    dest_dir = prompt_destination_dir(config["download_dir"])
+    if not dest_dir:
+        return
+        
+    quality = prompt_video_quality()
+    ffmpeg_available = shutil.which("ffmpeg") is not None
+    if not ffmpeg_available:
+        console.print("[bold yellow]Warning: FFmpeg is not installed. Trimming might fail or require full download.[/bold yellow]")
+        
+    console.print("\nEnter download segment range (formats: HH:MM:SS, MM:SS, or raw seconds).")
+    start_time = Prompt.ask("Start Time", default="00:00").strip()
+    end_time = Prompt.ask("End Time").strip()
+    
+    if not end_time:
+        console.print("[bold red]Error: End time cannot be empty.[/bold red]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    start_sec = parse_time_to_seconds(start_time)
+    end_sec = parse_time_to_seconds(end_time)
+    
+    if start_sec is None or end_sec is None:
+        console.print("[bold red]Error: Invalid time format.[/bold red]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    if start_sec >= end_sec:
+        console.print("[bold red]Error: Start time must be less than end time.[/bold red]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    ydl_opts = get_default_ydl_opts(config, dest_dir)
+    ydl_opts['format'] = get_format_string(quality, ffmpeg_available)
+    ydl_opts['download_ranges'] = lambda info, ydl: [{
+        'start_time': start_sec,
+        'end_time': end_sec,
+        'title': info.get('title', 'video')
+    }]
+    ydl_opts['force_keyframes_at_cuts'] = True
+    
+    console.print(f"\n[bold green]Downloading segment: {start_time} to {end_time} ...[/bold green]")
+    try:
+        success = run_ydl_download(ydl_opts, [url])
+        if success:
+            console.print("[bold green][SUCCESS] Video segment downloaded and trimmed successfully![/bold green]")
+            add_history_entry(url, f"Trimmed Video ({start_time}-{end_time})", "Success", "Video Trim", dest_dir)
+        else:
+            console.print("[bold red][FAILED] Download failed.[/bold red]")
+            add_history_entry(url, "Trimmed Video", "Failed", "Video Trim")
+    except Exception as e:
+        console.print(f"[bold red]Error during trimmed download: {e}[/bold red]")
+        
+    handle_post_download_options(config, dest_dir)
+
+
+def get_local_ip() -> str:
+    """Gets the active local IP address of this device on the network."""
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
+def operation_share_via_qr(config: Dict[str, Any]):
+    """Starts a local HTTP server in the downloads directory and prints a QR code for mobile connection."""
+    print_header()
+    console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
+    
+    try:
+        import qrcode
+    except ImportError:
+        console.print("[yellow]Notice: 'qrcode' Python package is required to display QR codes in the terminal.[/yellow]")
+        if Confirm.ask("Would you like to install 'qrcode' now?", default=True):
+            if install_python_package("qrcode"):
+                import qrcode
+            else:
+                console.print("[bold red]Failed to install 'qrcode'. Cannot print QR code.[/bold red]")
+                Prompt.ask("\nPress Enter to return...")
+                return
+        else:
+            Prompt.ask("\nPress Enter to return...")
+            return
+            
+    dest_dir = config.get("download_dir", get_default_download_dir())
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir, exist_ok=True)
+        
+    local_ip = get_local_ip()
+    port = 8000
+    share_url = f"http://{local_ip}:{port}"
+    
+    console.print(f"📁 Sharing Folder: [bold white]{dest_dir}[/bold white]")
+    console.print(f"🔗 LAN Link: [bold green]{share_url}[/bold green]\n")
+    
+    qr = qrcode.QRCode(version=1, border=1)
+    qr.add_data(share_url)
+    qr.make(fit=True)
+    
+    console.print("[bold white]Scan this QR code to access download folder on your phone/tablet:[/bold white]")
+    
+    try:
+        matrix = qr.get_matrix()
+        for r in range(len(matrix)):
+            row_str = ""
+            for c in range(len(matrix[r])):
+                if matrix[r][c]:
+                    row_str += "██"
+                else:
+                    row_str += "  "
+            console.print(row_str, style="white on black" if sys.platform.startswith("win") else "black on white")
+    except Exception as e:
+        console.print(f"[yellow]Failed to render custom QR. Falling back to default printer: {e}[/yellow]")
+        qr.print_ascii(invert=True)
+        
+    console.print("\n[bold yellow]HTTP File Server running. Press Ctrl+C to stop sharing...[/bold yellow]")
+    
+    import socketserver
+    from http.server import SimpleHTTPRequestHandler
+    
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(dest_dir)
+        class SilentHandler(SimpleHTTPRequestHandler):
+            def log_message(self, format, *args):
+                logger.info(f"HTTP Server Access: {format % args}")
+                
+        with socketserver.TCPServer(("", port), SilentHandler) as httpd:
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Share server stopped.[/yellow]")
+    except Exception as e:
+        console.print(f"[bold red]Server Error: {e}[/bold red]")
+    finally:
+        os.chdir(original_cwd)
+        
+    Prompt.ask("\nPress Enter to return to menu...")
+
+
+def operation_transcode_media(config: Dict[str, Any]):
+    """Lists files in the downloads directory and transcodes selected media files using FFmpeg."""
+    print_header()
+    console.print("\n[bold cyan]=== TRANSCODE MEDIA FILES ===[/bold cyan]\n")
+    
+    ffmpeg_available = shutil.which("ffmpeg") is not None
+    if not ffmpeg_available:
+        inst_cmd = get_ffmpeg_install_instruction()
+        console.print("[bold red]Error: FFmpeg is not installed.[/bold red]")
+        console.print(f"Please install FFmpeg to use this feature. Command: '{inst_cmd}'")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    dest_dir = config.get("download_dir", get_default_download_dir())
+    if not os.path.exists(dest_dir):
+        console.print("[yellow]No downloads folder found. Try downloading some files first.[/yellow]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    media_extensions = (".mp4", ".mkv", ".avi", ".webm", ".mp3", ".m4a", ".wav", ".opus", ".flac")
+    files = [f for f in os.listdir(dest_dir) if f.lower().endswith(media_extensions) and os.path.isfile(os.path.join(dest_dir, f))]
+    
+    if not files:
+        console.print("[yellow]No supported media files found in downloads folder.[/yellow]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    console.print("[bold]Available Media Files for Transcoding:[/bold]")
+    for idx, f in enumerate(files, 1):
+        size_mb = os.path.getsize(os.path.join(dest_dir, f)) / (1024 * 1024)
+        console.print(f"{idx}. {f} [dim]({size_mb:.2f} MB)[/dim]")
+        
+    file_choice = Prompt.ask("\nSelect file to transcode", choices=[str(i) for i in range(1, len(files) + 1)])
+    selected_file = files[int(file_choice) - 1]
+    input_path = os.path.join(dest_dir, selected_file)
+    
+    console.print("\n[bold]Select Target Format:[/bold]")
+    console.print("1. MP3 (Audio - standard compression)")
+    console.print("2. M4A (Audio - high quality AAC)")
+    console.print("3. WAV (Audio - uncompressed lossless)")
+    console.print("4. MP4 (Video - standard H.264/AAC)")
+    console.print("5. MKV (Video - versatile container)")
+    console.print("6. WebM (Video - web-friendly format)")
+    
+    format_choice = Prompt.ask("Choose target format", choices=["1", "2", "3", "4", "5", "6"])
+    format_map = {
+        "1": (".mp3", ["-vn", "-acodec", "libmp3lame", "-ab", "192k"]),
+        "2": (".m4a", ["-vn", "-acodec", "aac", "-ab", "192k"]),
+        "3": (".wav", ["-vn", "-acodec", "pcm_s16le"]),
+        "4": (".mp4", ["-vcodec", "libx264", "-acodec", "aac", "-preset", "fast"]),
+        "5": (".mkv", ["-vcodec", "copy", "-acodec", "copy"]),
+        "6": (".webm", ["-vcodec", "libvpx-vp9", "-acodec", "libopus", "-b:v", "0", "-crf", "30"])
+    }
+    
+    target_ext, ffmpeg_args = format_map[format_choice]
+    base_name = os.path.splitext(selected_file)[0]
+    output_file = f"{base_name}_transcoded{target_ext}"
+    output_path = os.path.join(dest_dir, output_file)
+    
+    if os.path.exists(output_path):
+        if not Confirm.ask(f"Output file '{output_file}' already exists. Overwrite?", default=True):
+            return
+            
+    console.print(f"\n[bold green]Transcoding: {selected_file} ➔ {output_file} ...[/bold green]")
+    cmd = ["ffmpeg", "-y", "-i", input_path] + ffmpeg_args + [output_path]
+    
+    try:
+        with console.status("[bold green]Running FFmpeg transcode... Please wait.", spinner="dots") as status:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+        if result.returncode == 0:
+            console.print(f"[bold green][SUCCESS] Transcoded successfully! Output saved to: {output_file}[/bold green]")
+            logger.info(f"Transcoded {selected_file} to {output_file}")
+        else:
+            console.print("[bold red][FAILED] Transcoding failed.[/bold red]")
+            console.print(f"[dim]{result.stderr}[/dim]")
+            logger.error(f"FFmpeg transcode failed: {result.stderr}")
+    except Exception as e:
+        console.print(f"[bold red]Transcoding Error: {e}[/bold red]")
+        
+    Prompt.ask("\nPress Enter to return...")
+
+
 def operation_view_history():
     """Renders formatted table of the logs list."""
     print_header()
@@ -1371,14 +1656,7 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             Prompt.ask("\nPress Enter to continue...")
             
         elif choice == "2":
-            console.print("\n[bold]Select Default Quality:[/bold]")
-            console.print("1. 1080p")
-            console.print("2. 720p")
-            console.print("3. 480p")
-            console.print("4. Best Available")
-            q_choice = Prompt.ask("Choose option", choices=["1", "2", "3", "4"])
-            q_map = {"1": "1080p", "2": "720p", "3": "480p", "4": "best"}
-            config["default_quality"] = q_map[q_choice]
+            config["default_quality"] = prompt_video_quality()
             save_config(config)
             console.print(f"[green]✓ Default quality set to: {config['default_quality']}[/green]")
             Prompt.ask("\nPress Enter to continue...")
@@ -1879,20 +2157,7 @@ def operation_search_and_download_video(config: Dict[str, Any]):
         for entry in selected_entries:
             console.print(f" - {escape(entry.get('title', 'Unknown Title'))}")
             
-        console.print("\n[bold]Select Video Quality:[/bold]")
-        console.print("1. 1080p (FHD)")
-        console.print("2. 720p (HD)")
-        console.print("3. 480p (SD)")
-        console.print("4. Best Available (Recommended)")
-        quality_choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
-        
-        quality_map = {
-            "1": "1080p",
-            "2": "720p",
-            "3": "480p",
-            "4": "best"
-        }
-        selected_quality = quality_map[quality_choice]
+        selected_quality = prompt_video_quality()
         
         dest_dir = prompt_destination_dir(config["download_dir"])
         if not dest_dir:
@@ -2075,14 +2340,7 @@ def add_to_queue_interactive(config: Dict[str, Any], item_type: str):
 
     quality = "best"
     if item_type == "Video":
-        console.print("\n[bold]Select Video Quality:[/bold]")
-        console.print("1. 1080p (FHD)")
-        console.print("2. 720p (HD)")
-        console.print("3. 480p (SD)")
-        console.print("4. Best Available (Recommended)")
-        q_choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
-        quality_map = {"1": "1080p", "2": "720p", "3": "480p", "4": "best"}
-        quality = quality_map[q_choice]
+        quality = prompt_video_quality()
     
     dest_dir = prompt_destination_dir(config["download_dir"])
     if not dest_dir:
@@ -2565,18 +2823,21 @@ def main():
         dl_table.add_row("[bold cyan]4.[/bold cyan] Download Playlist [dim](Batch)[/dim]")
         dl_table.add_row("[bold cyan]5.[/bold cyan] Download Channel [dim](Batch)[/dim]")
         dl_table.add_row("[bold cyan]6.[/bold cyan] Download Subtitles [dim](Subs)[/dim]")
+        dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
         
         mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
-        mgmt_table.add_row("[bold green]7.[/bold green] View History Logs")
-        mgmt_table.add_row("[bold green]8.[/bold green] Download Queue [dim](Batch)[/dim]")
-        mgmt_table.add_row("[bold green]9.[/bold green] Configuration [dim](Settings)[/dim]")
-        mgmt_table.add_row("[bold green]10.[/bold green] Updates Manager")
-        mgmt_table.add_row("[bold green]11.[/bold green] Open Save Folder")
+        mgmt_table.add_row("[bold green]8.[/bold green] View History Logs")
+        mgmt_table.add_row("[bold green]9.[/bold green] Download Queue [dim](Batch)[/dim]")
+        mgmt_table.add_row("[bold green]10.[/bold green] Configuration [dim](Settings)[/dim]")
+        mgmt_table.add_row("[bold green]11.[/bold green] Updates Manager")
+        mgmt_table.add_row("[bold green]12.[/bold green] Open Save Folder")
+        mgmt_table.add_row("[bold green]13.[/bold green] Transcode Media [dim](Converter)[/dim]")
+        mgmt_table.add_row("[bold green]14.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
         
         info_table = Table(show_header=False, box=None, padding=(0, 1))
-        info_table.add_row("[bold magenta]12.[/bold magenta] About Creator [dim](Credit)[/dim]")
-        info_table.add_row("[bold magenta]13.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-        info_table.add_row("[bold red]14.[/bold red] Exit Application [dim](Quit)[/dim]")
+        info_table.add_row("[bold magenta]15.[/bold magenta] About Creator [dim](Credit)[/dim]")
+        info_table.add_row("[bold magenta]16.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+        info_table.add_row("[bold red]17.[/bold red] Exit Application [dim](Quit)[/dim]")
         
         menu_grid = Table.grid(expand=True)
         if console.width >= 100:
@@ -2602,7 +2863,7 @@ def main():
             padding=(1, 2)
         ))
         
-        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 15)], default="14")
+        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 18)], default="17")
         
         try:
             if choice == "1":
@@ -2618,20 +2879,26 @@ def main():
             elif choice == "6":
                 operation_download_subtitles(config)
             elif choice == "7":
-                operation_view_history()
+                operation_trim_and_download_video(config)
             elif choice == "8":
-                operation_download_queue(config)
+                operation_view_history()
             elif choice == "9":
-                config = operation_settings(config)
+                operation_download_queue(config)
             elif choice == "10":
-                operation_updates_manager(config)
+                config = operation_settings(config)
             elif choice == "11":
-                operation_open_downloads_folder(config)
+                operation_updates_manager(config)
             elif choice == "12":
-                operation_about_creator()
+                operation_open_downloads_folder(config)
             elif choice == "13":
-                operation_report_bug_feedback()
+                operation_transcode_media(config)
             elif choice == "14":
+                operation_share_via_qr(config)
+            elif choice == "15":
+                operation_about_creator()
+            elif choice == "16":
+                operation_report_bug_feedback()
+            elif choice == "17":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
         except KeyboardInterrupt:
