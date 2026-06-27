@@ -244,7 +244,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.4.4"
+    CURRENT_VERSION = "1.4.5"
 
 LATEST_VERSION = None
 
@@ -2645,6 +2645,12 @@ def add_to_queue_interactive(config: Dict[str, Any], item_type: str):
         return
     
     queue = load_queue()
+    duplicates = [item for item in queue if item["url"] == normalized and item["status"] in ("Pending", "Downloading") and item["type"] == item_type]
+    if duplicates:
+        console.print("[bold yellow]Warning: This URL is already in the queue as a pending/active task.[/bold yellow]")
+        if not Confirm.ask("Would you still like to add it?", default=False):
+            return
+            
     next_id = max([item["id"] for item in queue], default=0) + 1
     
     new_item = {
