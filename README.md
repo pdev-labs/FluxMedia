@@ -1,5 +1,8 @@
 # 🌊 FluxMedia
 
+> [!IMPORTANT]
+> **Disclaimer & Educational Notice:** This program is developed strictly for educational and research purposes. You must obtain explicit permission from the original content creators before downloading any videos or media. The author does not assume any liability for unauthorized downloads or usage of this tool.
+
 FluxMedia is a powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Built on top of `yt-dlp` and `rich`, it provides a beautiful terminal user interface (TUI) to download videos, audio streams, playlists, channel uploads, and subtitles from thousands of supported websites.
 
 ---
