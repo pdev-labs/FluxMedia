@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.4.5] - 2026-06-27
+### Added
+- **Duplicate Task Prevention**: Added validation checks inside the batch download queue manager `add_to_queue_interactive()` to warn users and block queuing duplicates of the same URL and file format when already active in the downloads queue.
+
+---
+
 ## [v1.4.4] - 2026-06-27
 ### Added
 - **Educational Disclaimer Notice**: Appended a prominent and explicit educational notice to the top of `README.md` to outline terms of use and creator permissions across the GitHub frontpage and PyPI page.
