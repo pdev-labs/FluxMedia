@@ -72,6 +72,30 @@ If upgrading FluxMedia or yt-dlp inside the app fails because the files are lock
   pip install -U fluxmedia
   ```
 
+### 5. SSL Certificate Verification Failures (SSLError)
+If downloads fail with `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate`:
+* **macOS Users**: Go to your Applications/Python folder and double-click `Install Certificates.command` to download and install the required root certificates.
+* **All Platforms**: Run the following command in your terminal to upgrade your root certificates library:
+  ```bash
+  pip install --upgrade certifi
+  ```
+
+### 6. Slow Download Speeds & Throttling
+If download speeds are extremely slow:
+* **Update the Downloader Engine**: Media platforms frequently change their streaming protocols. Go to main menu option **11. Updates Manager** and select **1. Update yt-dlp** to fetch the latest download engine patches.
+* **ISP Throttling**: Some ISPs throttle automated HTTP video requests. Running a VPN can bypass these local network throttling blocks.
+
+### 7. HTTP 403 Forbidden / Sign-In Required / Age-Restricted Errors
+If downloads fail with `HTTP Error 403: Forbidden`, age-restriction walls, or geo-blocks:
+* **Pass Cookies**: You can pass authentication credentials from your browser. Go to main menu option **10. Configuration ➔ 7. Preferred Cookies Browser** and choose the browser you use (e.g., `chrome`, `edge`, `firefox`, `brave`, or `safari`). This allows FluxMedia to download files using your active browser session cookies without typing your password.
+
+### 8. ExtractorError / Unsupported URL
+If you get parsing errors on newer video layouts:
+* Simply run the Updates Manager inside the app (Option 11) or upgrade the core downloader from your command prompt:
+  ```bash
+  pip install -U yt-dlp
+  ```
+
 ---
 
 ## 👑 Credits & Support
