@@ -94,6 +94,13 @@ def blink_warning():
     import time
     import sys
     
+    # Move to a new line first so we don't overwrite the prompt inline
+    if console:
+        console.print()
+    else:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+        
     message = "⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit."
     if console and console.width < len(message) + 2:
         message = "⚠️ Ctrl+C detected! Press again to exit."
@@ -311,7 +318,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.5.1"
+    CURRENT_VERSION = "1.5.2"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0

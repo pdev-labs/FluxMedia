@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.5.2] - 2026-06-28
+### Fixed
+- **Blinking Warning Wrapping**: Fixed inline carriage return wrapping overlap by prepending a newline, forcing the blinking warning message to display and erase cleanly on a fresh line.
+
+---
+
 ## [v1.5.1] - 2026-06-28
 ### Fixed
 - **Blinking Warning Rich Compatibility**: Fixed a TypeError crash when calling Rich `Console.print` with an unsupported `flush` keyword parameter, using explicit manual stdout flushing instead.
