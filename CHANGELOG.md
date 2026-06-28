@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.4.8] - 2026-06-28
+### Added
+- **Double Ctrl+C Keyboard Interrupt Verification**: Implemented double-press confirmation for terminal keyboard interrupts globally to prevent accidental exit from the CLI downloader interface.
+
+---
+
 ## [v1.4.7] - 2026-06-28
 ### Added
 - **Bold FluxMedia Dashboard Branding**: Added high-visibility bold FLUXMEDIA branding to the top of the TUI Control Panel and Main Menu headers.

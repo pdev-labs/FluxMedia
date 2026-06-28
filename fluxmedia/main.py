@@ -79,6 +79,16 @@ def clear_screen():
         else:
             os.system('clear')
 
+def register_interrupt() -> bool:
+    """Registers a KeyboardInterrupt event. Returns True if it was a double-press within 2 seconds."""
+    global LAST_INTERRUPT_TIME
+    import time
+    current_time = time.time()
+    if current_time - LAST_INTERRUPT_TIME < 2.0:
+        return True
+    LAST_INTERRUPT_TIME = current_time
+    return False
+
 def install_python_package(pkg_name: str) -> bool:
     """Installs a python package using pip, showing clear output."""
     try:
@@ -254,9 +264,10 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.4.7"
+    CURRENT_VERSION = "1.4.8"
 
 LATEST_VERSION = None
+LAST_INTERRUPT_TIME = 0.0
 
 CURRENT_THEME_COLORS = {
     "primary": "cyan",
@@ -1022,9 +1033,14 @@ def operation_download_video(config: Dict[str, Any]):
                 logger.error(f"Failed to download Video: {title} ({url})")
         send_desktop_notification("FluxMedia - Batch Complete", f"Downloaded {total_urls} video(s) to {dest_dir}.")
     except KeyboardInterrupt:
-        console.print("\n[bold yellow]Batch download suspended by user.[/bold yellow]")
+        if register_interrupt():
+            console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+            sys.exit(0)
+        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
         send_desktop_notification("FluxMedia - Batch Interrupted", "Batch download was suspended.")
-    handle_post_download_options(config, dest_dir)
+        import time
+        time.sleep(1.5)
+        return
 
 def operation_download_audio(config: Dict[str, Any]):
     """Prompts for and extracts high-quality audio stream (supports multiple space-separated URLs)."""
@@ -1127,9 +1143,14 @@ def operation_download_audio(config: Dict[str, Any]):
                 logger.error(f"Failed to download Audio: {title} ({url})")
         send_desktop_notification("FluxMedia - Batch Complete", f"Downloaded {total_urls} audio file(s) to {dest_dir}.")
     except KeyboardInterrupt:
-        console.print("\n[bold yellow]Batch download suspended by user.[/bold yellow]")
+        if register_interrupt():
+            console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+            sys.exit(0)
+        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
         send_desktop_notification("FluxMedia - Batch Interrupted", "Batch download was suspended.")
-    handle_post_download_options(config, dest_dir)
+        import time
+        time.sleep(1.5)
+        return
 
 def operation_download_playlist(config: Dict[str, Any]):
     """Downloads an entire playlist nested in a playlist subfolder."""
@@ -1610,6 +1631,9 @@ def operation_share_via_qr(config: Dict[str, Any]):
             try:
                 httpd.serve_forever()
             except KeyboardInterrupt:
+                if register_interrupt():
+                    console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+                    sys.exit(0)
                 console.print("\n[yellow]Share server stopped.[/yellow]")
     except Exception as e:
         console.print(f"[bold red]Server Error: {e}[/bold red]")
@@ -2549,8 +2573,14 @@ def operation_search_and_download_video(config: Dict[str, Any]):
                     logger.error(f"Failed to download searched Video: {video_title} ({video_url})")
             send_desktop_notification("FluxMedia - Search Download", "Finished searching and downloading video.")
         except KeyboardInterrupt:
-            console.print("\n[bold yellow]Batch download suspended by user.[/bold yellow]")
+            if register_interrupt():
+                console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+                sys.exit(0)
+            console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
             send_desktop_notification("FluxMedia - Search Interrupted", "Batch download was suspended.")
+            import time
+            time.sleep(1.5)
+            return
             
     except Exception as e:
         logger.error(f"Search download failed: {e}", exc_info=True)
@@ -2821,15 +2851,20 @@ def process_download_queue(config: Dict[str, Any]):
         send_desktop_notification("FluxMedia Queue Complete", summary_msg)
         console.print(f"\n[bold green]Queue processing complete! {successful_count} succeeded, {failed_count} failed.[/bold green]")
     except KeyboardInterrupt:
+        if register_interrupt():
+            console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+            sys.exit(0)
         # Mark currently downloading task as Failed
         queue = load_queue()
         actual_item = next((x for x in queue if x["status"] == "Downloading"), None)
         if actual_item:
             actual_item["status"] = "Failed"
             save_queue(queue)
-        console.print("\n[bold yellow]Queue processing suspended by user.[/bold yellow]")
+        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
         send_desktop_notification("FluxMedia - Queue Interrupted", "Queue download was suspended.")
-    handle_post_download_options(config, last_dest_dir)
+        import time
+        time.sleep(1.5)
+        return
 
 def remove_from_queue_interactive():
     """Prompts for a task ID and removes it from the queue."""
@@ -3157,61 +3192,61 @@ def main():
 
     
     while True:
-        print_header()
-        
-        # Categorized sub-menus
-        dl_table = Table(show_header=False, box=None, padding=(0, 1))
-        dl_table.add_row("[bold cyan]1.[/bold cyan] Download Video [dim](URL)[/dim]")
-        dl_table.add_row("[bold cyan]2.[/bold cyan] Search & Download [dim](YT)[/dim]")
-        dl_table.add_row("[bold cyan]3.[/bold cyan] Download Audio [dim](MP3)[/dim]")
-        dl_table.add_row("[bold cyan]4.[/bold cyan] Download Playlist [dim](Batch)[/dim]")
-        dl_table.add_row("[bold cyan]5.[/bold cyan] Download Channel [dim](Batch)[/dim]")
-        dl_table.add_row("[bold cyan]6.[/bold cyan] Download Subtitles [dim](Subs)[/dim]")
-        dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
-        
-        mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
-        mgmt_table.add_row("[bold green]8.[/bold green] View History Logs")
-        mgmt_table.add_row("[bold green]9.[/bold green] Download Queue [dim](Batch)[/dim]")
-        mgmt_table.add_row("[bold green]10.[/bold green] Configuration [dim](Settings)[/dim]")
-        mgmt_table.add_row("[bold green]11.[/bold green] Updates Manager")
-        mgmt_table.add_row("[bold green]12.[/bold green] Open Save Folder")
-        mgmt_table.add_row("[bold green]13.[/bold green] Transcode Media [dim](Converter)[/dim]")
-        mgmt_table.add_row("[bold green]14.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
-        
-        info_table = Table(show_header=False, box=None, padding=(0, 1))
-        info_table.add_row("[bold magenta]15.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
-        info_table.add_row("[bold magenta]16.[/bold magenta] About Creator [dim](Credit)[/dim]")
-        info_table.add_row("[bold magenta]17.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-        info_table.add_row("[bold red]18.[/bold red] Exit Application [dim](Quit)[/dim]")
-        
-        menu_grid = Table.grid(expand=True)
-        if console.width >= 100:
-            menu_grid.add_column(ratio=1)
-            menu_grid.add_column(ratio=1)
-            menu_grid.add_column(ratio=1)
-            menu_grid.add_row(
-                Panel(dl_table, title="[bold cyan]📥 Downloader Engine[/bold cyan]", border_style="cyan", padding=(1, 2)),
-                Panel(mgmt_table, title="[bold green]⚙️ Workspace & Settings[/bold green]", border_style="green", padding=(1, 2)),
-                Panel(info_table, title="[bold magenta]ℹ️ System Info[/bold magenta]", border_style="magenta", padding=(1, 2))
-            )
-        else:
-            menu_grid.add_column(ratio=1)
-            menu_grid.add_row(Panel(dl_table, title="[bold cyan]📥 Downloader Engine[/bold cyan]", border_style="cyan", padding=(0, 2)))
-            menu_grid.add_row(Panel(mgmt_table, title="[bold green]⚙️ Workspace & Settings[/bold green]", border_style="green", padding=(0, 2)))
-            menu_grid.add_row(Panel(info_table, title="[bold magenta]ℹ️ System Info[/bold magenta]", border_style="magenta", padding=(0, 2)))
-        
-        console.print(Panel(
-            menu_grid,
-            box=box.DOUBLE,
-            title="[bold white] 🌊 FLUXMEDIA MAIN MENU 🌊 [/bold white]",
-            border_style="bold blue",
-            padding=(1, 2)
-        ))
-        
-        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 19)], default="18")
-        clear_screen()
-        
         try:
+            print_header()
+            
+            # Categorized sub-menus
+            dl_table = Table(show_header=False, box=None, padding=(0, 1))
+            dl_table.add_row("[bold cyan]1.[/bold cyan] Download Video [dim](URL)[/dim]")
+            dl_table.add_row("[bold cyan]2.[/bold cyan] Search & Download [dim](YT)[/dim]")
+            dl_table.add_row("[bold cyan]3.[/bold cyan] Download Audio [dim](MP3)[/dim]")
+            dl_table.add_row("[bold cyan]4.[/bold cyan] Download Playlist [dim](Batch)[/dim]")
+            dl_table.add_row("[bold cyan]5.[/bold cyan] Download Channel [dim](Batch)[/dim]")
+            dl_table.add_row("[bold cyan]6.[/bold cyan] Download Subtitles [dim](Subs)[/dim]")
+            dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
+            
+            mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
+            mgmt_table.add_row("[bold green]8.[/bold green] View History Logs")
+            mgmt_table.add_row("[bold green]9.[/bold green] Download Queue [dim](Batch)[/dim]")
+            mgmt_table.add_row("[bold green]10.[/bold green] Configuration [dim](Settings)[/dim]")
+            mgmt_table.add_row("[bold green]11.[/bold green] Updates Manager")
+            mgmt_table.add_row("[bold green]12.[/bold green] Open Save Folder")
+            mgmt_table.add_row("[bold green]13.[/bold green] Transcode Media [dim](Converter)[/dim]")
+            mgmt_table.add_row("[bold green]14.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
+            
+            info_table = Table(show_header=False, box=None, padding=(0, 1))
+            info_table.add_row("[bold magenta]15.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
+            info_table.add_row("[bold magenta]16.[/bold magenta] About Creator [dim](Credit)[/dim]")
+            info_table.add_row("[bold magenta]17.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold red]18.[/bold red] Exit Application [dim](Quit)[/dim]")
+            
+            menu_grid = Table.grid(expand=True)
+            if console.width >= 100:
+                menu_grid.add_column(ratio=1)
+                menu_grid.add_column(ratio=1)
+                menu_grid.add_column(ratio=1)
+                menu_grid.add_row(
+                    Panel(dl_table, title="[bold cyan]📥 Downloader Engine[/bold cyan]", border_style="cyan", padding=(1, 2)),
+                    Panel(mgmt_table, title="[bold green]⚙️ Workspace & Settings[/bold green]", border_style="green", padding=(1, 2)),
+                    Panel(info_table, title="[bold magenta]ℹ️ System Info[/bold magenta]", border_style="magenta", padding=(1, 2))
+                )
+            else:
+                menu_grid.add_column(ratio=1)
+                menu_grid.add_row(Panel(dl_table, title="[bold cyan]📥 Downloader Engine[/bold cyan]", border_style="cyan", padding=(0, 2)))
+                menu_grid.add_row(Panel(mgmt_table, title="[bold green]⚙️ Workspace & Settings[/bold green]", border_style="green", padding=(0, 2)))
+                menu_grid.add_row(Panel(info_table, title="[bold magenta]ℹ️ System Info[/bold magenta]", border_style="magenta", padding=(0, 2)))
+            
+            console.print(Panel(
+                menu_grid,
+                box=box.DOUBLE,
+                title="[bold white] 🌊 FLUXMEDIA MAIN MENU 🌊 [/bold white]",
+                border_style="bold blue",
+                padding=(1, 2)
+            ))
+            
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 19)], default="18")
+            clear_screen()
+            
             if choice == "1":
                 operation_download_video(config)
             elif choice == "2":
@@ -3250,8 +3285,12 @@ def main():
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
         except KeyboardInterrupt:
-            console.print("\n\n[yellow]Operation interrupted. Returning to menu...[/yellow]")
-            Prompt.ask("Press Enter to continue...")
+            if register_interrupt():
+                console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
+                sys.exit(0)
+            console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
+            import time
+            time.sleep(1.5)
         except Exception as e:
             logger.critical(f"Unhandled exception in main loop: {e}", exc_info=True)
             console.print(f"\n[bold red]An unexpected error occurred: {e}[/bold red]")
@@ -3262,4 +3301,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nExiting...")
+        if register_interrupt():
+            print("\nThank you for using FluxMedia! Goodbye.")
+        else:
+            print("\n⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.")
+        sys.exit(0)
