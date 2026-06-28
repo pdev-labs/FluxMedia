@@ -80,14 +80,57 @@ def clear_screen():
             os.system('clear')
 
 def register_interrupt() -> bool:
-    """Registers a KeyboardInterrupt event. Returns True if it was a double-press within 2 seconds."""
+    """Registers a KeyboardInterrupt event. Returns True if it was a double-press within 6 seconds."""
     global LAST_INTERRUPT_TIME
     import time
     current_time = time.time()
-    if current_time - LAST_INTERRUPT_TIME < 2.0:
+    if current_time - LAST_INTERRUPT_TIME < 6.0:
         return True
     LAST_INTERRUPT_TIME = current_time
     return False
+
+def blink_warning():
+    """Blinks the interruption warning message on the same line for 5 seconds."""
+    import time
+    import sys
+    message = "⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit."
+    blank = " " * (len(message) + 10)
+    
+    try:
+        # Hide cursor
+        sys.stdout.write("\033[?25l")
+        sys.stdout.flush()
+    except Exception:
+        pass
+        
+    try:
+        for i in range(10):  # 10 half-second periods = 5 seconds
+            if i % 2 == 0:
+                if console:
+                    console.print(f"\r[bold yellow]{message}[/bold yellow]", end="")
+                else:
+                    sys.stdout.write(f"\r{message}")
+            else:
+                if console:
+                    console.print(f"\r{blank}", end="")
+                else:
+                    sys.stdout.write(f"\r{blank}")
+            sys.stdout.flush()
+            time.sleep(0.5)
+            
+        # Clean up the line at the end
+        if console:
+            console.print(f"\r{blank}\r", end="")
+        else:
+            sys.stdout.write(f"\r{blank}\r")
+        sys.stdout.flush()
+    finally:
+        try:
+            # Show cursor
+            sys.stdout.write("\033[?25h")
+            sys.stdout.flush()
+        except Exception:
+            pass
 
 def install_python_package(pkg_name: str) -> bool:
     """Installs a python package using pip, showing clear output."""
@@ -264,7 +307,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.4.8"
+    CURRENT_VERSION = "1.4.9"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
@@ -1036,10 +1079,8 @@ def operation_download_video(config: Dict[str, Any]):
         if register_interrupt():
             console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
             sys.exit(0)
-        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
+        blink_warning()
         send_desktop_notification("FluxMedia - Batch Interrupted", "Batch download was suspended.")
-        import time
-        time.sleep(1.5)
         return
 
 def operation_download_audio(config: Dict[str, Any]):
@@ -1146,10 +1187,8 @@ def operation_download_audio(config: Dict[str, Any]):
         if register_interrupt():
             console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
             sys.exit(0)
-        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
+        blink_warning()
         send_desktop_notification("FluxMedia - Batch Interrupted", "Batch download was suspended.")
-        import time
-        time.sleep(1.5)
         return
 
 def operation_download_playlist(config: Dict[str, Any]):
@@ -2576,10 +2615,8 @@ def operation_search_and_download_video(config: Dict[str, Any]):
             if register_interrupt():
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 sys.exit(0)
-            console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
+            blink_warning()
             send_desktop_notification("FluxMedia - Search Interrupted", "Batch download was suspended.")
-            import time
-            time.sleep(1.5)
             return
             
     except Exception as e:
@@ -2860,10 +2897,8 @@ def process_download_queue(config: Dict[str, Any]):
         if actual_item:
             actual_item["status"] = "Failed"
             save_queue(queue)
-        console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
+        blink_warning()
         send_desktop_notification("FluxMedia - Queue Interrupted", "Queue download was suspended.")
-        import time
-        time.sleep(1.5)
         return
 
 def remove_from_queue_interactive():
@@ -3288,9 +3323,7 @@ def main():
             if register_interrupt():
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 sys.exit(0)
-            console.print("\n[bold yellow]⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.[/bold yellow]")
-            import time
-            time.sleep(1.5)
+            blink_warning()
         except Exception as e:
             logger.critical(f"Unhandled exception in main loop: {e}", exc_info=True)
             console.print(f"\n[bold red]An unexpected error occurred: {e}[/bold red]")
@@ -3304,5 +3337,5 @@ if __name__ == "__main__":
         if register_interrupt():
             print("\nThank you for using FluxMedia! Goodbye.")
         else:
-            print("\n⚠️ Keyboard interruption detected. Press the interruption key (Ctrl+C) twice to exit.")
+            blink_warning()
         sys.exit(0)

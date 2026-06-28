@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.4.9] - 2026-06-28
+### Added
+- **5-Second Blinking Keyboard Interrupt Warning**: Integrated a 5-second blinking warning prompt when KeyboardInterrupt (Ctrl+C) is detected, highlighting instructions for confirming exit.
+
+---
+
 ## [v1.4.8] - 2026-06-28
 ### Added
 - **Double Ctrl+C Keyboard Interrupt Verification**: Implemented double-press confirmation for terminal keyboard interrupts globally to prevent accidental exit from the CLI downloader interface.
