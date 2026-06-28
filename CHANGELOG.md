@@ -4,8 +4,9 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
-## [v1.4.6] - 2026-06-28
+## [v1.4.7] - 2026-06-28
 ### Added
+- **Bold FluxMedia Dashboard Branding**: Added high-visibility bold FLUXMEDIA branding to the top of the TUI Control Panel and Main Menu headers.
 - **TUI Option Screen Clearing**: Configured terminal screen clearing immediately upon option select across all menu and configuration prompts, providing cleaner layout transitions.
 - **PEP 668 Troubleshooting Support**: Integrated dedicated troubleshooting guidance for `externally-managed-environment` errors when installing packages globally, outlining solutions for `pipx` and custom virtual environments.
 
