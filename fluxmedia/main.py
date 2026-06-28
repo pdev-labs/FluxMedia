@@ -915,7 +915,7 @@ def print_header():
         container_grid,
         box=box.DOUBLE,
         border_style="cyan",
-        title="[bold white] CONTROL PANEL [/bold white]",
+        title="[bold white] 🌊 FLUXMEDIA CONTROL PANEL 🌊 [/bold white]",
         title_align="center"
     ))
 
@@ -3203,7 +3203,7 @@ def main():
         console.print(Panel(
             menu_grid,
             box=box.DOUBLE,
-            title="[bold white] CONTROL PANEL MAIN MENU [/bold white]",
+            title="[bold white] 🌊 FLUXMEDIA MAIN MENU 🌊 [/bold white]",
             border_style="bold blue",
             padding=(1, 2)
         ))
