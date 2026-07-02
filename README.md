@@ -123,7 +123,7 @@ If installing FluxMedia system-wide fails with `error: externally-managed-enviro
 ---
 
 ## 👑 Credits & Support
-This project was created and is fully maintained by **Priyanshu Chauhan** ([@pdev-labs](https://github.com/pdev-labs)).
+This project was created and is fully maintained by **pdev-labs** (https://github.com/pdev-labs).
 I am a student in India (Standard 11, PCM with CS) and I spent a couple of weeks designing, coding, and perfecting FluxMedia alone. 
 
 If you find this tool helpful, please support my work by giving it a star on GitHub! ⭐
@@ -141,3 +141,15 @@ To help me resolve errors quickly, please:
 1. Search active issues first to avoid duplicate bug tickets.
 2. Provide details about your Operating System and whether FFmpeg is installed.
 3. Paste logs or stderr dumps. (Local execution logs are saved inside your home directory under `~/.fluxmedia/fluxmedia.log`).
+
+---
+
+## 📜 Changelog
+
+Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
+
+### Latest Release: [v1.5.8] - 2026-07-02
+- **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.
+- **Premium Material 3 Tones**: Introduced 4 new theme tones (Royal Purple, Crimson Rose, Sunset Orange, Indigo Breeze) across all templates.
+- **Responsive Layout Optimizations**: Optimized page header to stack controls cleanly on mobile viewports while preserving standard inline spacing on desktops.
+- **Port Overriding**: Enabled running the sharing server on a custom port if the default port 8000 is occupied.

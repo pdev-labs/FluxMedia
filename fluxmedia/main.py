@@ -4219,13 +4219,13 @@ def operation_search_and_download_video(config: Dict[str, Any]):
         Prompt.ask("\nPress Enter to return to menu...")
 
 def operation_about_creator():
-    """Renders details about the creator (Priyanshu Chauhan)."""
+    """Renders details about the creator (pdev-labs)."""
     print_header()
     
     about_text = Text()
     about_text.append("\n👑 Creator & Developer:\n", style="bold cyan")
-    about_text.append("  Priyanshu Chauhan ", style="bold white")
-    about_text.append("(@pdev-labs)\n\n", style="bold yellow")
+    about_text.append("  pdev-labs ", style="bold white")
+    about_text.append("\n\n", style="bold yellow")
     
     about_text.append("🎓 Background:\n", style="bold cyan")
     about_text.append("  A high school student (Standard 11, PCM with Computer Science) from India.\n\n", style="white")
