@@ -1653,6 +1653,53 @@ def operation_share_via_qr(config: Dict[str, Any]):
         class SilentHandler(SimpleHTTPRequestHandler):
             def log_message(self, format, *args):
                 logger.info(f"HTTP Server Access: {format % args}")
+
+            def guess_type(self, path):
+                # Ensure correct MIME types on environments like Termux (Android)
+                # which lack standard system mime.types databases.
+                custom_types = {
+                    # Video
+                    '.mp4': 'video/mp4',
+                    '.mkv': 'video/x-matroska',
+                    '.webm': 'video/webm',
+                    '.avi': 'video/x-msvideo',
+                    '.mov': 'video/quicktime',
+                    '.wmv': 'video/x-ms-wmv',
+                    '.3gp': 'video/3gpp',
+                    '.ts': 'video/mp2t',
+                    '.m4v': 'video/x-m4v',
+                    # Audio
+                    '.mp3': 'audio/mpeg',
+                    '.m4a': 'audio/mp4',
+                    '.aac': 'audio/aac',
+                    '.opus': 'audio/ogg',
+                    '.ogg': 'audio/ogg',
+                    '.wav': 'audio/wav',
+                    '.flac': 'audio/flac',
+                    '.mka': 'audio/x-matroska',
+                    # Subtitles
+                    '.srt': 'text/plain',
+                    '.vtt': 'text/vtt',
+                    '.ass': 'text/plain',
+                    '.ssa': 'text/plain',
+                    # Images
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.webp': 'image/webp',
+                    '.gif': 'image/gif',
+                    '.svg': 'image/svg+xml',
+                    # Web/Common
+                    '.html': 'text/html',
+                    '.css': 'text/css',
+                    '.js': 'application/javascript',
+                    '.json': 'application/json',
+                    '.txt': 'text/plain',
+                }
+                ext = os.path.splitext(path)[1].lower()
+                if ext in custom_types:
+                    return custom_types[ext]
+                return super().guess_type(path)
                 
         # Dynamically allocate an open port starting from 8000
         httpd = None
@@ -2298,72 +2345,13 @@ def operation_update_ytdlp():
     Prompt.ask("\nPress Enter to return to menu...")
 
 def open_folder_android(dest_dir: str) -> bool:
-    """Offers file manager options on Android, defaulting to Google Files or custom intent."""
-    console.print("\n[bold]Choose File Manager to open folder:[/bold]")
-    console.print("1. Google Files / System Files (Default)")
-    console.print("2. Any available File Manager App (Generic Intent)")
-    console.print("3. Print folder path (Cancel)")
-    choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="1")
-    
-    if choice == "3":
-        console.print(f"\n[bold green]Downloads Folder Path:[/bold green]\n{dest_dir}")
-        return True
-
+    """Prints the download folder path on Android/Termux, removing the open files app option."""
     abs_path = os.path.abspath(dest_dir)
-    
-    # Extract relative path on external shared storage
-    rel_path = None
-    for prefix in ["/storage/emulated/0/", "/sdcard/", os.path.expanduser("~/storage/shared/")]:
-        if abs_path.startswith(prefix):
-            rel_path = abs_path[len(prefix):].replace("\\", "/").strip("/")
-            break
-            
-    if not rel_path:
-        if "/storage/emulated/0/" in abs_path:
-            rel_path = abs_path.split("/storage/emulated/0/")[-1].replace("\\", "/").strip("/")
-        elif "/sdcard/" in abs_path:
-            rel_path = abs_path.split("/sdcard/")[-1].replace("\\", "/").strip("/")
-
-    from urllib.parse import quote
-    doc_id = "primary:" + (rel_path if rel_path else "Download")
-    uri = f"content://com.android.externalstorage.documents/document/{quote(doc_id)}"
-
-    if choice == "1":
-        # Android DocumentsUI content URI format
-        cmd = ["am", "start", "-a", "android.intent.action.VIEW", "-d", uri]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            console.print("[bold green]Google Files opened successfully![/bold green]")
-            return True
-            
-        # Try package-specific documentsui FilesActivity intent
-        cmd2 = ["am", "start", "-n", "com.google.android.documentsui/com.android.documentsui.files.FilesActivity", "-d", uri]
-        result2 = subprocess.run(cmd2, capture_output=True, text=True)
-        if result2.returncode == 0:
-            console.print("[bold green]Google Files opened successfully![/bold green]")
-            return True
-            
-        console.print("[yellow]Could not launch default Files app. Retrying with generic intent chooser...[/yellow]")
-        choice = "2"
-
-    if choice == "2":
-        if shutil.which("termux-open"):
-            try:
-                subprocess.run(["termux-open", abs_path])
-                console.print("[bold green]File Manager launched successfully![/bold green]")
-                return True
-            except Exception:
-                pass
-                
-        # Fallback to general VIEW intent using content URI (avoids FileUriExposedException)
-        cmd = ["am", "start", "-a", "android.intent.action.VIEW", "-d", uri]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            console.print("[bold green]File Manager launched successfully![/bold green]")
-            return True
-            
-        console.print(f"[bold red]Failed to launch any file manager. Please open manually. Path: {abs_path}[/bold red]")
-        return False
+    if console:
+        console.print(f"\n[bold green]Downloads Folder Path:[/bold green]\n{abs_path}")
+    else:
+        print(f"\nDownloads Folder Path:\n{abs_path}")
+    return True
 
 def open_folder(config: Dict[str, Any], dest_dir: str) -> bool:
     """Opens the downloads directory in the corresponding platform file explorer."""

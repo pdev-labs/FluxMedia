@@ -4,6 +4,12 @@ All notable changes to the **FluxMedia** project are documented in this file.
 
 ---
 
+## [v1.5.6] - 2026-07-02
+### Changed
+- **Android/Termux Sharing & Folder Printing**: Overrode standard HTTP server MIME type resolution to correctly guess streaming types (like `.mp4`, `.mkv`, etc.) on Termux. Simplified downloads directory printer on Android to output the path directly rather than attempting to launch external files app.
+
+---
+
 ## [v1.5.5] - 2026-06-30
 ### Changed
 - **Version Release Sync**: Share via QR-Code streaming fixed.
