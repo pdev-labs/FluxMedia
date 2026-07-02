@@ -2138,22 +2138,22 @@ def start_share_server(config: Dict[str, Any]):
         </div>
         
         <nav class="flex-1 space-y-1">
-            <a href="javascript:void(0)" onclick="setCategory('all', this)" 
+            <a href="javascript:void(0)" onclick="setCategory('all')" data-category-link="all"
                class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all bg-primary-container text-on-primary-container">
                 <span class="material-symbols-outlined active-icon">theaters</span>
                 <span>Library</span>
             </a>
-            <a href="javascript:void(0)" onclick="setCategory('audio', this)" 
+            <a href="javascript:void(0)" onclick="setCategory('audio')" data-category-link="audio"
                class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
                 <span class="material-symbols-outlined">favorite</span>
                 <span>Audio Vault</span>
             </a>
-            <a href="javascript:void(0)" onclick="setCategory('video', this)" 
+            <a href="javascript:void(0)" onclick="setCategory('video')" data-category-link="video"
                class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
                 <span class="material-symbols-outlined">download</span>
                 <span>Videos</span>
             </a>
-            <a href="javascript:void(0)" onclick="setCategory('other', this)" 
+            <a href="javascript:void(0)" onclick="setCategory('other')" data-category-link="other"
                class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
                 <span class="material-symbols-outlined">movie_filter</span>
                 <span>Documents & Others</span>
@@ -2266,19 +2266,19 @@ def start_share_server(config: Dict[str, Any]):
 
     <!-- Mobile Bottom Navigation -->
     <nav class="md:hidden fixed bottom-0 left-0 w-full z-40 bg-surface-container border-t border-outline-variant/10 flex justify-around py-2">
-        <a href="javascript:void(0)" onclick="setCategory('all', this)" class="flex flex-col items-center text-primary font-medium text-xs">
+        <a href="javascript:void(0)" onclick="setCategory('all')" data-category-link="all" class="flex flex-col items-center text-primary font-medium text-xs">
             <span class="material-symbols-outlined active-icon">theaters</span>
             <span>Library</span>
         </a>
-        <a href="javascript:void(0)" onclick="setCategory('audio', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+        <a href="javascript:void(0)" onclick="setCategory('audio')" data-category-link="audio" class="flex flex-col items-center text-on-surface-variant text-xs">
             <span class="material-symbols-outlined">favorite</span>
             <span>Audio</span>
         </a>
-        <a href="javascript:void(0)" onclick="setCategory('video', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+        <a href="javascript:void(0)" onclick="setCategory('video')" data-category-link="video" class="flex flex-col items-center text-on-surface-variant text-xs">
             <span class="material-symbols-outlined">download</span>
             <span>Videos</span>
         </a>
-        <a href="javascript:void(0)" onclick="setCategory('other', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+        <a href="javascript:void(0)" onclick="setCategory('other')" data-category-link="other" class="flex flex-col items-center text-on-surface-variant text-xs">
             <span class="material-symbols-outlined">movie_filter</span>
             <span>Documents & Others</span>
         </a>
@@ -2301,19 +2301,19 @@ def start_share_server(config: Dict[str, Any]):
             applyFilterAndSearch();
         }
 
-        function setCategory(cat, element) {
+        function setCategory(cat) {
             currentCategory = cat;
             
-            // Remove active classes on desktop drawer and mobile nav
-            document.querySelectorAll('aside nav a, nav a').forEach(el => {
+            // Remove active classes on all category links
+            document.querySelectorAll('[data-category-link]').forEach(el => {
                 el.classList.remove('bg-primary-container', 'text-on-primary-container', 'text-primary', 'font-medium');
                 el.classList.add('text-on-surface-variant');
                 const icon = el.querySelector('.material-symbols-outlined');
                 if (icon) icon.classList.remove('active-icon');
             });
             
-            // Highlight selected
-            if (element) {
+            // Highlight selected category on both desktop and mobile
+            document.querySelectorAll(`[data-category-link="${cat}"]`).forEach(element => {
                 element.classList.remove('text-on-surface-variant');
                 element.classList.add('font-medium');
                 if (element.closest('aside')) {
@@ -2323,7 +2323,7 @@ def start_share_server(config: Dict[str, Any]):
                 }
                 const icon = element.querySelector('.material-symbols-outlined');
                 if (icon) icon.classList.add('active-icon');
-            }
+            });
             
             applyFilterAndSearch();
         }
