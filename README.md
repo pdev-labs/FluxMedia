@@ -185,4 +185,10 @@ FFmpeg is required for merging high-definition video streams and converting audi
 
 If FFmpeg is not installed, FluxMedia will notify you in the main header and fall back to single-file downloads (usually limited to 720p or native audio formats).
 
+---
+
+## 🔗 Related Projects
+
+* **[FluxMedia-py](https://github.com/pdev-labs/FluxMedia-py)**: The official Python package and module distribution for FluxMedia, available on PyPI.
+
 
