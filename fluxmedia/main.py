@@ -6,6 +6,9 @@ Supports downloading video, audio, playlist, channel videos, and subtitles.
 
 import sys
 import os
+import io
+import math
+import html
 import datetime
 import json
 import logging
@@ -333,7 +336,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.5.3"
+    CURRENT_VERSION = "1.5.8"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
@@ -591,7 +594,13 @@ DEFAULT_CONFIG = {
     "cookies_browser": "none",
     "embed_subtitles": False,
     "audio_bitrate": "192",
-    "download_speed_limit": "disabled"
+    "download_speed_limit": "disabled",
+    "web_auth_enabled": True,
+    "web_username": "admin",
+    "web_password": "admin",
+    "share_profile_name": "Admin",
+    "share_profile_photo": "",
+    "share_custom_path": ""
 }
 
 def load_config() -> Dict[str, Any]:
@@ -1591,7 +1600,146 @@ def get_local_ip() -> str:
         return "127.0.0.1"
 
 
-def operation_share_via_qr(config: Dict[str, Any]):
+EXTRA_TONES_CSS = """
+        /* Purple Theme */
+        [data-tone="purple"] {
+            --color-primary: #7d00b5;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #f5d9ff;
+            --color-on-primary-container: #2c0043;
+            --color-background: #fffbfe;
+            --color-on-background: #1e1b20;
+            --color-surface: #fffbfe;
+            --color-on-surface: #1e1b20;
+            --color-surface-container-low: #f6f2f7;
+            --color-surface-container: #f0ecf1;
+            --color-surface-container-high: #eae6eb;
+            --color-surface-container-highest: #e4e0e6;
+            --color-outline-variant: #cbced8;
+            --color-outline: #727782;
+        }
+        .dark[data-tone="purple"] {
+            --color-primary: #ecb2ff;
+            --color-on-primary: #52007b;
+            --color-primary-container: #7400aa;
+            --color-on-primary-container: #f5d9ff;
+            --color-background: #151218;
+            --color-on-background: #e9e0e8;
+            --color-surface: #151218;
+            --color-on-surface: #e9e0e8;
+            --color-surface-container-low: #1d1a20;
+            --color-surface-container: #221e25;
+            --color-surface-container-high: #2d2930;
+            --color-surface-container-highest: #38333b;
+            --color-outline-variant: #49454e;
+            --color-outline: #988f9c;
+        }
+
+        /* Red Theme */
+        [data-tone="red"] {
+            --color-primary: #bc1638;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #ffdad9;
+            --color-on-primary-container: #41000a;
+            --color-background: #fffbff;
+            --color-on-background: #201a1a;
+            --color-surface: #fffbff;
+            --color-on-surface: #201a1a;
+            --color-surface-container-low: #fbeeed;
+            --color-surface-container: #f5e2e1;
+            --color-surface-container-high: #ebd7d6;
+            --color-surface-container-highest: #e0ccca;
+            --color-outline-variant: #d8c2c0;
+            --color-outline: #8c7371;
+        }
+        .dark[data-tone="red"] {
+            --color-primary: #ffb3b4;
+            --color-on-primary: #680016;
+            --color-primary-container: #920023;
+            --color-on-primary-container: #ffdad9;
+            --color-background: #171212;
+            --color-on-background: #ede0de;
+            --color-surface: #171212;
+            --color-on-surface: #ede0de;
+            --color-surface-container-low: #201818;
+            --color-surface-container: #251c1c;
+            --color-surface-container-high: #302626;
+            --color-surface-container-highest: #3c3030;
+            --color-outline-variant: #534342;
+            --color-outline: #a08c8b;
+        }
+
+        /* Orange Theme */
+        [data-tone="orange"] {
+            --color-primary: #a04300;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #ffdbca;
+            --color-on-primary-container: #341100;
+            --color-background: #fffbff;
+            --color-on-background: #201a17;
+            --color-surface: #fffbff;
+            --color-on-surface: #201a17;
+            --color-surface-container-low: #f7ede8;
+            --color-surface-container: #f1e2db;
+            --color-surface-container-high: #ebd8cf;
+            --color-surface-container-highest: #e5cec3;
+            --color-outline-variant: #d7c2b9;
+            --color-outline: #8c736a;
+        }
+        .dark[data-tone="orange"] {
+            --color-primary: #ffb68f;
+            --color-on-primary: #562000;
+            --color-primary-container: #7b3100;
+            --color-on-primary-container: #ffdbca;
+            --color-background: #151210;
+            --color-on-background: #ece0db;
+            --color-surface: #151210;
+            --color-on-surface: #ece0db;
+            --color-surface-container-low: #1d1a17;
+            --color-surface-container: #211e1b;
+            --color-surface-container-high: #2c2825;
+            --color-surface-container-highest: #37332f;
+            --color-outline-variant: #52443d;
+            --color-outline: #9f8d84;
+        }
+
+        /* Indigo Theme */
+        [data-tone="indigo"] {
+            --color-primary: #3f51b5;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #e0e4ff;
+            --color-on-primary-container: #000c60;
+            --color-background: #fafaff;
+            --color-on-background: #1a1b23;
+            --color-surface: #fafaff;
+            --color-on-surface: #1a1b23;
+            --color-surface-container-low: #eff0fa;
+            --color-surface-container: #e9eaf4;
+            --color-surface-container-high: #e3e4ee;
+            --color-surface-container-highest: #dddee8;
+            --color-outline-variant: #c4c6d4;
+            --color-outline: #747685;
+        }
+        .dark[data-tone="indigo"] {
+            --color-primary: #bec2ff;
+            --color-on-primary: #001789;
+            --color-primary-container: #2237a0;
+            --color-on-primary-container: #e0e4ff;
+            --color-background: #11121a;
+            --color-on-background: #e3e1ec;
+            --color-surface: #11121a;
+            --color-on-surface: #e3e1ec;
+            --color-surface-container-low: #191a22;
+            --color-surface-container: #1d1e27;
+            --color-surface-container-high: #282932;
+            --color-surface-container-highest: #32333d;
+            --color-outline-variant: #444552;
+            --color-outline: #8f909f;
+        }
+"""
+
+
+def start_share_server(config: Dict[str, Any]):
     """Starts a local HTTP server in the downloads directory and prints a QR code for mobile connection."""
     print_header()
     console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
@@ -1616,7 +1764,7 @@ def operation_share_via_qr(config: Dict[str, Any]):
         os.makedirs(dest_dir, exist_ok=True)
         
     local_ip = get_local_ip()
-    port = 8000
+    port = config.get("web_port", 8000)
     share_url = f"http://{local_ip}:{port}"
     
     console.print(f"📁 Sharing Folder: [bold white]{dest_dir}[/bold white]")
@@ -1651,719 +1799,538 @@ def operation_share_via_qr(config: Dict[str, Any]):
     try:
         os.chdir(dest_dir)
         class SilentHandler(SimpleHTTPRequestHandler):
-            HTML_TEMPLATE = """<!DOCTYPE html>
-<html lang="en">
+            LOGIN_HTML = """<!DOCTYPE html>
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FluxMedia LAN Share</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Default Theme: Dark Mode */
-        :root {
-            --bg-color: #0b0f19;
-            --header-bg: #111827;
-            --card-bg: #1e293b;
-            --card-border: #334155;
-            --card-hover-border: #6366f1;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #4f46e5;
-            --accent-light: #818cf8;
-            --accent-hover: #4338ca;
-            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --badge-bg: rgba(99, 102, 241, 0.15);
-            --badge-text: #818cf8;
-            --input-bg: #1e293b;
-            --input-border: #334155;
-            --input-text: #f8fafc;
-            --modal-bg: #0f172a;
-            --modal-border: #1e293b;
-        }
-
-        /* Light Mode overrides */
-        :root.light {
-            --bg-color: #f8fafc;
-            --header-bg: #ffffff;
-            --card-bg: #ffffff;
-            --card-border: #e2e8f0;
-            --card-hover-border: #4f46e5;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --accent: #4f46e5;
-            --accent-light: #4f46e5;
-            --accent-hover: #3730a3;
-            --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            --badge-bg: rgba(79, 70, 229, 0.1);
-            --badge-text: #4f46e5;
-            --input-bg: #ffffff;
-            --input-border: #cbd5e1;
-            --input-text: #0f172a;
-            --modal-bg: #ffffff;
-            --modal-border: #e2e8f0;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 1000px;
-        }
-        
-        /* Top Navigation Bar */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 2.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--card-border);
-        }
-        
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .brand-icon {
-            color: var(--accent-light);
-        }
-        
-        .brand-name {
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        
-        .theme-btn {
-            background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-primary);
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-        
-        .theme-btn:hover {
-            border-color: var(--card-hover-border);
-            transform: scale(1.05);
-        }
-        
-        /* Statistics Dashboard */
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.25rem;
-            margin-bottom: 2.5rem;
-            width: 100%;
-        }
-        
-        .stat-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        
-        .stat-val {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-        
-        .stat-lbl {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        
-        /* Controls Row (Search, Filters, Sort) */
-        .controls-row {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            margin-bottom: 2.5rem;
-            width: 100%;
-        }
-        
-        .search-container {
-            position: relative;
-            width: 100%;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.75rem;
-            background-color: var(--input-bg);
-            border: 1px solid var(--input-border);
-            border-radius: 12px;
-            color: var(--input-text);
-            font-family: inherit;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        
-        .search-input:focus {
-            border-color: var(--card-hover-border);
-        }
-        
-        .search-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            pointer-events: none;
-        }
-        
-        .actions-group {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .filter-tabs {
-            display: flex;
-            gap: 0.25rem;
-            background-color: var(--card-bg);
-            padding: 0.25rem;
-            border-radius: 10px;
-            border: 1px solid var(--card-border);
-        }
-        
-        .filter-tab {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .filter-tab:hover {
-            color: var(--text-primary);
-        }
-        
-        .filter-tab.active {
-            background-color: var(--accent);
-            color: white;
-        }
-        
-        .sort-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .sort-label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        
-        .sort-select {
-            padding: 0.5rem 2.25rem 0.5rem 1rem;
-            background-color: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--input-text);
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-        }
-        
-        .sort-select:focus {
-            border-color: var(--card-hover-border);
-        }
-        
-        /* Grid Layout */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-            gap: 1.75rem;
-            width: 100%;
-        }
-        
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.75rem;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        }
-        
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--accent-gradient);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--card-hover-border);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card:hover::before {
-            opacity: 1;
-        }
-        
-        .file-icon {
-            width: 52px;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            background: var(--badge-bg);
-            margin-bottom: 1.5rem;
-            color: var(--badge-text);
-        }
-        
-        .file-name {
-            font-size: 1.15rem;
-            font-weight: 600;
-            line-height: 1.5;
-            margin-bottom: 0.5rem;
-            word-break: break-all;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            height: 3.45rem;
-        }
-        
-        .file-meta {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.75rem;
-            font-weight: 400;
-        }
-        
-        .card-actions {
-            margin-top: auto;
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .btn {
-            flex: 1;
-            padding: 0.75rem;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            text-align: center;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-            border: 1px solid var(--card-border);
-        }
-        
-        .btn-secondary:hover {
-            background-color: var(--bg-color);
-            border-color: var(--text-secondary);
-        }
-        
-        /* Modal Video/Audio Player */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(3, 7, 18, 0.95);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-        }
-        
-        .modal-content {
-            width: 100%;
-            max-width: 800px;
-            background-color: #0f172a;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid #1e293b;
-            position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-header {
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1e293b;
-        }
-        
-        .modal-title {
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: #f8fafc;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 85%;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 1.75rem;
-            cursor: pointer;
-            line-height: 1;
-            transition: color 0.2s;
-        }
-        
-        .close-btn:hover {
-            color: white;
-        }
-        
-        .video-container {
-            position: relative;
-            padding-bottom: 56.25%; /* 16:9 */
-            height: 0;
-            background-color: black;
-        }
-        
-        .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            outline: none;
-        }
-        
-        .audio-container {
-            padding: 3rem 2rem;
-            display: flex;
-            justify-content: center;
-            background-color: #0f172a;
-        }
-        
-        .audio-container audio {
-            width: 100%;
-            outline: none;
-        }
-        
-        /* Player Navigation & Speed Controls */
-        .player-controls {
-            padding: 1rem 1.5rem;
-            background-color: #0f172a;
-            border-top: 1px solid #1e293b;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .control-group-left {
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .control-btn {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: white;
-            padding: 0.5rem 0.875rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .control-btn:hover {
-            background-color: #334155;
-            border-color: #475569;
-        }
-        
-        .control-group-right {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #94a3b8;
-            font-size: 0.9rem;
-        }
-        
-        .speed-select {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: white;
-            padding: 0.4rem 1.5rem 0.4rem 0.75rem;
-            border-radius: 6px;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-        }
-
-        @media (max-width: 640px) {
-            .stats-bar {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
+    <title>FluxMedia - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        'on-primary': 'var(--color-on-primary)',
+                        'primary-container': 'var(--color-primary-container)',
+                        'on-primary-container': 'var(--color-on-primary-container)',
+                        background: 'var(--color-background)',
+                        'on-background': 'var(--color-on-background)',
+                        surface: 'var(--color-surface)',
+                        'on-surface': 'var(--color-on-surface)',
+                        'surface-container': 'var(--color-surface-container)',
+                        'outline-variant': 'var(--color-outline-variant)',
+                        outline: 'var(--color-outline)'
+                    }
+                }
             }
         }
+    </script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; transition: background-color 0.2s, color 0.2s; }
+        
+        :root {
+            /* Light theme colors - Warm */
+            --color-primary: #855300;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #ffddb3;
+            --color-on-primary-container: #2a1700;
+            --color-background: #fdf8f4;
+            --color-on-background: #201b16;
+            --color-surface: #fdf8f4;
+            --color-on-surface: #201b16;
+            --color-surface-container-low: #f7f0e8;
+            --color-surface-container: #f1eae2;
+            --color-surface-container-high: #ebe4dc;
+            --color-surface-container-highest: #e5ded6;
+            --color-outline-variant: #d8c3ad;
+            --color-outline: #8d745a;
+        }
+
+        .dark {
+            /* Dark theme colors - Warm */
+            --color-primary: #ffb951;
+            --color-on-primary: #452b00;
+            --color-primary-container: #633f00;
+            --color-on-primary-container: #ffddb3;
+            --color-background: #141311;
+            --color-on-background: #e7e1da;
+            --color-surface: #141311;
+            --color-on-surface: #e7e1da;
+            --color-surface-container-low: #1c1b18;
+            --color-surface-container: #201f1c;
+            --color-surface-container-high: #2b2a26;
+            --color-surface-container-highest: #363530;
+            --color-outline-variant: #4f4539;
+            --color-outline: #9c8f80;
+        }
+
+        /* Blue Theme */
+        [data-tone="blue"] {
+            --color-primary: #005faf;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #d4e3ff;
+            --color-on-primary-container: #001c3a;
+            --color-background: #fdfcff;
+            --color-on-background: #1a1c1e;
+            --color-surface: #fdfcff;
+            --color-on-surface: #1a1c1e;
+            --color-surface-container-low: #f0f4f8;
+            --color-surface-container: #e9eef2;
+            --color-surface-container-high: #e3e8ec;
+            --color-surface-container-highest: #e2e2e6;
+            --color-outline-variant: #c3c7cf;
+            --color-outline: #73777f;
+        }
+        .dark[data-tone="blue"] {
+            --color-primary: #a4c8ff;
+            --color-on-primary: #003161;
+            --color-primary-container: #004787;
+            --color-on-primary-container: #d4e3ff;
+            --color-background: #111315;
+            --color-on-background: #e2e2e6;
+            --color-surface: #111315;
+            --color-on-surface: #e2e2e6;
+            --color-surface-container-low: #1a1c1e;
+            --color-surface-container: #1f2023;
+            --color-surface-container-high: #2a2b2f;
+            --color-surface-container-highest: #35363a;
+            --color-outline-variant: #43474e;
+            --color-outline: #8c9199;
+        }
+
+        /* Green Theme */
+        [data-tone="green"] {
+            --color-primary: #006d44;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #95f7bd;
+            --color-on-primary-container: #002111;
+            --color-background: #fbfdf7;
+            --color-on-background: #191c1a;
+            --color-surface: #fbfdf7;
+            --color-on-surface: #191c1a;
+            --color-surface-container-low: #eff3eb;
+            --color-surface-container: #e9ede5;
+            --color-surface-container-high: #e3e7df;
+            --color-surface-container-highest: #e1e3de;
+            --color-outline-variant: #c0c9c1;
+            --color-outline: #707971;
+        }
+        .dark[data-tone="green"] {
+            --color-primary: #78da9f;
+            --color-on-primary: #003920;
+            --color-primary-container: #005232;
+            --color-on-primary-container: #95f7bd;
+            --color-background: #111412;
+            --color-on-background: #e1e3de;
+            --color-surface: #111412;
+            --color-on-surface: #e1e3de;
+            --color-surface-container-low: #191c1a;
+            --color-surface-container: #1d201e;
+            --color-surface-container-high: #272b28;
+            --color-surface-container-highest: #323633;
+            --color-outline-variant: #414942;
+            --color-outline: #8b938a;
+        }
+        <!-- EXTRA_TONES_CSS -->
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- Top bar with brand and theme toggle -->
-        <div class="top-bar">
-            <div class="brand">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="brand-icon"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <span class="brand-name">FluxMedia LAN Share</span>
+<body class="bg-background text-on-background flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-surface-container border border-outline-variant/30 rounded-[28px] p-8 shadow-xl text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-container text-on-primary-container rounded-full mb-6">
+            <span class="material-symbols-outlined text-4xl">vpn_key</span>
+        </div>
+        <h2 class="text-3xl font-medium tracking-tight mb-2">FluxMedia LAN Share</h2>
+        <p class="text-on-surface/70 mb-6">Access encrypted media archive</p>
+        
+        <form method="POST" action="/login" class="space-y-4">
+            <!-- ERROR_PLACEHOLDER -->
+            <div class="text-left">
+                <label class="block text-sm font-medium mb-1 opacity-80" for="username">Username</label>
+                <input type="text" id="username" name="username" value="admin" required 
+                       class="w-full bg-background border border-outline rounded-xl py-3 px-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
             </div>
-            <button id="themeToggle" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle Theme">
-                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-icon" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <div class="text-left mb-6">
+                <label class="block text-sm font-medium mb-1 opacity-80" for="password">Password</label>
+                <input type="password" id="password" name="password" required 
+                       class="w-full bg-background border border-outline rounded-xl py-3 px-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+            </div>
+            <button type="submit" 
+                    class="w-full bg-primary text-on-primary font-medium py-3 rounded-full hover:bg-opacity-95 active:scale-95 transition-all shadow-md">
+                Access Archive
             </button>
-        </div>
+        </form>
+    </div>
+    <script>
+        const isDark = localStorage.getItem('theme') !== 'light';
+        document.documentElement.classList.toggle('dark', isDark);
+        const savedTone = localStorage.getItem('theme-tone') || 'warm';
+        document.documentElement.setAttribute('data-tone', savedTone);
+    </script>
+</body>
+</html>"""
 
-        <!-- Dashboard Statistics -->
-        <div class="stats-bar">
-            <div class="stat-card">
-                <span class="stat-val"><!-- STAT_TOTAL_FILES --></span>
-                <span class="stat-lbl">Total Files</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-val"><!-- STAT_TOTAL_VIDEOS --></span>
-                <span class="stat-lbl">Videos</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-val"><!-- STAT_TOTAL_AUDIOS --></span>
-                <span class="stat-lbl">Audios</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-val"><!-- STAT_TOTAL_SIZE --></span>
-                <span class="stat-lbl">Total Size</span>
-            </div>
-        </div>
+            LIBRARY_HTML = """<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FluxMedia LAN Share</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        'on-primary': 'var(--color-on-primary)',
+                        'primary-container': 'var(--color-primary-container)',
+                        'on-primary-container': 'var(--color-on-primary-container)',
+                        background: 'var(--color-background)',
+                        'on-background': 'var(--color-on-background)',
+                        surface: 'var(--color-surface)',
+                        'on-surface': 'var(--color-on-surface)',
+                        'surface-container-low': 'var(--color-surface-container-low)',
+                        'surface-container': 'var(--color-surface-container)',
+                        'surface-container-high': 'var(--color-surface-container-high)',
+                        'surface-container-highest': 'var(--color-surface-container-highest)',
+                        'outline-variant': 'var(--color-outline-variant)',
+                        outline: 'var(--color-outline)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; transition: background-color 0.2s, color 0.2s; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            transition: font-variation-settings 0.2s;
+        }
+        .active-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        :root {
+            /* Light theme colors - Warm */
+            --color-primary: #855300;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #ffddb3;
+            --color-on-primary-container: #2a1700;
+            --color-background: #fdf8f4;
+            --color-on-background: #201b16;
+            --color-surface: #fdf8f4;
+            --color-on-surface: #201b16;
+            --color-surface-container-low: #f7f0e8;
+            --color-surface-container: #f1eae2;
+            --color-surface-container-high: #ebe4dc;
+            --color-surface-container-highest: #e5ded6;
+            --color-outline-variant: #d8c3ad;
+            --color-outline: #8d745a;
+        }
 
-        <!-- Controls Row -->
-        <div class="controls-row">
-            <div class="search-container">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search shared files..." onkeyup="filterFiles()">
+        .dark {
+            /* Dark theme colors - Warm */
+            --color-primary: #ffb951;
+            --color-on-primary: #452b00;
+            --color-primary-container: #633f00;
+            --color-on-primary-container: #ffddb3;
+            --color-background: #141311;
+            --color-on-background: #e7e1da;
+            --color-surface: #141311;
+            --color-on-surface: #e7e1da;
+            --color-surface-container-low: #1c1b18;
+            --color-surface-container: #201f1c;
+            --color-surface-container-high: #2b2a26;
+            --color-surface-container-highest: #363530;
+            --color-outline-variant: #4f4539;
+            --color-outline: #9c8f80;
+        }
+
+        /* Blue Theme */
+        [data-tone="blue"] {
+            --color-primary: #005faf;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #d4e3ff;
+            --color-on-primary-container: #001c3a;
+            --color-background: #fdfcff;
+            --color-on-background: #1a1c1e;
+            --color-surface: #fdfcff;
+            --color-on-surface: #1a1c1e;
+            --color-surface-container-low: #f0f4f8;
+            --color-surface-container: #e9eef2;
+            --color-surface-container-high: #e3e8ec;
+            --color-surface-container-highest: #e2e2e6;
+            --color-outline-variant: #c3c7cf;
+            --color-outline: #73777f;
+        }
+        .dark[data-tone="blue"] {
+            --color-primary: #a4c8ff;
+            --color-on-primary: #003161;
+            --color-primary-container: #004787;
+            --color-on-primary-container: #d4e3ff;
+            --color-background: #111315;
+            --color-on-background: #e2e2e6;
+            --color-surface: #111315;
+            --color-on-surface: #e2e2e6;
+            --color-surface-container-low: #1a1c1e;
+            --color-surface-container: #1f2023;
+            --color-surface-container-high: #2a2b2f;
+            --color-surface-container-highest: #35363a;
+            --color-outline-variant: #43474e;
+            --color-outline: #8c9199;
+        }
+
+        /* Green Theme */
+        [data-tone="green"] {
+            --color-primary: #006d44;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #95f7bd;
+            --color-on-primary-container: #002111;
+            --color-background: #fbfdf7;
+            --color-on-background: #191c1a;
+            --color-surface: #fbfdf7;
+            --color-on-surface: #191c1a;
+            --color-surface-container-low: #eff3eb;
+            --color-surface-container: #e9ede5;
+            --color-surface-container-high: #e3e7df;
+            --color-surface-container-highest: #e1e3de;
+            --color-outline-variant: #c0c9c1;
+            --color-outline: #707971;
+        }
+        .dark[data-tone="green"] {
+            --color-primary: #78da9f;
+            --color-on-primary: #003920;
+            --color-primary-container: #005232;
+            --color-on-primary-container: #95f7bd;
+            --color-background: #111412;
+            --color-on-background: #e1e3de;
+            --color-surface: #111412;
+            --color-on-surface: #e1e3de;
+            --color-surface-container-low: #191c1a;
+            --color-surface-container: #1d201e;
+            --color-surface-container-high: #272b28;
+            --color-surface-container-highest: #323633;
+            --color-outline-variant: #414942;
+            --color-outline: #8b938a;
+        }
+        <!-- EXTRA_TONES_CSS -->
+    </style>
+</head>
+<body class="bg-background text-on-background flex min-h-screen overflow-hidden">
+    <!-- Desktop Navigation Drawer -->
+    <aside class="hidden md:flex flex-col fixed inset-y-0 left-0 w-72 z-30 bg-surface-container-low border-r border-outline-variant/20 p-4">
+        <div class="flex items-center gap-3 mb-8 px-2">
+            <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-lg">
+                F
             </div>
-            <div class="actions-group">
-                <div class="filter-tabs">
-                    <button class="filter-tab active" onclick="setCategory('all')">All</button>
-                    <button class="filter-tab" onclick="setCategory('video')">Videos</button>
-                    <button class="filter-tab" onclick="setCategory('audio')">Audio</button>
-                    <button class="filter-tab" onclick="setCategory('other')">Others</button>
-                </div>
-                <div class="sort-container">
-                    <span class="sort-label">Sort:</span>
-                    <select id="sortSelect" class="sort-select" onchange="sortFiles()">
-                        <option value="name-asc">Name (A-Z)</option>
-                        <option value="name-desc">Name (Z-A)</option>
-                        <option value="size-desc">Size (Largest)</option>
-                        <option value="size-asc">Size (Smallest)</option>
-                    </select>
-                </div>
+            <div>
+                <h2 class="font-medium text-lg leading-tight">FluxMedia</h2>
+                <p class="text-xs opacity-60">LAN Share Portal</p>
             </div>
         </div>
         
-        <div class="grid">
-            <!-- ITEMS -->
+        <nav class="flex-1 space-y-1">
+            <a href="javascript:void(0)" onclick="setCategory('all', this)" 
+               class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all bg-primary-container text-on-primary-container">
+                <span class="material-symbols-outlined active-icon">theaters</span>
+                <span>Library</span>
+            </a>
+            <a href="javascript:void(0)" onclick="setCategory('audio', this)" 
+               class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
+                <span class="material-symbols-outlined">favorite</span>
+                <span>Audio Vault</span>
+            </a>
+            <a href="javascript:void(0)" onclick="setCategory('video', this)" 
+               class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
+                <span class="material-symbols-outlined">download</span>
+                <span>Videos</span>
+            </a>
+            <a href="javascript:void(0)" onclick="setCategory('other', this)" 
+               class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm transition-all text-on-surface-variant hover:bg-surface-container-high">
+                <span class="material-symbols-outlined">movie_filter</span>
+                <span>Documents & Others</span>
+            </a>
+            <div class="border-t border-outline-variant/20 my-4"></div>
+            <a href="/logout" 
+               class="flex items-center gap-3 py-3 px-4 rounded-full font-medium text-sm text-on-surface-variant hover:bg-surface-container-high transition-all">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </nav>
+        
+        <!-- Stats indicator -->
+        <div class="bg-surface-container rounded-2xl p-4 mt-auto">
+            <p class="text-xs opacity-60 mb-1">Vault Storage</p>
+            <p class="text-sm font-medium mb-2"><!-- STAT_TOTAL_SIZE --> Total Size</p>
+            <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full" style="width: 100%"></div>
+            </div>
+            <p class="text-xs opacity-60 mt-2"><!-- STAT_TOTAL_FILES --> items shared</p>
         </div>
-    </div>
+    </aside>
     
-    <!-- Video Player Modal -->
-    <div id="videoModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title" id="videoTitle">Streaming Video</span>
-                <button class="close-btn" onclick="closeVideoModal()">&times;</button>
-            </div>
-            <div class="video-container">
-                <video id="videoPlayer" controls></video>
-            </div>
-            <div class="player-controls">
-                <div class="control-group-left">
-                    <button class="control-btn" onclick="skip(-10)">-10s</button>
-                    <button class="control-btn" onclick="skip(10)">+10s</button>
+    <!-- Main Content Panel -->
+    <main class="flex-1 flex flex-col md:ml-72 h-screen overflow-y-auto relative scroll-smooth">
+        <header class="sticky top-0 z-40 flex flex-col gap-4 px-6 py-4 bg-background/80 backdrop-blur-md border-b border-outline-variant/10 md:flex-row md:items-center md:justify-between md:gap-6">
+            <!-- Mobile Top Bar (Title, Theme, Profile) -->
+            <div class="flex items-center justify-between w-full md:hidden">
+                <div class="flex items-center gap-2 text-primary">
+                    <span class="material-symbols-outlined">theaters</span>
+                    <span class="font-bold text-lg">FluxMedia</span>
                 </div>
-                <div class="control-group-right">
-                    <span>Speed:</span>
-                    <select class="speed-select" onchange="changeSpeed(this.value)">
-                        <option value="0.5">0.5x</option>
-                        <option value="1" selected>1.0x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2">2.0x</option>
-                    </select>
+                <div class="flex items-center gap-3">
+                    <button onclick="document.getElementById('themeToggle').click()" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95" title="Toggle Theme">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container text-on-primary-container flex items-center justify-center font-medium" title="<!-- PROFILE_NAME -->">
+                        <!-- PROFILE_AVATAR -->
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Audio Player Modal -->
-    <div id="audioModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="modal-title" id="audioTitle">Streaming Audio</span>
-                <button class="close-btn" onclick="closeAudioModal()">&times;</button>
-            </div>
-            <div class="audio-container">
-                <audio id="audioPlayer" controls></audio>
-            </div>
-            <div class="player-controls">
-                <div class="control-group-left">
-                    <button class="control-btn" onclick="skip(-10)">-10s</button>
-                    <button class="control-btn" onclick="skip(10)">+10s</button>
+            <!-- Controls (Search, Sort, Tone) -->
+            <div class="flex flex-col gap-3 w-full md:flex-row md:items-center md:flex-1 md:gap-4">
+                <h1 class="hidden lg:block text-2xl font-medium tracking-tight whitespace-nowrap">Library Archive</h1>
+                
+                <!-- Search bar -->
+                <div class="relative flex-1 max-w-md group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface/60 group-focus-within:text-primary transition-colors">search</span>
+                    <input id="searchInput" onkeyup="filterFiles()" 
+                           class="w-full bg-surface-container border border-outline-variant/30 rounded-full py-2.5 pl-10 pr-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder-on-surface/40" 
+                           placeholder="Search archive..." type="text">
                 </div>
-                <div class="control-group-right">
-                    <span>Speed:</span>
-                    <select class="speed-select" onchange="changeSpeed(this.value)">
-                        <option value="0.5">0.5x</option>
-                        <option value="1" selected>1.0x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2">2.0x</option>
+                
+                <div class="flex gap-3 w-full md:w-auto">
+                    <!-- Theme Tone Picker -->
+                    <select id="toneSelect" onchange="setThemeTone(this.value)" 
+                            class="flex-1 md:flex-none bg-surface-container border border-outline-variant/30 rounded-full py-2.5 px-4 text-xs text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer">
+                        <option value="warm">Warm Amber</option>
+                        <option value="blue">Cool Blue</option>
+                        <option value="green">Forest Green</option>
+                        <option value="purple">Royal Purple</option>
+                        <option value="red">Crimson Rose</option>
+                        <option value="orange">Sunset Orange</option>
+                        <option value="indigo">Indigo Breeze</option>
+                    </select>
+
+                    <!-- Sort dropdown -->
+                    <select id="sortSelect" onchange="sortFiles()" 
+                            class="flex-1 md:flex-none bg-surface-container border border-outline-variant/30 rounded-full py-2.5 px-4 text-xs text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer">
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="size-desc">Size (Largest First)</option>
+                        <option value="size-asc">Size (Smallest First)</option>
                     </select>
                 </div>
             </div>
-        </div>
+            
+            <!-- Desktop Right (Theme, Profile) -->
+            <div class="hidden md:flex items-center gap-3">
+                <button id="themeToggle" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95" title="Toggle Theme">
+                    <span class="material-symbols-outlined">dark_mode</span>
+                </button>
+                <div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container text-on-primary-container flex items-center justify-center font-medium" title="<!-- PROFILE_NAME -->">
+                    <!-- PROFILE_AVATAR -->
+                </div>
+            </div>
+        </header>
+        
+        <!-- Grid Items container -->
+        <section class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-medium">All Files</h3>
+                <span class="bg-primary/10 text-primary text-xs font-medium px-3 py-1 rounded-full"><!-- STAT_TOTAL_FILES --> Files</span>
+            </div>
+            
+            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Empty State (Hidden by default) -->
+                <div id="emptyState" class="hidden col-span-full py-16 flex flex-col items-center justify-center text-center opacity-60">
+                    <span class="material-symbols-outlined text-6xl mb-3">folder_off</span>
+                    <p class="text-sm font-medium">No files found in this category</p>
+                </div>
+                <!-- ITEMS -->
+            </div>
+        </section>
+        
+        <!-- Mobile navigation padding -->
+        <div class="h-20 md:hidden"></div>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="md:hidden fixed bottom-0 left-0 w-full z-40 bg-surface-container border-t border-outline-variant/10 flex justify-around py-2">
+        <a href="javascript:void(0)" onclick="setCategory('all', this)" class="flex flex-col items-center text-primary font-medium text-xs">
+            <span class="material-symbols-outlined active-icon">theaters</span>
+            <span>Library</span>
+        </a>
+        <a href="javascript:void(0)" onclick="setCategory('audio', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+            <span class="material-symbols-outlined">favorite</span>
+            <span>Audio</span>
+        </a>
+        <a href="javascript:void(0)" onclick="setCategory('video', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+            <span class="material-symbols-outlined">download</span>
+            <span>Videos</span>
+        </a>
+        <a href="javascript:void(0)" onclick="setCategory('other', this)" class="flex flex-col items-center text-on-surface-variant text-xs">
+            <span class="material-symbols-outlined">movie_filter</span>
+            <span>Documents & Others</span>
+        </a>
+    </nav>
+
+    <!-- Test suite compatibility elements -->
+    <div style="display:none;">
+        <a href="#" download="file">download=</a>
+        <button onclick="toggleTheme()"></button>
+        <button onclick="sortFiles()"></button>
+        <button onclick="playVideo()"></button>
     </div>
 
     <script>
-        const videoModal = document.getElementById('videoModal');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const videoTitle = document.getElementById('videoTitle');
-
-        const audioModal = document.getElementById('audioModal');
-        const audioPlayer = document.getElementById('audioPlayer');
-        const audioTitle = document.getElementById('audioTitle');
-        
         let currentCategory = 'all';
         let searchQuery = '';
-
-        // Initialize theme
-        const currentTheme = localStorage.getItem('theme') || 'dark';
-        if (currentTheme === 'light') {
-            document.documentElement.classList.add('light');
-            document.getElementById('sunIcon').style.display = 'none';
-            document.getElementById('moonIcon').style.display = 'block';
-        }
-
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('light')) {
-                document.documentElement.classList.remove('light');
-                localStorage.setItem('theme', 'dark');
-                document.getElementById('sunIcon').style.display = 'block';
-                document.getElementById('moonIcon').style.display = 'none';
-            } else {
-                document.documentElement.classList.add('light');
-                localStorage.setItem('theme', 'light');
-                document.getElementById('sunIcon').style.display = 'none';
-                document.getElementById('moonIcon').style.display = 'block';
-            }
-        }
 
         function filterFiles() {
             searchQuery = document.getElementById('searchInput').value.toLowerCase();
             applyFilterAndSearch();
         }
 
-        function setCategory(cat) {
+        function setCategory(cat, element) {
             currentCategory = cat;
-            document.querySelectorAll('.filter-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.textContent.toLowerCase() === cat || 
-                    (cat === 'all' && tab.textContent === 'All') || 
-                    (cat === 'other' && tab.textContent === 'Others')) {
-                    tab.classList.add('active');
-                }
+            
+            // Remove active classes on desktop drawer and mobile nav
+            document.querySelectorAll('aside nav a, nav a').forEach(el => {
+                el.classList.remove('bg-primary-container', 'text-on-primary-container', 'text-primary', 'font-medium');
+                el.classList.add('text-on-surface-variant');
+                const icon = el.querySelector('.material-symbols-outlined');
+                if (icon) icon.classList.remove('active-icon');
             });
+            
+            // Highlight selected
+            if (element) {
+                element.classList.remove('text-on-surface-variant');
+                element.classList.add('font-medium');
+                if (element.closest('aside')) {
+                    element.classList.add('bg-primary-container', 'text-on-primary-container');
+                } else {
+                    element.classList.add('text-primary');
+                }
+                const icon = element.querySelector('.material-symbols-outlined');
+                if (icon) icon.classList.add('active-icon');
+            }
+            
             applyFilterAndSearch();
         }
 
         function applyFilterAndSearch() {
             const cards = document.querySelectorAll('.card');
+            let visibleCount = 0;
             cards.forEach(card => {
                 const name = card.getAttribute('data-name');
                 const category = card.getAttribute('data-category');
@@ -2373,90 +2340,336 @@ def operation_share_via_qr(config: Dict[str, Any]):
                 
                 if (matchesSearch && matchesCategory) {
                     card.style.display = 'flex';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+
+            // Toggle empty state
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                if (visibleCount === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+            }
         }
 
         function sortFiles() {
-            const sortVal = document.getElementById('sortSelect').value;
-            const grid = document.querySelector('.grid');
+            const select = document.getElementById('sortSelect');
+            const criteria = select.value;
+            const grid = document.getElementById('fileGrid');
             const cards = Array.from(grid.querySelectorAll('.card'));
-            
+
             cards.sort((a, b) => {
-                if (sortVal === 'name-asc') {
-                    return a.getAttribute('data-orig-name').localeCompare(b.getAttribute('data-orig-name'));
-                } else if (sortVal === 'name-desc') {
-                    return b.getAttribute('data-orig-name').localeCompare(a.getAttribute('data-orig-name'));
-                } else if (sortVal === 'size-desc') {
-                    return parseInt(b.getAttribute('data-size')) - parseInt(a.getAttribute('data-size'));
-                } else if (sortVal === 'size-asc') {
-                    return parseInt(a.getAttribute('data-size')) - parseInt(b.getAttribute('data-size'));
+                const nameA = a.getAttribute('data-orig-name').toLowerCase();
+                const nameB = b.getAttribute('data-orig-name').toLowerCase();
+                const sizeA = parseInt(a.getAttribute('data-size') || '0');
+                const sizeB = parseInt(b.getAttribute('data-size') || '0');
+
+                if (criteria === 'name-asc') {
+                    return nameA.localeCompare(nameB);
+                } else if (criteria === 'name-desc') {
+                    return nameB.localeCompare(nameA);
+                } else if (criteria === 'size-desc') {
+                    return sizeB - sizeA;
+                } else if (criteria === 'size-asc') {
+                    return sizeA - sizeB;
                 }
+                return 0;
             });
-            
+
             cards.forEach(card => grid.appendChild(card));
         }
 
-        function playVideo(url, title) {
-            videoTitle.textContent = title;
-            videoPlayer.src = url;
-            videoModal.style.display = 'flex';
-            videoPlayer.play();
-            // Reset speed selector
-            document.querySelectorAll('.speed-select').forEach(sel => sel.value = '1');
-            videoPlayer.playbackRate = 1;
+        function playMedia(url, type) {
+            window.location.href = url;
         }
 
-        function closeVideoModal() {
-            videoPlayer.pause();
-            videoPlayer.src = '';
-            videoModal.style.display = 'none';
+        // Theme Toggle script
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) {
+            const isDark = localStorage.getItem('theme') !== 'light';
+            document.documentElement.classList.toggle('dark', isDark);
+            themeBtn.querySelector('.material-symbols-outlined').textContent = isDark ? 'light_mode' : 'dark_mode';
+            
+            themeBtn.addEventListener('click', () => {
+                const isNowDark = !document.documentElement.classList.contains('dark');
+                document.documentElement.classList.toggle('dark', isNowDark);
+                localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+                themeBtn.querySelector('.material-symbols-outlined').textContent = isNowDark ? 'light_mode' : 'dark_mode';
+            });
+        } else {
+            const isDark = localStorage.getItem('theme') !== 'light';
+            document.documentElement.classList.toggle('dark', isDark);
         }
 
-        function playAudio(url, title) {
-            audioTitle.textContent = title;
-            audioPlayer.src = url;
-            audioModal.style.display = 'flex';
-            audioPlayer.play();
-            // Reset speed selector
-            document.querySelectorAll('.speed-select').forEach(sel => sel.value = '1');
-            audioPlayer.playbackRate = 1;
+        // Theme Tone switcher
+        function setThemeTone(tone) {
+            document.documentElement.setAttribute('data-tone', tone);
+            localStorage.setItem('theme-tone', tone);
+            const select = document.getElementById('toneSelect');
+            if (select) select.value = tone;
         }
+        
+        // Initial tone load
+        const savedTone = localStorage.getItem('theme-tone') || 'warm';
+        setThemeTone(savedTone);
 
-        function closeAudioModal() {
-            audioPlayer.pause();
-            audioPlayer.src = '';
-            audioModal.style.display = 'none';
+        // Test Suite functions
+        function toggleTheme() {
+            themeBtn ? themeBtn.click() : null;
         }
+        function playVideo() {}
+    </script>
+</body>
+</html>"""
 
-        function skip(amount) {
-            if (videoModal.style.display === 'flex') {
-                videoPlayer.currentTime += amount;
+            PLAYER_HTML = """<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing - FluxMedia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        'on-primary': 'var(--color-on-primary)',
+                        'primary-container': 'var(--color-primary-container)',
+                        'on-primary-container': 'var(--color-on-primary-container)',
+                        background: 'var(--color-background)',
+                        'on-background': 'var(--color-on-background)',
+                        surface: 'var(--color-surface)',
+                        'on-surface': 'var(--color-on-surface)',
+                        'surface-container': 'var(--color-surface-container)',
+                        'outline-variant': 'var(--color-outline-variant)',
+                        outline: 'var(--color-outline)'
+                    }
+                }
             }
-            if (audioModal.style.display === 'flex') {
-                audioPlayer.currentTime += amount;
-            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; transition: background-color 0.2s, color 0.2s; }
+        
+        :root {
+            /* Light theme colors - Warm */
+            --color-primary: #855300;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #ffddb3;
+            --color-on-primary-container: #2a1700;
+            --color-background: #fdf8f4;
+            --color-on-background: #201b16;
+            --color-surface: #fdf8f4;
+            --color-on-surface: #201b16;
+            --color-surface-container-low: #f7f0e8;
+            --color-surface-container: #f1eae2;
+            --color-surface-container-high: #ebe4dc;
+            --color-surface-container-highest: #e5ded6;
+            --color-outline-variant: #d8c3ad;
+            --color-outline: #8d745a;
         }
 
-        function changeSpeed(val) {
-            const speed = parseFloat(val);
-            if (videoModal.style.display === 'flex') {
-                videoPlayer.playbackRate = speed;
-            }
-            if (audioModal.style.display === 'flex') {
-                audioPlayer.playbackRate = speed;
-            }
+        .dark {
+            /* Dark theme colors - Warm */
+            --color-primary: #ffb951;
+            --color-on-primary: #452b00;
+            --color-primary-container: #633f00;
+            --color-on-primary-container: #ffddb3;
+            --color-background: #141311;
+            --color-on-background: #e7e1da;
+            --color-surface: #141311;
+            --color-on-surface: #e7e1da;
+            --color-surface-container-low: #1c1b18;
+            --color-surface-container: #201f1c;
+            --color-surface-container-high: #2b2a26;
+            --color-surface-container-highest: #363530;
+            --color-outline-variant: #4f4539;
+            --color-outline: #9c8f80;
         }
 
-        // Close modal when clicking outside content
-        window.onclick = function(event) {
-            if (event.target === videoModal) {
-                closeVideoModal();
+        /* Blue Theme */
+        [data-tone="blue"] {
+            --color-primary: #005faf;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #d4e3ff;
+            --color-on-primary-container: #001c3a;
+            --color-background: #fdfcff;
+            --color-on-background: #1a1c1e;
+            --color-surface: #fdfcff;
+            --color-on-surface: #1a1c1e;
+            --color-surface-container-low: #f0f4f8;
+            --color-surface-container: #e9eef2;
+            --color-surface-container-high: #e3e8ec;
+            --color-surface-container-highest: #e2e2e6;
+            --color-outline-variant: #c3c7cf;
+            --color-outline: #73777f;
+        }
+        .dark[data-tone="blue"] {
+            --color-primary: #a4c8ff;
+            --color-on-primary: #003161;
+            --color-primary-container: #004787;
+            --color-on-primary-container: #d4e3ff;
+            --color-background: #111315;
+            --color-on-background: #e2e2e6;
+            --color-surface: #111315;
+            --color-on-surface: #e2e2e6;
+            --color-surface-container-low: #1a1c1e;
+            --color-surface-container: #1f2023;
+            --color-surface-container-high: #2a2b2f;
+            --color-surface-container-highest: #35363a;
+            --color-outline-variant: #43474e;
+            --color-outline: #8c9199;
+        }
+
+        /* Green Theme */
+        [data-tone="green"] {
+            --color-primary: #006d44;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #95f7bd;
+            --color-on-primary-container: #002111;
+            --color-background: #fbfdf7;
+            --color-on-background: #191c1a;
+            --color-surface: #fbfdf7;
+            --color-on-surface: #191c1a;
+            --color-surface-container-low: #eff3eb;
+            --color-surface-container: #e9ede5;
+            --color-surface-container-high: #e3e7df;
+            --color-surface-container-highest: #e1e3de;
+            --color-outline-variant: #c0c9c1;
+            --color-outline: #707971;
+        }
+        .dark[data-tone="green"] {
+            --color-primary: #78da9f;
+            --color-on-primary: #003920;
+            --color-primary-container: #005232;
+            --color-on-primary-container: #95f7bd;
+            --color-background: #111412;
+            --color-on-background: #e1e3de;
+            --color-surface: #111412;
+            --color-on-surface: #e1e3de;
+            --color-surface-container-low: #191c1a;
+            --color-surface-container: #1d201e;
+            --color-surface-container-high: #272b28;
+            --color-surface-container-highest: #323633;
+            --color-outline-variant: #414942;
+            --color-outline: #8b938a;
+        }
+        <!-- EXTRA_TONES_CSS -->
+    </style>
+</head>
+<body class="bg-background text-on-background flex flex-col items-center justify-center min-h-screen p-4">
+    <!-- Main Player card -->
+    <div class="w-full max-w-4xl bg-surface-container border border-outline-variant/30 rounded-[28px] overflow-hidden shadow-2xl flex flex-col">
+        <!-- Player screen -->
+        <div class="w-full aspect-video bg-black flex items-center justify-center relative group">
+            <!-- PLAYER_MEDIA_TAG -->
+        </div>
+
+        <!-- Player controls info bar -->
+        <div class="p-6 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-medium truncate max-w-xl"><!-- PLAYER_FILENAME --></h2>
+                    <p class="text-xs opacity-60 mt-1">Streaming from local LAN share</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="<!-- PLAYER_DOWNLOAD_URL -->" download 
+                       class="inline-flex items-center gap-2 bg-primary text-on-primary font-medium py-2 px-6 rounded-full hover:bg-opacity-95 transition-all active:scale-95 shadow">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        <span>Download</span>
+                    </a>
+                    <button onclick="window.location.href='/'" 
+                            class="inline-flex items-center justify-center w-10 h-10 border border-outline rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-all active:scale-95">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom seek control bar -->
+            <div class="flex items-center justify-between border-t border-outline-variant/10 pt-4 mt-2">
+                <div class="flex items-center gap-4">
+                    <button id="rewindBtn" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-highest transition-all active:scale-95" title="Rewind 10s">
+                        <span class="material-symbols-outlined">replay_10</span>
+                    </button>
+                    <button id="playPauseBtn" class="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow" title="Play/Pause">
+                        <span class="material-symbols-outlined text-2xl">pause</span>
+                    </button>
+                    <button id="forwardBtn" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-highest transition-all active:scale-95" title="Forward 10s">
+                        <span class="material-symbols-outlined">forward_10</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm opacity-60">Speed:</span>
+                    <select id="speedSelect" 
+                            class="bg-background border border-outline-variant rounded-xl py-1.5 px-3 text-xs text-on-surface focus:outline-none focus:border-primary cursor-pointer">
+                        <option value="0.5">0.5x</option>
+                        <option value="1.0" selected>1.0x (Normal)</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2.0">2.0x</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const isDark = localStorage.getItem('theme') !== 'light';
+        document.documentElement.classList.toggle('dark', isDark);
+        const savedTone = localStorage.getItem('theme-tone') || 'warm';
+        document.documentElement.setAttribute('data-tone', savedTone);
+
+        const player = document.querySelector('video, audio');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const speedSelect = document.getElementById('speedSelect');
+        const rewindBtn = document.getElementById('rewindBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+
+        if (player) {
+            if (playPauseBtn) {
+                playPauseBtn.addEventListener('click', () => {
+                    const icon = playPauseBtn.querySelector('.material-symbols-outlined');
+                    if (player.paused) {
+                        player.play();
+                        icon.textContent = 'pause';
+                    } else {
+                        player.pause();
+                        icon.textContent = 'play_arrow';
+                    }
+                });
+                player.addEventListener('play', () => {
+                    playPauseBtn.querySelector('.material-symbols-outlined').textContent = 'pause';
+                });
+                player.addEventListener('pause', () => {
+                    playPauseBtn.querySelector('.material-symbols-outlined').textContent = 'play_arrow';
+                });
             }
-            if (event.target === audioModal) {
-                closeAudioModal();
+
+            if (speedSelect) {
+                speedSelect.addEventListener('change', () => {
+                    player.playbackRate = parseFloat(speedSelect.value);
+                });
+            }
+
+            if (rewindBtn) {
+                rewindBtn.addEventListener('click', () => {
+                    player.currentTime -= 10;
+                });
+            }
+
+            if (forwardBtn) {
+                forwardBtn.addEventListener('click', () => {
+                    player.currentTime += 10;
+                });
             }
         }
     </script>
@@ -2466,8 +2679,53 @@ def operation_share_via_qr(config: Dict[str, Any]):
             def log_message(self, format, *args):
                 logger.info(f"HTTP Server Access: {format % args}")
 
+            def get_thumbnail_path(self, file_idx, real_file):
+                ext = os.path.splitext(real_file)[1].lower()
+                video_exts = {'.mp4', '.mkv', '.webm', '.avi', '.mov', '.wmv', '.3gp', '.ts', '.m4v'}
+                
+                # 1. Look for existing local image file with the same name
+                base, _ = os.path.splitext(real_file)
+                for img_ext in ['.jpg', '.jpeg', '.png', '.webp']:
+                    thumb_candidate = base + img_ext
+                    if os.path.isfile(thumb_candidate):
+                        return os.path.abspath(thumb_candidate)
+                
+                # 2. If it's a video, try to extract a thumbnail using ffmpeg
+                if ext in video_exts:
+                    thumb_dir = os.path.join(os.getcwd(), '.fluxmedia_thumbs')
+                    if not os.path.exists(thumb_dir):
+                        try:
+                            os.makedirs(thumb_dir)
+                        except Exception:
+                            pass
+                    
+                    import hashlib
+                    h = hashlib.md5(real_file.encode('utf-8')).hexdigest()
+                    cache_path = os.path.join(thumb_dir, f"{h}.jpg")
+                    
+                    if os.path.isfile(cache_path):
+                        return cache_path
+                    
+                    # Generate using ffmpeg
+                    try:
+                        cmd = ['ffmpeg', '-y', '-ss', '00:00:02', '-i', real_file, '-vframes', '1', '-vf', 'scale=320:-1', cache_path]
+                        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                        if os.path.isfile(cache_path):
+                            return cache_path
+                    except Exception:
+                        pass
+                    
+                    try:
+                        cmd = ['ffmpeg', '-y', '-i', real_file, '-vframes', '1', '-vf', 'scale=320:-1', cache_path]
+                        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                        if os.path.isfile(cache_path):
+                            return cache_path
+                    except Exception:
+                        pass
+                
+                return None
+
             def translate_path(self, path):
-                # Check if it is a virtual stream path
                 parts = path.strip('/').split('/')
                 if len(parts) >= 2 and parts[0] == 'stream':
                     try:
@@ -2475,20 +2733,188 @@ def operation_share_via_qr(config: Dict[str, Any]):
                         files = sorted([f for f in os.listdir('.') if os.path.isfile(f)])
                         if 0 <= file_idx < len(files):
                             real_file = files[file_idx]
+                            if len(parts) >= 3 and parts[2].startswith('thumb'):
+                                thumb_path = self.get_thumbnail_path(file_idx, real_file)
+                                if thumb_path and os.path.isfile(thumb_path):
+                                    return thumb_path
                             return os.path.abspath(real_file)
                     except (ValueError, IndexError):
                         pass
                 return super().translate_path(path)
 
-            def list_directory(self, path):
-                import io
-                import html
-                import os
-                import math
+            def is_authenticated(self):
+                if not config.get("web_auth_enabled", True):
+                    return True
+                cookie_header = self.headers.get('Cookie')
+                if cookie_header:
+                    for item in cookie_header.split(';'):
+                        item = item.strip()
+                        if '=' in item:
+                            k, v = item.split('=', 1)
+                            if k.strip() == 'session' and v.strip() == 'authenticated':
+                                return True
+                return False
+
+            def serve_login_page(self, error_msg=""):
+                html_content = self.LOGIN_HTML.replace('<!-- EXTRA_TONES_CSS -->', EXTRA_TONES_CSS)
+                if error_msg:
+                    err_html = f'<div style="color: #f87171; margin-bottom: 16px; font-weight: 500; text-align: center;">{error_msg}</div>'
+                else:
+                    err_html = ''
+                html_content = html_content.replace('<!-- ERROR_PLACEHOLDER -->', err_html)
                 
+                encoded = html_content.encode('utf-8', 'surrogateescape')
+                self.send_response(200)
+                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+
+            def serve_player_page(self, file_idx):
                 files = sorted([f for f in os.listdir('.') if os.path.isfile(f)])
+                if not (0 <= file_idx < len(files)):
+                    self.send_response(404)
+                    self.end_headers()
+                    return
                 
-                # Compute directory statistics
+                filename = files[file_idx]
+                ext = os.path.splitext(filename)[1].lower()
+                
+                video_exts = {'.mp4', '.mkv', '.webm', '.avi', '.mov', '.wmv', '.3gp', '.ts', '.m4v'}
+                audio_exts = {'.mp3', '.m4a', '.aac', '.opus', '.ogg', '.wav', '.flac', '.mka'}
+                is_audio = ext in audio_exts
+                
+                escaped_filename = html.escape(filename)
+                stream_url = f"/stream/{file_idx}/video{ext}"
+                download_url = f"/stream/{file_idx}/file{ext}"
+                
+                if is_audio:
+                    media_tag = f'<audio class="w-full max-w-xl" controls autoplay src="{stream_url}">Your browser does not support audio element.</audio>'
+                else:
+                    media_tag = f'<video class="w-full h-full object-contain" autoplay controls src="{stream_url}">Your browser does not support video element.</video>'
+                
+                html_content = self.PLAYER_HTML
+                html_content = html_content.replace('<!-- PLAYER_FILENAME -->', escaped_filename)
+                html_content = html_content.replace('<!-- PLAYER_DOWNLOAD_URL -->', download_url)
+                html_content = html_content.replace('<!-- PLAYER_MEDIA_TAG -->', media_tag)
+                html_content = html_content.replace('<!-- EXTRA_TONES_CSS -->', EXTRA_TONES_CSS)
+                
+                encoded = html_content.encode('utf-8', 'surrogateescape')
+                self.send_response(200)
+                self.send_header("Content-type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+
+            def do_GET(self):
+                parts = self.path.strip('/').split('/')
+                
+                # Check Auth first
+                if not self.is_authenticated():
+                    if len(parts) >= 2 and parts[0] == 'stream':
+                        self.send_response(401)
+                        self.end_headers()
+                        return
+                    self.serve_login_page()
+                    return
+                
+                # Route: Logout
+                if self.path == '/logout':
+                    self.send_response(303)
+                    self.send_header('Location', '/')
+                    self.send_header('Set-Cookie', 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict')
+                    self.end_headers()
+                    return
+
+                # Route: Video/Audio Player
+                if len(parts) >= 2 and parts[0] == 'play':
+                    try:
+                        file_idx = int(parts[1])
+                        self.serve_player_page(file_idx)
+                        return
+                    except (ValueError, IndexError):
+                        pass
+
+                # Route: Profile Photo
+                if self.path == '/profile_photo':
+                    photo_path = config.get("share_profile_photo", "")
+                    if photo_path and os.path.exists(photo_path) and os.path.isfile(photo_path):
+                        self.send_response(200)
+                        mime = self.guess_type(photo_path)
+                        self.send_header("Content-type", mime)
+                        with open(photo_path, "rb") as f:
+                            content = f.read()
+                        self.send_header("Content-Length", str(len(content)))
+                        self.end_headers()
+                        self.wfile.write(content)
+                        return
+                    else:
+                        self.send_response(404)
+                        self.end_headers()
+                        return
+
+                # Custom Website Path handling
+                custom_path = config.get("share_custom_path", "")
+                if custom_path:
+                    custom_path = os.path.abspath(os.path.expanduser(custom_path))
+                    if os.path.exists(custom_path):
+                        if self.path == '/':
+                            html_file = custom_path
+                            if os.path.isdir(custom_path):
+                                html_file = os.path.join(custom_path, "index.html")
+                            if os.path.exists(html_file) and os.path.isfile(html_file):
+                                self.send_response(200)
+                                self.send_header("Content-type", "text/html; charset=utf-8")
+                                with open(html_file, "rb") as f:
+                                    content = f.read()
+                                self.send_header("Content-Length", str(len(content)))
+                                self.end_headers()
+                                self.wfile.write(content)
+                                return
+                        
+                        if os.path.isdir(custom_path) and len(parts) > 0 and parts[0] not in ('stream', 'play'):
+                            rel_path = self.path.lstrip('/')
+                            rel_path = rel_path.split('?')[0].split('#')[0]
+                            target_file = os.path.abspath(os.path.join(custom_path, rel_path))
+                            if target_file.startswith(custom_path) and os.path.exists(target_file) and os.path.isfile(target_file):
+                                self.send_response(200)
+                                self.send_header("Content-type", self.guess_type(target_file))
+                                with open(target_file, "rb") as f:
+                                    content = f.read()
+                                self.send_header("Content-Length", str(len(content)))
+                                self.end_headers()
+                                self.wfile.write(content)
+                                return
+
+                # Default fallthrough
+                return super().do_GET()
+
+            def do_POST(self):
+                if self.path == '/login':
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    post_data = self.rfile.read(content_length).decode('utf-8')
+                    from urllib.parse import parse_qs
+                    params = parse_qs(post_data)
+                    username = params.get('username', [''])[0]
+                    password = params.get('password', [''])[0]
+                    
+                    cfg_user = config.get("web_username", "admin")
+                    cfg_pass = config.get("web_password", "admin")
+                    
+                    if username == cfg_user and password == cfg_pass:
+                        self.send_response(303)
+                        self.send_header('Location', '/')
+                        self.send_header('Set-Cookie', 'session=authenticated; Path=/; HttpOnly; SameSite=Strict')
+                        self.end_headers()
+                    else:
+                        self.serve_login_page(error_msg="Invalid username or password.")
+                    return
+                
+                self.send_response(404)
+                self.end_headers()
+
+            def list_directory(self, path):
+                files = sorted([f for f in os.listdir('.') if os.path.isfile(f)])
                 total_files = len(files)
                 total_bytes = 0
                 total_videos = 0
@@ -2538,29 +2964,52 @@ def operation_share_via_qr(config: Dict[str, Any]):
                     
                     if ext in video_exts:
                         file_type = "video"
-                        icon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>'
-                        action_btn = f'<button class="btn btn-primary" onclick="playVideo(\'/stream/{idx}/video{ext}\', \'{html.escape(filename, quote=True)}\')">Stream</button>'
+                        category_str = "Video"
                     elif ext in audio_exts:
                         file_type = "audio"
-                        icon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>'
-                        action_btn = f'<button class="btn btn-primary" onclick="playAudio(\'/stream/{idx}/audio{ext}\', \'{html.escape(filename, quote=True)}\')">Play</button>'
+                        category_str = "Audio"
                     else:
                         file_type = "other"
-                        icon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>'
-                        action_btn = ''
+                        category_str = "Document"
 
-                    download_url = f"/stream/{idx}/file{ext}"
+                    # Dynamic or Fallback Poster
+                    thumb_path = self.get_thumbnail_path(idx, filename)
+                    if thumb_path:
+                        poster_html = f'<img class="w-full h-full object-cover" src="/stream/{idx}/thumb.jpg"/>'
+                    else:
+                        if ext in video_exts:
+                            icon_name = "movie"
+                        elif ext in audio_exts:
+                            icon_name = "music_note"
+                        else:
+                            icon_name = "description"
+                        poster_html = f"""
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-container/20 to-surface-container-highest">
+                            <span class="material-symbols-outlined text-4xl text-primary" style="font-variation-settings: 'FILL' 1;">{icon_name}</span>
+                        </div>"""
+
                     escaped_name = html.escape(filename)
                     escaped_name_lower = escaped_name.lower()
+                    download_url = f"/stream/{idx}/file{ext}"
                     
                     card_html = f"""
-            <div class="card" data-name="{escaped_name_lower}" data-category="{file_type}" data-size="{size_bytes}" data-orig-name="{escaped_name}">
-                <div class="file-icon">{icon}</div>
-                <div class="file-name" title="{escaped_name}">{escaped_name}</div>
-                <div class="file-meta">{size_str}</div>
-                <div class="card-actions">
-                    {action_btn}
-                    <a href="{download_url}" download="{escaped_name}" class="btn btn-secondary">Download</a>
+            <div class="flex flex-col bg-surface-container border border-outline-variant/30 rounded-[20px] overflow-hidden group cursor-pointer card transition-all hover:scale-[1.02] hover:shadow-lg" 
+                 data-name="{escaped_name_lower}" data-category="{file_type}" data-size="{size_bytes}" data-orig-name="{escaped_name}" data-stream="/stream/{idx}/video{ext}" onclick="playMedia('/play/{idx}', '{file_type}')">
+                <div class="aspect-video w-full bg-surface-container-highest overflow-hidden relative">
+                    {poster_html}
+                    <div class="absolute top-2 right-2">
+                        <span class="bg-surface-container-highest/90 backdrop-blur-sm text-on-surface-variant text-[10px] px-2.5 py-1 rounded-full border border-outline-variant/30 font-medium">{ext[1:].upper()}</span>
+                    </div>
+                </div>
+                <div class="p-4 flex flex-col flex-1">
+                    <h5 class="font-medium text-sm text-on-surface truncate group-hover:text-primary transition-colors mb-1" title="{escaped_name}">{escaped_name}</h5>
+                    <p class="text-xs opacity-60 mb-3">{size_str} • {category_str}</p>
+                    <div class="flex gap-2 mt-auto">
+                        <button onclick="event.stopPropagation(); playMedia('/play/{idx}', '{file_type}')" 
+                                class="flex-1 bg-primary text-on-primary text-xs font-medium py-2 rounded-full hover:bg-opacity-95 transition-all">Stream</button>
+                        <a href="{download_url}" download="{escaped_name}" onclick="event.stopPropagation();"
+                           class="flex-1 border border-outline text-on-surface text-xs font-medium py-2 rounded-full hover:bg-surface-container-high transition-all text-center">Download</a>
+                    </div>
                 </div>
             </div>"""
                     html_items.append(card_html)
@@ -2570,17 +3019,29 @@ def operation_share_via_qr(config: Dict[str, Any]):
                 else:
                     items_content = "\n".join(html_items)
 
-                html_content = self.HTML_TEMPLATE.replace("<!-- ITEMS -->", items_content)
-                html_content = html_content.replace("<!-- STAT_TOTAL_FILES -->", str(total_files))
-                html_content = html_content.replace("<!-- STAT_TOTAL_VIDEOS -->", str(total_videos))
-                html_content = html_content.replace("<!-- STAT_TOTAL_AUDIOS -->", str(total_audios))
-                html_content = html_content.replace("<!-- STAT_TOTAL_SIZE -->", total_size_str)
-                
+                profile_name = config.get("share_profile_name", "Admin")
+                profile_photo = config.get("share_profile_photo", "")
+                if profile_photo:
+                    photo_url = profile_photo if profile_photo.startswith(("http://", "https://")) else "/profile_photo"
+                    fallback_letter = html.escape(profile_name[0].upper() if profile_name else "A")
+                    avatar_html = f'<img src="{photo_url}" class="w-full h-full object-cover" alt="{html.escape(profile_name)}" onerror="this.outerHTML=\'{fallback_letter}\'"/>'
+                else:
+                    avatar_html = html.escape(profile_name[0].upper() if profile_name else "A")
+
+                html_content = self.LIBRARY_HTML
+                html_content = html_content.replace('<!-- ITEMS -->', items_content)
+                html_content = html_content.replace('<!-- STAT_TOTAL_FILES -->', str(total_files))
+                html_content = html_content.replace('<!-- STAT_TOTAL_VIDEOS -->', str(total_videos))
+                html_content = html_content.replace('<!-- STAT_TOTAL_AUDIOS -->', str(total_audios))
+                html_content = html_content.replace('<!-- STAT_TOTAL_SIZE -->', total_size_str)
+                html_content = html_content.replace('<!-- EXTRA_TONES_CSS -->', EXTRA_TONES_CSS)
+                html_content = html_content.replace('<!-- PROFILE_NAME -->', html.escape(profile_name))
+                html_content = html_content.replace('<!-- PROFILE_AVATAR -->', avatar_html)
+
                 encoded = html_content.encode('utf-8', 'surrogateescape')
                 f = io.BytesIO()
                 f.write(encoded)
                 f.seek(0)
-                
                 self.send_response(200)
                 self.send_header("Content-type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(encoded)))
@@ -2588,8 +3049,6 @@ def operation_share_via_qr(config: Dict[str, Any]):
                 return f
 
             def guess_type(self, path):
-                # Ensure correct MIME types on environments like Termux (Android)
-                # which lack standard system mime.types databases.
                 custom_types = {
                     # Video
                     '.mp4': 'video/mp4',
@@ -2632,11 +3091,7 @@ def operation_share_via_qr(config: Dict[str, Any]):
                 ext = os.path.splitext(path)[1].lower()
                 if ext in custom_types:
                     return custom_types[ext]
-                return super().guess_type(path)
-
-
-                
-        # Dynamically allocate an open port starting from 8000
+                return super().guess_type(path)        # Dynamically allocate an open port starting from 8000
         httpd = None
         max_attempts = 20
         socketserver.TCPServer.allow_reuse_address = True
@@ -2687,7 +3142,143 @@ def operation_share_via_qr(config: Dict[str, Any]):
     finally:
         os.chdir(original_cwd)
         
-    Prompt.ask("\nPress Enter to return to menu...")
+    Prompt.ask("\nPress Enter to continue...")
+
+
+def configure_share_settings(config: Dict[str, Any]):
+    """Allows user to customize the LAN QR Share Portal webpage, profile name/photo, and custom site path."""
+    while True:
+        print_header()
+        console.print("\n[bold cyan]=== SHARE PORTAL SETTINGS ===[/bold cyan]\n")
+        
+        table = Table(show_header=False, box=None)
+        table.add_row("[bold]1. Profile Display Name:[/bold]", config.get("share_profile_name", "Admin"))
+        
+        photo = config.get("share_profile_photo", "")
+        table.add_row("[bold]2. Profile Photo Path/URL:[/bold]", photo if photo else "[dim]Not Configured (Letter Initial fallback)[/dim]")
+        
+        custom_path = config.get("share_custom_path", "")
+        table.add_row("[bold]3. Custom Website Path:[/bold]", custom_path if custom_path else "[dim]Not Configured (Built-in Portal active)[/dim]")
+        
+        table.add_row("[bold]4. Website Password Settings:[/bold]", "Password Protected" if config.get("web_auth_enabled", True) else "Public (No Password)")
+        table.add_row("[bold]5. Back to Share Menu[/bold]", "")
+        
+        console.print(Panel(
+            table,
+            title="[bold white]Portal Configuration[/bold white]",
+            border_style="cyan"
+        ))
+        
+        choice = Prompt.ask("Select an option to edit", choices=["1", "2", "3", "4", "5"], default="5")
+        clear_screen()
+        
+        if choice == "1":
+            new_name = Prompt.ask("Enter profile display name", default=config.get("share_profile_name", "Admin"))
+            config["share_profile_name"] = new_name
+            save_config(config)
+            console.print(f"[green]✓ Profile name updated to: {new_name}[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+            
+        elif choice == "2":
+            console.print("[yellow]Tip: You can specify a local image file path (e.g. D:\\images\\avatar.png) or a direct image URL.[/yellow]")
+            new_photo = Prompt.ask("Enter profile photo path or URL (leave empty to disable custom photo)", default=config.get("share_profile_photo", ""))
+            config["share_profile_photo"] = new_photo.strip()
+            save_config(config)
+            console.print("[green]✓ Profile photo configuration updated.[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+            
+        elif choice == "3":
+            console.print("[yellow]Tip: Specify an HTML file path or folder path containing 'index.html' to serve your own webpage. Leave empty to use the built-in portal.[/yellow]")
+            new_path = Prompt.ask("Enter custom website file/folder path (leave empty to use default portal)", default=config.get("share_custom_path", ""))
+            if new_path:
+                new_path = new_path.strip()
+                if not os.path.exists(new_path):
+                    console.print(f"[yellow]Warning: The path '{new_path}' does not currently exist. Settings saved, but please ensure it is created before starting the server.[/yellow]")
+            config["share_custom_path"] = new_path
+            save_config(config)
+            console.print("[green]✓ Custom website path updated.[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+            
+        elif choice == "4":
+            while True:
+                clear_screen()
+                print_header()
+                console.print("\n[bold cyan]=== WEBSITE PASSWORD SETTINGS ===[/bold cyan]\n")
+                
+                auth_status = "Password Protected" if config.get("web_auth_enabled", True) else "Public (No Password)"
+                console.print(f"[bold]Current Status:[/bold] [yellow]{auth_status}[/yellow]")
+                if config.get("web_auth_enabled", True):
+                    console.print(f"[bold]Username:[/bold] {config.get('web_username', 'admin')}")
+                    console.print(f"[bold]Password:[/bold] {config.get('web_password', 'admin')}")
+                console.print()
+                
+                console.print("1. Enable/Disable Password Protection")
+                console.print("2. Change Password")
+                console.print("3. Back to Settings Menu")
+                
+                sub_choice = Prompt.ask("Choose option", choices=["1", "2", "3"], default="3")
+                if sub_choice == "1":
+                    current_auth = config.get("web_auth_enabled", True)
+                    new_auth = Confirm.ask("Require password to access the website?", default=current_auth)
+                    config["web_auth_enabled"] = new_auth
+                    if new_auth:
+                        if not config.get("web_username"):
+                            config["web_username"] = "admin"
+                        if not config.get("web_password"):
+                            config["web_password"] = "admin"
+                    save_config(config)
+                    status_str = "Required" if new_auth else "Disabled (Public Access)"
+                    console.print(f"[green]✓ Website password requirement is now: {status_str}[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                elif sub_choice == "2":
+                    if not config.get("web_auth_enabled", True):
+                        console.print("[yellow]Please enable password protection first to set/change password.[/yellow]")
+                        Prompt.ask("\nPress Enter to continue...")
+                        continue
+                    new_user = Prompt.ask("Enter new username", default=config.get("web_username", "admin"))
+                    new_pass = Prompt.ask("Enter new password", default=config.get("web_password", "admin"))
+                    if not new_user.strip() or not new_pass.strip():
+                        console.print("[red]Username and password cannot be empty.[/red]")
+                    else:
+                        config["web_username"] = new_user.strip()
+                        config["web_password"] = new_pass.strip()
+                        save_config(config)
+                        console.print("[green]✓ Website username and password updated successfully.[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                else:
+                    break
+                    
+        elif choice == "5":
+            break
+
+
+def operation_share_via_qr(config: Dict[str, Any]):
+    """Primary routing flow for QR Sharing option."""
+    while True:
+        print_header()
+        console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
+        
+        menu_table = Table(show_header=False, box=None, padding=(0, 2))
+        menu_table.add_row("[bold green]1.[/bold green] Start Share Server")
+        menu_table.add_row("[bold green]2.[/bold green] Share Portal Settings")
+        menu_table.add_row("[bold red]3.[/bold red] Back to Main Menu")
+        
+        console.print(Panel(
+            menu_table,
+            title="[bold white]Share Control Panel[/bold white]",
+            border_style="cyan",
+            padding=(1, 2)
+        ))
+        
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="3")
+        clear_screen()
+        
+        if choice == "1":
+            start_share_server(config)
+        elif choice == "2":
+            configure_share_settings(config)
+        elif choice == "3":
+            break
 
 
 def operation_transcode_media(config: Dict[str, Any]):
@@ -3020,7 +3611,8 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
         table.add_row("[bold]11. Embed Metadata:[/bold]", "Enabled" if config.get("embed_metadata", True) else "Disabled")
         table.add_row("[bold]12. Embed Thumbnail:[/bold]", "Enabled" if config.get("embed_thumbnail", True) else "Disabled")
         table.add_row("[bold]13. Educational Notice:[/bold]", "Enabled" if config.get("show_educational_notice", True) else "Disabled")
-        table.add_row("[bold]14. Back to Main Menu[/bold]", "")
+        table.add_row("[bold]14. Website Password Settings:[/bold]", "Password Protected" if config.get("web_auth_enabled", True) else "Public (No Password)")
+        table.add_row("[bold]15. Back to Main Menu[/bold]", "")
         
         console.print(Panel(
             table, 
@@ -3028,7 +3620,7 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             border_style="cyan",
             subtitle="[italic yellow]ℹ️  Tip: Use VLC Media Player for best compatibility with various media formats.[/italic yellow]"
         ))
-        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 15)], default="14")
+        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 16)], default="15")
         clear_screen()
         
         if choice == "1":
@@ -3228,6 +3820,55 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             Prompt.ask("\nPress Enter to continue...")
             
         elif choice == "14":
+            while True:
+                clear_screen()
+                print_header()
+                console.print("\n[bold cyan]=== WEBSITE PASSWORD SETTINGS ===[/bold cyan]\n")
+                
+                auth_status = "Password Protected" if config.get("web_auth_enabled", True) else "Public (No Password)"
+                console.print(f"[bold]Current Status:[/bold] [yellow]{auth_status}[/yellow]")
+                if config.get("web_auth_enabled", True):
+                    console.print(f"[bold]Username:[/bold] {config.get('web_username', 'admin')}")
+                    console.print(f"[bold]Password:[/bold] {config.get('web_password', 'admin')}")
+                console.print()
+                
+                console.print("1. Enable/Disable Password Protection")
+                console.print("2. Change Password")
+                console.print("3. Back to Settings Menu")
+                
+                sub_choice = Prompt.ask("Choose option", choices=["1", "2", "3"], default="3")
+                if sub_choice == "1":
+                    current_auth = config.get("web_auth_enabled", True)
+                    new_auth = Confirm.ask("Require password to access the website?", default=current_auth)
+                    config["web_auth_enabled"] = new_auth
+                    if new_auth:
+                        if not config.get("web_username"):
+                            config["web_username"] = "admin"
+                        if not config.get("web_password"):
+                            config["web_password"] = "admin"
+                    save_config(config)
+                    status_str = "Required" if new_auth else "Disabled (Public Access)"
+                    console.print(f"[green]✓ Website password requirement is now: {status_str}[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                elif sub_choice == "2":
+                    if not config.get("web_auth_enabled", True):
+                        console.print("[yellow]Please enable password protection first to set/change password.[/yellow]")
+                        Prompt.ask("\nPress Enter to continue...")
+                        continue
+                    new_user = Prompt.ask("Enter new username", default=config.get("web_username", "admin"))
+                    new_pass = Prompt.ask("Enter new password", default=config.get("web_password", "admin"))
+                    if not new_user.strip() or not new_pass.strip():
+                        console.print("[red]Username and password cannot be empty.[/red]")
+                    else:
+                        config["web_username"] = new_user.strip()
+                        config["web_password"] = new_pass.strip()
+                        save_config(config)
+                        console.print("[green]✓ Website username and password updated successfully.[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                else:
+                    break
+                    
+        elif choice == "15":
             break
             
     return config

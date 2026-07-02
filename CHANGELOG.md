@@ -2,6 +2,13 @@
 
 All notable changes to the **FluxMedia** project are documented in this file.
 
+## [v1.5.8] - 2026-07-02
+### Added
+- **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.
+- **Premium Material 3 Tones**: Introduced 4 new theme tones (Royal Purple, Crimson Rose, Sunset Orange, Indigo Breeze) across all templates.
+- **Responsive Layout Optimizations**: Optimized page header to stack controls cleanly on mobile viewports while preserving standard inline spacing on desktops.
+- **Port Overriding**: Enabled running the sharing server on a custom port if the default port 8000 is occupied.
+
 ---
 
 ## [v1.5.7] - 2026-07-02
