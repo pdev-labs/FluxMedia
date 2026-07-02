@@ -1,5 +1,13 @@
 # 🌊 FluxMedia
 
+> [!TIP]
+> **FluxMedia is now available as a Python Module!** 📦
+> You can install and run it directly via `pip`. Check out the Python Module repository at [FluxMedia-py](https://github.com/pdev-labs/FluxMedia-py) or install it directly using:
+> ```bash
+> pip install fluxmedia
+> fluxmedia
+> ```
+
 FluxMedia is a powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Built on top of `yt-dlp` and `rich`, it provides a beautiful terminal user interface (TUI) to download videos, audio streams, playlists, channel uploads, and subtitles from thousands of supported websites.
 
 This project is licensed under the **MIT License**—making it entirely open-source and free to modify, distribute, and use.
@@ -32,6 +40,16 @@ The project consists of three core entry points:
 ---
 
 ## 🛠️ Step-by-Step Installation & Setup
+
+### 0. Quick Python Module Installation (Recommended)
+You can install and run FluxMedia directly on any system using Python's package installer:
+```bash
+pip install fluxmedia
+fluxmedia
+```
+For package updates, usage details, or customization options, visit the [FluxMedia-py](https://github.com/pdev-labs/FluxMedia-py) repository.
+
+---
 
 ### 1. Windows Execution (Standard/Bootstrapper)
 The batch file is self-contained. It contains the Python script embedded inside it, extracts it to the system temporary directory on start, runs it, and cleans up when finished.
