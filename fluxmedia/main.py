@@ -179,6 +179,132 @@ def install_ffmpeg_termux() -> bool:
         print(f"Error installing FFmpeg: {e}")
         return False
 
+def tag_mp3(file_path: str, title: str, artist: str, album: str, genre: str, track: str, cover_path: Optional[str] = None) -> bool:
+    try:
+        from mutagen.id3 import ID3, TIT2, TPE1, TALB, TCON, TRCK, APIC
+        try:
+            audio = ID3(file_path)
+        except Exception:
+            audio = ID3()
+        if title: audio['TIT2'] = TIT2(encoding=3, text=title)
+        if artist: audio['TPE1'] = TPE1(encoding=3, text=artist)
+        if album: audio['TALB'] = TALB(encoding=3, text=album)
+        if genre: audio['TCON'] = TCON(encoding=3, text=genre)
+        if track: audio['TRCK'] = TRCK(encoding=3, text=str(track))
+        
+        if cover_path and os.path.exists(cover_path):
+            mime = 'image/jpeg' if cover_path.lower().endswith(('.jpg', '.jpeg')) else 'image/png'
+            with open(cover_path, 'rb') as f:
+                img_data = f.read()
+            audio['APIC'] = APIC(encoding=3, mime=mime, type=3, desc='Cover', data=img_data)
+        audio.save(file_path)
+        return True
+    except Exception as e:
+        logger.error(f"Error tagging MP3 with mutagen: {e}")
+        return False
+
+def tag_m4a(file_path: str, title: str, artist: str, album: str, genre: str, track: str, cover_path: Optional[str] = None) -> bool:
+    try:
+        from mutagen.mp4 import MP4, MP4Cover
+        audio = MP4(file_path)
+        if title: audio['\xa9nam'] = [title]
+        if artist: audio['\xa9ART'] = [artist]
+        if album: audio['\xa9alb'] = [album]
+        if genre: audio['\xa9gen'] = [genre]
+        if track:
+            try:
+                audio['trkn'] = [(int(track), 0)]
+            except ValueError:
+                pass
+        if cover_path and os.path.exists(cover_path):
+            cover_format = MP4Cover.FORMAT_JPEG if cover_path.lower().endswith(('.jpg', '.jpeg')) else MP4Cover.FORMAT_PNG
+            with open(cover_path, 'rb') as f:
+                img_data = f.read()
+            audio['covr'] = [MP4Cover(img_data, imageformat=cover_format)]
+        audio.save()
+        return True
+    except Exception as e:
+        logger.error(f"Error tagging M4A with mutagen: {e}")
+        return False
+
+def tag_generic_flac(file_path: str, title: str, artist: str, album: str, genre: str, track: str, cover_path: Optional[str] = None) -> bool:
+    try:
+        from mutagen.flac import FLAC, Picture
+        audio = FLAC(file_path)
+        if title: audio['title'] = [title]
+        if artist: audio['artist'] = [artist]
+        if album: audio['album'] = [album]
+        if genre: audio['genre'] = [genre]
+        if track: audio['tracknumber'] = [str(track)]
+        if cover_path and os.path.exists(cover_path):
+            pic = Picture()
+            pic.data = open(cover_path, 'rb').read()
+            pic.mime = 'image/jpeg' if cover_path.lower().endswith(('.jpg', '.jpeg')) else 'image/png'
+            pic.type = 3
+            audio.add_picture(pic)
+        audio.save()
+        return True
+    except Exception as e:
+        logger.error(f"Error tagging FLAC with mutagen: {e}")
+        return False
+
+def tag_audio_file(file_path: str, tags: Dict[str, Any]) -> bool:
+    """Uses mutagen to write ID3, MP4, or FLAC tags and embed cover art if present."""
+    try:
+        import mutagen
+    except ImportError:
+        logger.warning("mutagen is not installed. Custom tagging skipped.")
+        return False
+        
+    title = tags.get('title')
+    artist = tags.get('artist')
+    album = tags.get('album')
+    genre = tags.get('genre')
+    track = tags.get('track')
+    
+    # Locate cover art
+    base_path, _ = os.path.splitext(file_path)
+    cover_path = None
+    for ext in ('.jpg', '.jpeg', '.png', '.webp'):
+        test_path = base_path + ext
+        if os.path.exists(test_path):
+            cover_path = test_path
+            break
+
+    ext = os.path.splitext(file_path)[1].lower()
+    success = False
+    
+    if ext == '.mp3':
+        success = tag_mp3(file_path, title, artist, album, genre, track, cover_path)
+    elif ext in ('.m4a', '.mp4'):
+        success = tag_m4a(file_path, title, artist, album, genre, track, cover_path)
+    elif ext == '.flac':
+        success = tag_generic_flac(file_path, title, artist, album, genre, track, cover_path)
+    else:
+        # Generic fallback
+        try:
+            from mutagen import File
+            audio = File(file_path)
+            if audio is not None:
+                if title: audio['title'] = [title]
+                if artist: audio['artist'] = [artist]
+                if album: audio['album'] = [album]
+                if genre: audio['genre'] = [genre]
+                audio.save()
+                success = True
+        except Exception as e:
+            logger.error(f"Mutagen generic tagging failed: {e}")
+            success = False
+
+    # Clean up thumbnail file if embedded successfully or if we are done with it
+    if cover_path and os.path.exists(cover_path):
+        try:
+            os.remove(cover_path)
+        except Exception:
+            pass
+            
+    return success
+
 def verify_and_install_requirements():
     """Checks for required third-party packages, system tools, and environment permissions, offering to install/fix them."""
     is_termux = "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ
@@ -188,6 +314,7 @@ def verify_and_install_requirements():
         {"name": "requests", "import_name": "requests", "type": "Python Package", "desc": "Checking updates & internet (essential)", "essential": True},
         {"name": "yt-dlp", "import_name": "yt_dlp", "type": "Python Package", "desc": "Core downloader engine (essential)", "essential": True},
         {"name": "qrcode", "import_name": "qrcode", "type": "Python Package", "desc": "Generating QR codes for file sharing (recommended)", "essential": False},
+        {"name": "mutagen", "import_name": "mutagen", "type": "Python Package", "desc": "Advanced audio metadata tagging (recommended)", "essential": False},
         {"name": "ffmpeg", "import_name": None, "type": "System Binary", "desc": "Audio extraction, merging format streams, embedding subtitles (recommended)", "essential": False}
     ]
     
@@ -278,9 +405,9 @@ def verify_and_install_requirements():
     # Prompt the user for installation/granting permission
     if rich_available:
         from rich.prompt import Confirm
-        install_choice = Confirm.ask("Would you like to try installing/setting up the missing requirements now?", default=True)
+        install_choice = Confirm.ask("Would you like to install the missing requirements automatically in another terminal?", default=True)
     else:
-        user_input = input("Would you like to try installing/setting up the missing requirements now? (yes/no) [yes]: ").strip().lower()
+        user_input = input("Would you like to install the missing requirements automatically in another terminal? (yes/no) [yes]: ").strip().lower()
         install_choice = user_input in ("y", "yes", "")
         
     if not install_choice:
@@ -293,39 +420,172 @@ def verify_and_install_requirements():
             return
             
     # Process installation of missing items
-    for req in requirements:
-        if req["status"] == "Missing":
-            if req["type"] == "Python Package":
-                print(f"\n>>> Downloading & Installing Python package: [ {req['name']} ]...")
-                success = install_python_package(req["name"])
-                if not success and req["essential"]:
-                    print(f"Failed to install essential requirement: {req['name']}. Exiting.")
-                    sys.exit(1)
-            elif req["name"] == "ffmpeg":
-                print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
-                if is_termux:
+    missing_pkgs = [req["name"] for req in requirements if req["type"] == "Python Package" and req["status"] == "Missing"]
+    missing_ffmpeg = any(req["name"] == "ffmpeg" and req["status"] == "Missing" for req in requirements)
+    
+    if is_termux:
+        # Termux installation (in current terminal)
+        for req in requirements:
+            if req["status"] == "Missing":
+                if req["type"] == "Python Package":
+                    print(f"\n>>> Downloading & Installing Python package: [ {req['name']} ]...")
+                    success = install_python_package(req["name"])
+                    if not success and req["essential"]:
+                        print(f"Failed to install essential requirement: {req['name']}. Exiting.")
+                        sys.exit(1)
+                elif req["name"] == "ffmpeg":
+                    print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
                     install_ffmpeg_termux()
-                else:
-                    inst_cmd = get_ffmpeg_install_instruction()
-                    print(f"To install FFmpeg on your system, please run the following command in a new terminal:")
-                    print(f"  {inst_cmd}")
-                    input("Press Enter to continue once you have installed FFmpeg...")
-            elif req["name"] == "Android Storage":
-                print(f"\n>>> Requesting System Permission: [ Android Storage Access ]...")
-                print("Running 'termux-setup-storage'. Please accept the storage prompt on your phone.")
-                try:
-                    subprocess.run(["termux-setup-storage"], check=True)
-                except Exception as e:
-                    print(f"Failed to run termux-setup-storage: {e}")
-                print("Checking storage access...")
-                import time
-                time.sleep(2.0)
-                test_dir = "/sdcard/Download"
-                if os.path.exists(test_dir) and os.access(test_dir, os.W_OK):
-                    print("Storage permission granted successfully!")
-                else:
-                    print("Warning: Storage permission not detected yet. If files fail to open or save, please run 'termux-setup-storage' manually.")
-                    
+                elif req["name"] == "Android Storage":
+                    print(f"\n>>> Requesting System Permission: [ Android Storage Access ]...")
+                    print("Running 'termux-setup-storage'. Please accept the storage prompt on your phone.")
+                    try:
+                        subprocess.run(["termux-setup-storage"], check=True)
+                    except Exception as e:
+                        print(f"Failed to run termux-setup-storage: {e}")
+                    print("Checking storage access...")
+                    import time
+                    time.sleep(2.0)
+                    test_dir = "/sdcard/Download"
+                    if os.path.exists(test_dir) and os.access(test_dir, os.W_OK):
+                        print("Storage permission granted successfully!")
+                    else:
+                        print("Warning: Storage permission not detected yet. If files fail to open or save, please run 'termux-setup-storage' manually.")
+    else:
+        # Desktop / Server environment: Try to launch in a new terminal window
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        system = platform.system()
+        launched_new_terminal = False
+        
+        if system == "Windows":
+            bat_path = os.path.join(temp_dir, "install_fluxmedia_requirements.bat")
+            try:
+                with open(bat_path, "w", encoding="utf-8") as f:
+                    f.write("@echo off\n")
+                    f.write("echo ==========================================================\n")
+                    f.write("echo   FluxMedia Requirements Installer\n")
+                    f.write("echo ==========================================================\n")
+                    f.write("echo.\n")
+                    if missing_pkgs:
+                        f.write(f"echo [*] Installing missing Python packages: {', '.join(missing_pkgs)}...\n")
+                        f.write(f'"{sys.executable}" -m pip install {" ".join(missing_pkgs)}\n')
+                        f.write("echo.\n")
+                    if missing_ffmpeg:
+                        f.write("echo [*] Installing FFmpeg via winget...\n")
+                        f.write("winget install Gyan.FFmpeg\n")
+                        f.write("echo.\n")
+                    f.write("echo ==========================================================\n")
+                    f.write("echo   Installation process finished.\n")
+                    f.write("echo ==========================================================\n")
+                    f.write("echo You can close this window now.\n")
+                    f.write("pause\n")
+                
+                subprocess.Popen(f'start "FluxMedia Installer" "{bat_path}"', shell=True)
+                launched_new_terminal = True
+            except Exception as e:
+                print(f"Failed to create or run Windows installer script: {e}")
+                
+        elif system == "Darwin":
+            sh_path = os.path.join(temp_dir, "install_fluxmedia_requirements.sh")
+            try:
+                with open(sh_path, "w", encoding="utf-8") as f:
+                    f.write("#!/bin/bash\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo '  FluxMedia Requirements Installer'\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo\n")
+                    if missing_pkgs:
+                        f.write(f"echo '[*] Installing missing Python packages: {', '.join(missing_pkgs)}...'\n")
+                        f.write(f'"{sys.executable}" -m pip install {" ".join(missing_pkgs)}\n')
+                        f.write("echo\n")
+                    if missing_ffmpeg:
+                        f.write("echo '[*] Installing FFmpeg via Homebrew...'\n")
+                        f.write("brew install ffmpeg\n")
+                        f.write("echo\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo '  Installation process finished.'\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write('read -p "Press Enter to close this window..."\n')
+                
+                os.chmod(sh_path, 0o755)
+                cmd = f'tell application "Terminal" to do script "{sh_path}"'
+                subprocess.Popen(["osascript", "-e", cmd])
+                launched_new_terminal = True
+            except Exception as e:
+                print(f"Failed to create or run macOS installer script: {e}")
+                
+        else: # Linux and others
+            sh_path = os.path.join(temp_dir, "install_fluxmedia_requirements.sh")
+            try:
+                with open(sh_path, "w", encoding="utf-8") as f:
+                    f.write("#!/bin/bash\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo '  FluxMedia Requirements Installer'\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo\n")
+                    if missing_pkgs:
+                        f.write(f"echo '[*] Installing missing Python packages: {', '.join(missing_pkgs)}...'\n")
+                        f.write(f'"{sys.executable}" -m pip install {" ".join(missing_pkgs)}\n')
+                        f.write("echo\n")
+                    if missing_ffmpeg:
+                        f.write("echo '[*] Installing FFmpeg via package manager...'\n")
+                        if shutil.which("apt-get"):
+                            f.write("sudo apt-get update && sudo apt-get install -y ffmpeg\n")
+                        elif shutil.which("pacman"):
+                            f.write("sudo pacman -S --noconfirm ffmpeg\n")
+                        elif shutil.which("dnf"):
+                            f.write("sudo dnf install -y ffmpeg\n")
+                        else:
+                            f.write("sudo apt-get update && sudo apt-get install -y ffmpeg\n")
+                        f.write("echo\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write("echo '  Installation process finished.'\n")
+                    f.write("echo '=========================================================='\n")
+                    f.write('read -p "Press Enter to close this window..."\n')
+                
+                os.chmod(sh_path, 0o755)
+                terminals = [
+                    ["x-terminal-emulator", "-e", sh_path],
+                    ["gnome-terminal", "--", sh_path],
+                    ["konsole", "-e", sh_path],
+                    ["xfce4-terminal", "-e", sh_path],
+                    ["xterm", "-e", sh_path]
+                ]
+                for term in terminals:
+                    if shutil.which(term[0]):
+                        try:
+                            subprocess.Popen(term)
+                            launched_new_terminal = True
+                            break
+                        except Exception:
+                            continue
+            except Exception as e:
+                print(f"Failed to create or run Linux installer script: {e}")
+                
+        if launched_new_terminal:
+            print("\n>>> Spawning installation in another terminal window...")
+            print("Please follow the instructions in the newly opened window to complete the installation.")
+            input("Press Enter to continue once the installation has finished...")
+        else:
+            # Fallback to local / in-process installation
+            print("\n>>> Could not spawn another terminal. Installing in current terminal...")
+            if missing_pkgs:
+                for pkg in missing_pkgs:
+                    print(f"\n>>> Downloading & Installing Python package: [ {pkg} ]...")
+                    success = install_python_package(pkg)
+                    if not success:
+                        is_ess = any(req["name"] == pkg and req["essential"] for req in requirements)
+                        if is_ess:
+                            print(f"Failed to install essential requirement: {pkg}. Exiting.")
+                            sys.exit(1)
+            if missing_ffmpeg:
+                print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
+                inst_cmd = get_ffmpeg_install_instruction()
+                print(f"To install FFmpeg on your system, please run the following command:")
+                print(f"  {inst_cmd}")
+                input("Press Enter to continue once you have installed FFmpeg...")
+
     # Recursively check requirements again to ensure they are fully set up
     verify_and_install_requirements()
 
@@ -336,7 +596,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.5.9"
+    CURRENT_VERSION = "1.6.0"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
@@ -819,9 +1079,10 @@ def prompt_video_quality() -> str:
 
 class RichProgressHook:
     """Custom progress hook for binding yt-dlp logs with Rich Progress bars."""
-    def __init__(self, progress: Progress):
+    def __init__(self, progress: Progress, downloaded_files: Optional[List[str]] = None):
         self.progress = progress
         self.tasks = {}
+        self.downloaded_files = downloaded_files
 
     def __call__(self, d: Dict[str, Any]):
         if d['status'] == 'downloading':
@@ -861,8 +1122,12 @@ class RichProgressHook:
                 if total > 0:
                     self.progress.update(task_id, completed=total, total=total)
                 self.progress.update(task_id, description=f"[green]Finished: {os.path.basename(filename)}")
+            
+            if filename and self.downloaded_files is not None:
+                if filename not in self.downloaded_files:
+                    self.downloaded_files.append(filename)
 
-def run_ydl_download(ydl_opts: Dict[str, Any], urls: List[str]) -> bool:
+def run_ydl_download(ydl_opts: Dict[str, Any], urls: List[str], downloaded_files: Optional[List[str]] = None) -> bool:
     """Runs a yt-dlp session inside a Rich Progress context manager."""
     with Progress(
         TextColumn("[bold blue]{task.description}"),
@@ -872,8 +1137,17 @@ def run_ydl_download(ydl_opts: Dict[str, Any], urls: List[str]) -> bool:
         TimeRemainingColumn(),
         console=console
     ) as progress:
-        hook = RichProgressHook(progress)
+        hook = RichProgressHook(progress, downloaded_files)
         ydl_opts['progress_hooks'] = [hook]
+        
+        # Capture final file path after postprocessing (e.g. ffmpeg conversion)
+        def pp_hook(d):
+            if d.get('status') == 'finished' and downloaded_files is not None:
+                filepath = d.get('filepath')
+                if filepath and filepath not in downloaded_files:
+                    downloaded_files.append(filepath)
+        
+        ydl_opts['postprocessor_hooks'] = [pp_hook]
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -1187,6 +1461,16 @@ def operation_download_audio(config: Dict[str, Any]):
             'format': 'bestaudio/best',
         })
         
+    try:
+        import mutagen
+        mutagen_available = True
+    except ImportError:
+        mutagen_available = False
+        
+    prompt_custom = False
+    if mutagen_available and config.get("embed_metadata", True):
+        prompt_custom = Confirm.ask("Would you like to customize metadata tags for this download?", default=False)
+        
     total_urls = len(valid_urls)
     console.print(f"\n[bold green]Starting batch download of {total_urls} audio track(s)...[/bold green]")
     
@@ -1195,6 +1479,7 @@ def operation_download_audio(config: Dict[str, Any]):
             console.print(f"\n[bold cyan]--- Audio [{idx}/{total_urls}] ---[/bold cyan]")
             console.print(f"[bold green]Fetching audio information...[/bold green]")
             title = "Unknown Audio"
+            info = {}
             try:
                 with yt_dlp.YoutubeDL({'quiet': True, 'no_warnings': True}) as ydl:
                     info = ydl.extract_info(url, download=False)
@@ -1204,13 +1489,38 @@ def operation_download_audio(config: Dict[str, Any]):
                 logger.warning(f"Could not retrieve audio info beforehand: {e}")
                 console.print("[yellow]Could not fetch audio info. Attempting download directly...[/yellow]")
                 
+            tags = {
+                'title': info.get('title', title),
+                'artist': info.get('artist') or info.get('uploader') or info.get('creator') or '',
+                'album': info.get('album', ''),
+                'genre': info.get('genre', ''),
+                'track': info.get('track_number', '')
+            }
+            
+            if prompt_custom:
+                console.print("\n[bold yellow]Customize metadata tags:[/bold yellow]")
+                tags['title'] = Prompt.ask("  Title", default=tags['title'])
+                tags['artist'] = Prompt.ask("  Artist", default=tags['artist'])
+                tags['album'] = Prompt.ask("  Album", default=tags['album'])
+                tags['genre'] = Prompt.ask("  Genre", default=tags['genre'])
+                tags['track'] = Prompt.ask("  Track Number", default=str(tags['track']) if tags['track'] else "")
+                
             console.print(f"[bold green]Downloading audio to: {dest_dir}[/bold green]")
-            success = run_ydl_download(ydl_opts, [url])
+            downloaded_files = []
+            success = run_ydl_download(ydl_opts, [url], downloaded_files)
             
             if success:
                 pref_audio = config.get("audio_format", "mp3")
                 ext = pref_audio if (ffmpeg_available and pref_audio != "default") else "native format"
                 console.print(f"[bold green][SUCCESS] Successfully downloaded audio: {escape(title)} ({ext})[/bold green]")
+                
+                # Apply custom or auto metadata if mutagen is available
+                if mutagen_available and downloaded_files:
+                    for filepath in downloaded_files:
+                        if os.path.exists(filepath):
+                            console.print(f"[bold green]Applying metadata tags and artwork...[/bold green]")
+                            tag_audio_file(filepath, tags)
+                            
                 add_history_entry(url, title, "Success", "Audio", dest_dir)
                 logger.info(f"Successfully downloaded Audio: {title} ({url}) to {dest_dir}")
             else:

@@ -2,6 +2,13 @@
 
 All notable changes to the **FluxMedia** project are documented in this file.
 
+## [v1.6.0] - 2026-07-03
+### Added
+- **Automatic Requirement Spawner**: Automatically detects missing dependencies (like Python packages, system binaries like FFmpeg) on startup, prompts the user, and spawns a platform-specific installation terminal window.
+- **ID3 Metadata Tagging & Artwork Embedding**: Dynamically writes metadata (Title, Artist, Album, Genre, Track Number) and embeds front cover art into downloaded MP3/M4A/FLAC files using `mutagen`.
+
+---
+
 ## [v1.5.9] - 2026-07-02
 ### Changed
 - **Credits & Support Info**: Updated credits section to display developer username `@pdev-labs` only, removing real name details from the codebase, CLI screens, and package manifests.
