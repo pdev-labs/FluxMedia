@@ -2,6 +2,12 @@
 
 All notable changes to the **FluxMedia** project are documented in this file.
 
+## [v1.6.1] - 2026-07-03
+### Fixed
+- **Documentation Link Resolution**: Converted the relative reference to the Installation Guide (`INSTALLATION_GUIDE.md`) to an absolute GitHub URL so it resolves correctly on PyPI.
+
+---
+
 ## [v1.6.0] - 2026-07-03
 ### Added
 - **Automatic Requirement Spawner**: Automatically detects missing dependencies (like Python packages, system binaries like FFmpeg) on startup, prompts the user, and spawns a platform-specific installation terminal window.

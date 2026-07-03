@@ -10,7 +10,7 @@ FluxMedia is a powerful, open-source, and cross-platform command-line media down
 ## 🚀 Quick Start
 
 > [!TIP]
-> Looking for detailed step-by-step installation instructions for your specific OS (Windows, macOS, Linux, or Termux)? Check out the [Detailed OS-Specific Setup Guide](INSTALLATION_GUIDE.md).
+> Looking for detailed step-by-step installation instructions for your specific OS (Windows, macOS, Linux, or Termux)? Check out the [Detailed OS-Specific Setup Guide](https://github.com/pdev-labs/FluxMedia-py/blob/main/INSTALLATION_GUIDE.md).
 
 ### 1. Installation
 Install FluxMedia globally on any system running Python 3.10+ directly via `pip`:
