@@ -2,6 +2,14 @@
 
 All notable changes to the **FluxMedia** project are documented in this file.
 
+## [v1.6.2] - 2026-07-04
+### Added
+- **Keyboard Shortcuts UI**: Added a dedicated Keyboard Shortcuts section to the Settings modal in the web portal to improve accessibility and user discoverability.
+- **Color Tone Settings UI**: Shifted the Color Tone picker natively inside the Settings modal and fixed modal overlay behavior.
+- **Advanced CLI Features**: Relocated the "Clean Logs" setting from the web UI to the command-line interface under a new "Advanced Features" menu for better backend control.
+
+---
+
 ## [v1.6.1] - 2026-07-03
 ### Fixed
 - **Documentation Link Resolution**: Converted the relative reference to the Installation Guide (`INSTALLATION_GUIDE.md`) to an absolute GitHub URL so it resolves correctly on PyPI.
