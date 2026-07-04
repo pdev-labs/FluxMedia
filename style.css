@@ -1,0 +1,2065 @@
+/* FLUXMEDIA LAN SHARE PORTAL - MATERIAL 3 DESIGN SYSTEM STYLE SHEET */
+
+/* ==========================================================================
+   1. COLOR SCHEMES & DYNAMIC THEME SYSTEM (MATERIAL YOU TONAL PALETTES)
+   ========================================================================== */
+
+/* Default Fallback / General M3 Tokens base */
+:root {
+  --md-sys-color-primary-hue: 270; /* Default Purple */
+  --md-sys-color-secondary-hue: calc(var(--md-sys-color-primary-hue) + 10);
+  --md-sys-color-tertiary-hue: calc(var(--md-sys-color-primary-hue) - 50);
+  
+  --transition-fast: 0.2s cubic-bezier(0.2, 0, 0, 1);
+  --transition-medium: 0.35s cubic-bezier(0.3, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.3, 0, 0, 1);
+  
+  --elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  --elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  --elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --elevation-4: 0px 2px 3px 0px rgba(0, 0, 0, 0.3), 0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* --- THEME 1: ROYAL PURPLE --- */
+body.theme-purple.light {
+  --md-sys-color-primary: hsl(270, 50%, 40%);
+  --md-sys-color-on-primary: hsl(0, 0%, 100%);
+  --md-sys-color-primary-container: hsl(270, 70%, 90%);
+  --md-sys-color-on-primary-container: hsl(270, 90%, 15%);
+  --md-sys-color-secondary: hsl(270, 15%, 45%);
+  --md-sys-color-on-secondary: hsl(0, 0%, 100%);
+  --md-sys-color-secondary-container: hsl(270, 20%, 90%);
+  --md-sys-color-on-secondary-container: hsl(270, 40%, 15%);
+  --md-sys-color-tertiary: hsl(310, 40%, 40%);
+  --md-sys-color-on-tertiary: hsl(0, 0%, 100%);
+  --md-sys-color-tertiary-container: hsl(310, 60%, 90%);
+  --md-sys-color-on-tertiary-container: hsl(310, 80%, 15%);
+  --md-sys-color-background: hsl(270, 20%, 98%);
+  --md-sys-color-on-background: hsl(270, 30%, 10%);
+  --md-sys-color-surface: hsl(270, 15%, 98%);
+  --md-sys-color-on-surface: hsl(270, 30%, 10%);
+  --md-sys-color-surface-variant: hsl(270, 15%, 92%);
+  --md-sys-color-on-surface-variant: hsl(270, 20%, 30%);
+  --md-sys-color-outline: hsl(270, 10%, 50%);
+  --md-sys-color-outline-variant: hsl(270, 15%, 85%);
+  --md-sys-color-surface-container-lowest: hsl(0, 0%, 100%);
+  --md-sys-color-surface-container-low: hsl(270, 15%, 96%);
+  --md-sys-color-surface-container: hsl(270, 15%, 94%);
+  --md-sys-color-surface-container-high: hsl(270, 15%, 92%);
+  --md-sys-color-surface-container-highest: hsl(270, 15%, 90%);
+  --md-sys-color-error: hsl(0, 75%, 40%);
+  --md-sys-color-on-error: hsl(0, 0%, 100%);
+  --md-sys-color-error-container: hsl(0, 85%, 90%);
+  --md-sys-color-on-error-container: hsl(0, 95%, 15%);
+}
+body.theme-purple.dark {
+  --md-sys-color-primary: hsl(270, 65%, 80%);
+  --md-sys-color-on-primary: hsl(270, 70%, 20%);
+  --md-sys-color-primary-container: hsl(270, 50%, 30%);
+  --md-sys-color-on-primary-container: hsl(270, 70%, 90%);
+  --md-sys-color-secondary: hsl(270, 20%, 75%);
+  --md-sys-color-on-secondary: hsl(270, 25%, 20%);
+  --md-sys-color-secondary-container: hsl(270, 15%, 32%);
+  --md-sys-color-on-secondary-container: hsl(270, 30%, 88%);
+  --md-sys-color-tertiary: hsl(310, 50%, 80%);
+  --md-sys-color-on-tertiary: hsl(310, 60%, 20%);
+  --md-sys-color-tertiary-container: hsl(310, 45%, 32%);
+  --md-sys-color-on-tertiary-container: hsl(310, 60%, 90%);
+  --md-sys-color-background: hsl(270, 25%, 6%);
+  --md-sys-color-on-background: hsl(270, 20%, 90%);
+  --md-sys-color-surface: hsl(270, 25%, 8%);
+  --md-sys-color-on-surface: hsl(270, 20%, 90%);
+  --md-sys-color-surface-variant: hsl(270, 20%, 22%);
+  --md-sys-color-on-surface-variant: hsl(270, 20%, 80%);
+  --md-sys-color-outline: hsl(270, 10%, 60%);
+  --md-sys-color-outline-variant: hsl(270, 15%, 30%);
+  --md-sys-color-surface-container-lowest: hsl(270, 30%, 4%);
+  --md-sys-color-surface-container-low: hsl(270, 25%, 8%);
+  --md-sys-color-surface-container: hsl(270, 20%, 10%);
+  --md-sys-color-surface-container-high: hsl(270, 20%, 14%);
+  --md-sys-color-surface-container-highest: hsl(270, 20%, 18%);
+  --md-sys-color-error: hsl(0, 85%, 80%);
+  --md-sys-color-on-error: hsl(0, 90%, 20%);
+  --md-sys-color-error-container: hsl(0, 70%, 30%);
+  --md-sys-color-on-error-container: hsl(0, 85%, 90%);
+}
+
+/* --- THEME 2: CRIMSON ROSE --- */
+body.theme-rose.light {
+  --md-sys-color-primary: hsl(345, 60%, 40%);
+  --md-sys-color-on-primary: hsl(0, 0%, 100%);
+  --md-sys-color-primary-container: hsl(345, 80%, 90%);
+  --md-sys-color-on-primary-container: hsl(345, 95%, 15%);
+  --md-sys-color-secondary: hsl(345, 15%, 45%);
+  --md-sys-color-on-secondary: hsl(0, 0%, 100%);
+  --md-sys-color-secondary-container: hsl(345, 20%, 90%);
+  --md-sys-color-on-secondary-container: hsl(345, 45%, 15%);
+  --md-sys-color-tertiary: hsl(15, 55%, 42%);
+  --md-sys-color-on-tertiary: hsl(0, 0%, 100%);
+  --md-sys-color-tertiary-container: hsl(15, 75%, 90%);
+  --md-sys-color-on-tertiary-container: hsl(15, 90%, 15%);
+  --md-sys-color-background: hsl(345, 20%, 98%);
+  --md-sys-color-on-background: hsl(345, 35%, 10%);
+  --md-sys-color-surface: hsl(345, 15%, 98%);
+  --md-sys-color-on-surface: hsl(345, 35%, 10%);
+  --md-sys-color-surface-variant: hsl(345, 15%, 92%);
+  --md-sys-color-on-surface-variant: hsl(345, 20%, 30%);
+  --md-sys-color-outline: hsl(345, 10%, 50%);
+  --md-sys-color-outline-variant: hsl(345, 15%, 85%);
+  --md-sys-color-surface-container-lowest: hsl(0, 0%, 100%);
+  --md-sys-color-surface-container-low: hsl(345, 15%, 96%);
+  --md-sys-color-surface-container: hsl(345, 15%, 94%);
+  --md-sys-color-surface-container-high: hsl(345, 15%, 92%);
+  --md-sys-color-surface-container-highest: hsl(345, 15%, 90%);
+  --md-sys-color-error: hsl(0, 75%, 40%);
+  --md-sys-color-on-error: hsl(0, 0%, 100%);
+  --md-sys-color-error-container: hsl(0, 85%, 90%);
+  --md-sys-color-on-error-container: hsl(0, 95%, 15%);
+}
+body.theme-rose.dark {
+  --md-sys-color-primary: hsl(345, 75%, 80%);
+  --md-sys-color-on-primary: hsl(345, 80%, 20%);
+  --md-sys-color-primary-container: hsl(345, 60%, 30%);
+  --md-sys-color-on-primary-container: hsl(345, 80%, 92%);
+  --md-sys-color-secondary: hsl(345, 20%, 75%);
+  --md-sys-color-on-secondary: hsl(345, 25%, 20%);
+  --md-sys-color-secondary-container: hsl(345, 15%, 32%);
+  --md-sys-color-on-secondary-container: hsl(345, 30%, 88%);
+  --md-sys-color-tertiary: hsl(15, 70%, 78%);
+  --md-sys-color-on-tertiary: hsl(15, 75%, 22%);
+  --md-sys-color-tertiary-container: hsl(15, 60%, 32%);
+  --md-sys-color-on-tertiary-container: hsl(15, 75%, 90%);
+  --md-sys-color-background: hsl(345, 25%, 6%);
+  --md-sys-color-on-background: hsl(345, 20%, 90%);
+  --md-sys-color-surface: hsl(345, 25%, 8%);
+  --md-sys-color-on-surface: hsl(345, 20%, 90%);
+  --md-sys-color-surface-variant: hsl(345, 20%, 22%);
+  --md-sys-color-on-surface-variant: hsl(345, 20%, 80%);
+  --md-sys-color-outline: hsl(345, 10%, 60%);
+  --md-sys-color-outline-variant: hsl(345, 15%, 30%);
+  --md-sys-color-surface-container-lowest: hsl(345, 30%, 4%);
+  --md-sys-color-surface-container-low: hsl(345, 25%, 8%);
+  --md-sys-color-surface-container: hsl(345, 20%, 10%);
+  --md-sys-color-surface-container-high: hsl(345, 20%, 14%);
+  --md-sys-color-surface-container-highest: hsl(345, 20%, 18%);
+  --md-sys-color-error: hsl(0, 85%, 80%);
+  --md-sys-color-on-error: hsl(0, 90%, 20%);
+  --md-sys-color-error-container: hsl(0, 70%, 30%);
+  --md-sys-color-on-error-container: hsl(0, 85%, 90%);
+}
+
+/* --- THEME 3: SUNSET ORANGE --- */
+body.theme-orange.light {
+  --md-sys-color-primary: hsl(24, 75%, 38%);
+  --md-sys-color-on-primary: hsl(0, 0%, 100%);
+  --md-sys-color-primary-container: hsl(24, 85%, 88%);
+  --md-sys-color-on-primary-container: hsl(24, 95%, 12%);
+  --md-sys-color-secondary: hsl(24, 15%, 45%);
+  --md-sys-color-on-secondary: hsl(0, 0%, 100%);
+  --md-sys-color-secondary-container: hsl(24, 20%, 90%);
+  --md-sys-color-on-secondary-container: hsl(24, 45%, 15%);
+  --md-sys-color-tertiary: hsl(50, 65%, 35%);
+  --md-sys-color-on-tertiary: hsl(0, 0%, 100%);
+  --md-sys-color-tertiary-container: hsl(50, 75%, 88%);
+  --md-sys-color-on-tertiary-container: hsl(50, 90%, 12%);
+  --md-sys-color-background: hsl(24, 25%, 98%);
+  --md-sys-color-on-background: hsl(24, 35%, 10%);
+  --md-sys-color-surface: hsl(24, 15%, 98%);
+  --md-sys-color-on-surface: hsl(24, 35%, 10%);
+  --md-sys-color-surface-variant: hsl(24, 15%, 92%);
+  --md-sys-color-on-surface-variant: hsl(24, 20%, 30%);
+  --md-sys-color-outline: hsl(24, 10%, 50%);
+  --md-sys-color-outline-variant: hsl(24, 15%, 85%);
+  --md-sys-color-surface-container-lowest: hsl(0, 0%, 100%);
+  --md-sys-color-surface-container-low: hsl(24, 15%, 96%);
+  --md-sys-color-surface-container: hsl(24, 15%, 94%);
+  --md-sys-color-surface-container-high: hsl(24, 15%, 92%);
+  --md-sys-color-surface-container-highest: hsl(24, 15%, 90%);
+  --md-sys-color-error: hsl(0, 75%, 40%);
+  --md-sys-color-on-error: hsl(0, 0%, 100%);
+  --md-sys-color-error-container: hsl(0, 85%, 90%);
+  --md-sys-color-on-error-container: hsl(0, 95%, 15%);
+}
+body.theme-orange.dark {
+  --md-sys-color-primary: hsl(24, 85%, 75%);
+  --md-sys-color-on-primary: hsl(24, 85%, 18%);
+  --md-sys-color-primary-container: hsl(24, 70%, 28%);
+  --md-sys-color-on-primary-container: hsl(24, 85%, 90%);
+  --md-sys-color-secondary: hsl(24, 20%, 75%);
+  --md-sys-color-on-secondary: hsl(24, 25%, 20%);
+  --md-sys-color-secondary-container: hsl(24, 15%, 32%);
+  --md-sys-color-on-secondary-container: hsl(24, 30%, 88%);
+  --md-sys-color-tertiary: hsl(50, 80%, 75%);
+  --md-sys-color-on-tertiary: hsl(50, 85%, 18%);
+  --md-sys-color-tertiary-container: hsl(50, 70%, 28%);
+  --md-sys-color-on-tertiary-container: hsl(50, 85%, 90%);
+  --md-sys-color-background: hsl(24, 30%, 6%);
+  --md-sys-color-on-background: hsl(24, 20%, 90%);
+  --md-sys-color-surface: hsl(24, 25%, 8%);
+  --md-sys-color-on-surface: hsl(24, 20%, 90%);
+  --md-sys-color-surface-variant: hsl(24, 20%, 22%);
+  --md-sys-color-on-surface-variant: hsl(24, 20%, 80%);
+  --md-sys-color-outline: hsl(24, 10%, 60%);
+  --md-sys-color-outline-variant: hsl(24, 15%, 30%);
+  --md-sys-color-surface-container-lowest: hsl(24, 35%, 4%);
+  --md-sys-color-surface-container-low: hsl(24, 25%, 8%);
+  --md-sys-color-surface-container: hsl(24, 20%, 10%);
+  --md-sys-color-surface-container-high: hsl(24, 20%, 14%);
+  --md-sys-color-surface-container-highest: hsl(24, 20%, 18%);
+  --md-sys-color-error: hsl(0, 85%, 80%);
+  --md-sys-color-on-error: hsl(0, 90%, 20%);
+  --md-sys-color-error-container: hsl(0, 70%, 30%);
+  --md-sys-color-on-error-container: hsl(0, 85%, 90%);
+}
+
+/* --- THEME 4: INDIGO BREEZE --- */
+body.theme-breeze.light {
+  --md-sys-color-primary: hsl(210, 65%, 40%);
+  --md-sys-color-on-primary: hsl(0, 0%, 100%);
+  --md-sys-color-primary-container: hsl(210, 80%, 90%);
+  --md-sys-color-on-primary-container: hsl(210, 95%, 15%);
+  --md-sys-color-secondary: hsl(210, 15%, 45%);
+  --md-sys-color-on-secondary: hsl(0, 0%, 100%);
+  --md-sys-color-secondary-container: hsl(210, 20%, 90%);
+  --md-sys-color-on-secondary-container: hsl(210, 45%, 15%);
+  --md-sys-color-tertiary: hsl(180, 55%, 35%);
+  --md-sys-color-on-tertiary: hsl(0, 0%, 100%);
+  --md-sys-color-tertiary-container: hsl(180, 65%, 88%);
+  --md-sys-color-on-tertiary-container: hsl(180, 85%, 12%);
+  --md-sys-color-background: hsl(210, 25%, 98%);
+  --md-sys-color-on-background: hsl(210, 35%, 10%);
+  --md-sys-color-surface: hsl(210, 15%, 98%);
+  --md-sys-color-on-surface: hsl(210, 35%, 10%);
+  --md-sys-color-surface-variant: hsl(210, 15%, 92%);
+  --md-sys-color-on-surface-variant: hsl(210, 20%, 30%);
+  --md-sys-color-outline: hsl(210, 10%, 50%);
+  --md-sys-color-outline-variant: hsl(210, 15%, 85%);
+  --md-sys-color-surface-container-lowest: hsl(0, 0%, 100%);
+  --md-sys-color-surface-container-low: hsl(210, 15%, 96%);
+  --md-sys-color-surface-container: hsl(210, 15%, 94%);
+  --md-sys-color-surface-container-high: hsl(210, 15%, 92%);
+  --md-sys-color-surface-container-highest: hsl(210, 15%, 90%);
+  --md-sys-color-error: hsl(0, 75%, 40%);
+  --md-sys-color-on-error: hsl(0, 0%, 100%);
+  --md-sys-color-error-container: hsl(0, 85%, 90%);
+  --md-sys-color-on-error-container: hsl(0, 95%, 15%);
+}
+body.theme-breeze.dark {
+  --md-sys-color-primary: hsl(210, 80%, 75%);
+  --md-sys-color-on-primary: hsl(210, 85%, 18%);
+  --md-sys-color-primary-container: hsl(210, 70%, 28%);
+  --md-sys-color-on-primary-container: hsl(210, 85%, 90%);
+  --md-sys-color-secondary: hsl(210, 20%, 75%);
+  --md-sys-color-on-secondary: hsl(210, 25%, 20%);
+  --md-sys-color-secondary-container: hsl(210, 15%, 32%);
+  --md-sys-color-on-secondary-container: hsl(210, 30%, 88%);
+  --md-sys-color-tertiary: hsl(180, 70%, 72%);
+  --md-sys-color-on-tertiary: hsl(180, 85%, 18%);
+  --md-sys-color-tertiary-container: hsl(180, 70%, 28%);
+  --md-sys-color-on-tertiary-container: hsl(180, 85%, 90%);
+  --md-sys-color-background: hsl(210, 30%, 6%);
+  --md-sys-color-on-background: hsl(210, 20%, 90%);
+  --md-sys-color-surface: hsl(210, 25%, 8%);
+  --md-sys-color-on-surface: hsl(210, 20%, 90%);
+  --md-sys-color-surface-variant: hsl(210, 20%, 22%);
+  --md-sys-color-on-surface-variant: hsl(210, 20%, 80%);
+  --md-sys-color-outline: hsl(210, 10%, 60%);
+  --md-sys-color-outline-variant: hsl(210, 15%, 30%);
+  --md-sys-color-surface-container-lowest: hsl(210, 35%, 4%);
+  --md-sys-color-surface-container-low: hsl(210, 25%, 8%);
+  --md-sys-color-surface-container: hsl(210, 20%, 10%);
+  --md-sys-color-surface-container-high: hsl(210, 20%, 14%);
+  --md-sys-color-surface-container-highest: hsl(210, 20%, 18%);
+  --md-sys-color-error: hsl(0, 85%, 80%);
+  --md-sys-color-on-error: hsl(0, 90%, 20%);
+  --md-sys-color-error-container: hsl(0, 70%, 30%);
+  --md-sys-color-on-error-container: hsl(0, 85%, 90%);
+}
+
+/* ==========================================================================
+   2. BASE LAYOUT & TYPOGRAPHY STYLE SCALE
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+  transition: background-color var(--transition-medium), color var(--transition-medium);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Material 3 Typography Scale */
+.m3-display-large { font-size: 3.5rem; font-weight: 400; line-height: 4rem; letter-spacing: -0.25px; }
+.m3-headline-large { font-size: 2rem; font-weight: 400; line-height: 2.5rem; }
+.m3-headline-small { font-size: 1.5rem; font-weight: 400; line-height: 2rem; }
+.m3-title-large { font-size: 1.375rem; font-weight: 400; line-height: 1.75rem; }
+.m3-title-medium { font-size: 1rem; font-weight: 500; line-height: 1.5rem; letter-spacing: 0.15px; }
+.m3-title-small { font-size: 0.875rem; font-weight: 500; line-height: 1.25rem; letter-spacing: 0.1px; }
+.m3-body-large { font-size: 1rem; font-weight: 400; line-height: 1.5rem; letter-spacing: 0.5px; }
+.m3-body-medium { font-size: 0.875rem; font-weight: 400; line-height: 1.25rem; letter-spacing: 0.25px; }
+.m3-body-small { font-size: 0.75rem; font-weight: 400; line-height: 1rem; letter-spacing: 0.4px; }
+.m3-label-large { font-size: 0.875rem; font-weight: 500; line-height: 1.25rem; letter-spacing: 0.1px; }
+.m3-label-medium { font-size: 0.75rem; font-weight: 500; line-height: 1rem; letter-spacing: 0.5px; }
+
+/* Helpers */
+.hidden {
+  display: none !important;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   3. BASIC COMPONENT LIBRARY (M3 SPEC)
+   ========================================================================== */
+
+/* Buttons */
+.m3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 24px;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  position: relative;
+  overflow: hidden;
+  gap: 8px;
+  transition: box-shadow var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.m3-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.m3-btn:hover::after {
+  opacity: 0.08;
+}
+
+.m3-btn:focus-visible::after {
+  opacity: 0.12;
+}
+
+.m3-btn:active {
+  transform: scale(0.98);
+}
+
+.m3-btn-filled {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: none;
+}
+
+.m3-btn-filled:hover {
+  box-shadow: var(--elevation-1);
+}
+
+.m3-btn-outlined {
+  border: 1px solid var(--md-sys-color-outline);
+  color: var(--md-sys-color-primary);
+}
+
+.m3-btn-outlined:hover {
+  background-color: hsl(var(--md-sys-color-primary-hue), 10%, 95%);
+}
+
+.m3-btn-text {
+  color: var(--md-sys-color-primary);
+}
+
+.m3-btn-text:hover {
+  background-color: hsl(var(--md-sys-color-primary-hue), 10%, 95%);
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+/* Icon Buttons */
+.m3-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--md-sys-color-on-surface-variant);
+  position: relative;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.m3-icon-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.m3-icon-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.m3-icon-btn:hover::after {
+  opacity: 0.08;
+}
+
+.m3-icon-btn:focus-visible::after {
+  opacity: 0.12;
+}
+
+.m3-icon-btn:active {
+  transform: scale(0.92);
+}
+
+.m3-icon-btn-filled {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+/* Text Fields */
+.m3-text-field-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.m3-text-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid var(--md-sys-color-on-surface-variant);
+  height: 56px;
+  padding: 0 16px;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.m3-text-field:focus-within {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-bottom: 2px solid var(--md-sys-color-primary);
+}
+
+.m3-input-field {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--md-sys-color-on-surface);
+  padding-top: 16px;
+  padding-bottom: 4px;
+}
+
+.m3-input-label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface-variant);
+  pointer-events: none;
+  transition: transform var(--transition-fast), font-size var(--transition-fast), color var(--transition-fast);
+}
+
+.m3-input-field:focus ~ .m3-input-label,
+.m3-input-field:not(:placeholder-shown) ~ .m3-input-label {
+  transform: translateY(-10px);
+  font-size: 0.75rem;
+  color: var(--md-sys-color-primary);
+}
+
+.m3-input-icon {
+  position: absolute;
+  right: 8px;
+}
+
+.m3-helper-text {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  padding: 0 16px;
+  color: var(--md-sys-color-error);
+}
+
+/* Search Bar */
+.m3-search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--md-sys-color-surface-container-high);
+  height: 56px;
+  border-radius: 28px;
+  padding: 0 16px;
+  width: 100%;
+  gap: 12px;
+  transition: box-shadow var(--transition-fast), background-color var(--transition-fast);
+  box-shadow: var(--elevation-1);
+}
+
+.m3-search-bar:focus-within {
+  background-color: var(--md-sys-color-surface-container-highest);
+  box-shadow: var(--elevation-2);
+}
+
+.m3-search-bar .search-icon {
+  width: 24px;
+  height: 24px;
+  fill: var(--md-sys-color-on-surface-variant);
+}
+
+.m3-search-bar input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-search-bar input::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Filter Chips */
+.m3-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.m3-chip .chip-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.m3-chip:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+}
+
+.m3-chip.active {
+  background-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border-color: transparent;
+}
+
+/* Toast Snackbar */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+  width: 90%;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.m3-snackbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--md-sys-color-on-surface);
+  color: var(--md-sys-color-surface);
+  padding: 14px 16px;
+  border-radius: 4px;
+  box-shadow: var(--elevation-3);
+  pointer-events: auto;
+  animation: slide-up-fade var(--transition-medium) forwards;
+  gap: 16px;
+}
+
+.m3-snackbar-text {
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.m3-snackbar-action-btn {
+  color: var(--md-sys-color-primary-container);
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   4. SYSTEM PAGES & GATES (PASSWORD SCREEN & ERROR STATE)
+   ========================================================================== */
+
+/* Fullscreen overlays */
+.password-gate-container,
+.error-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 1000;
+  background-color: var(--md-sys-color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.gate-card,
+.error-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 28px;
+  padding: 36px 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: var(--elevation-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.gate-logo,
+.error-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-primary-container);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.wave-logo {
+  width: 36px;
+  height: 36px;
+  fill: var(--md-sys-color-on-primary-container);
+}
+
+.error-icon {
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+.error-icon svg {
+  width: 36px;
+  height: 36px;
+  fill: currentColor;
+}
+
+.gate-title,
+.error-card h2 {
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.gate-subtitle,
+.error-card p {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 28px;
+}
+
+.gate-form {
+  width: 100%;
+}
+
+.gate-submit-btn,
+#retry-connection-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 24px;
+  margin-top: 24px;
+}
+
+/* Invalid credentials shake animation */
+.gate-card.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
+}
+
+/* ==========================================================================
+   5. APPLICATION LAYOUT & HEADER CONTROLS
+   ========================================================================== */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 96px; /* Spacing for audio mini-player or multi-select */
+}
+
+/* Header bar */
+.app-header {
+  height: 72px;
+  padding: 0 16px;
+  background-color: var(--md-sys-color-surface-container);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background-color var(--transition-medium);
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--md-sys-color-primary-container);
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-pill {
+  color: var(--md-sys-color-secondary);
+}
+
+/* Multi-select indicator */
+.selection-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 72px;
+  padding: 0 16px;
+  background-color: var(--md-sys-color-surface-container-highest);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 150;
+  box-shadow: var(--elevation-2);
+  animation: slide-down var(--transition-medium) forwards;
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* Main content structure */
+.content-wrapper {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Toolbar area (search, filter buttons) */
+.toolbar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-bar-container {
+  flex: 1;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Sort dropdown */
+.m3-select-container {
+  position: relative;
+}
+
+#sort-menu-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+}
+
+.m3-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 4px;
+  list-style: none;
+  min-width: 180px;
+  box-shadow: var(--elevation-2);
+  z-index: 200;
+  padding: 8px 0;
+  animation: dropdown-fade var(--transition-fast) forwards;
+}
+
+@keyframes dropdown-fade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.m3-dropdown-item {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface);
+  transition: background-color var(--transition-fast);
+}
+
+.m3-dropdown-item:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+
+.m3-dropdown-item[aria-selected="true"] {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  font-weight: 500;
+}
+
+/* Filter chips scroll bar */
+.filter-chips-container {
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide standard Firefox scrollbars */
+  margin: 0 -16px;
+  padding: 0 16px 4px 16px;
+}
+
+.filter-chips-container::-webkit-scrollbar {
+  display: none; /* Hide Chrome/Safari scrollbars */
+}
+
+.filter-chips-scroll {
+  display: flex;
+  gap: 8px;
+}
+
+/* Footer layout */
+.app-footer {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   6. GRID & LIST BROWSING VISUALS (SKELETONS & CARDS)
+   ========================================================================== */
+
+.files-display-section {
+  position: relative;
+  min-height: 250px;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* Responsive grid layouts */
+@media(min-width: 600px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+}
+@media(min-width: 900px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+@media(min-width: 1200px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* SKELETON LOADER ANIMATIONS */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--md-sys-color-surface-container-high) 25%,
+    var(--md-sys-color-surface-container-highest) 37%,
+    var(--md-sys-color-surface-container-high) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer-anim 1.4s ease infinite;
+}
+
+@keyframes shimmer-anim {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-thumb {
+  aspect-ratio: 16/10;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 80%;
+  border-radius: 4px;
+}
+
+.skeleton-subtext {
+  height: 12px;
+  width: 50%;
+  border-radius: 4px;
+}
+
+/* FILE CARDS (M3 GRID SPEC) */
+.file-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-1);
+  background-color: var(--md-sys-color-surface-container);
+  border-color: var(--md-sys-color-outline);
+}
+
+/* Selection checkmarks and states */
+.file-card.selected {
+  background-color: var(--md-sys-color-primary-container);
+  border-color: var(--md-sys-color-primary);
+}
+
+.file-card-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-primary);
+  opacity: 0; /* Hidden unless selected or card hovered */
+  transition: opacity var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.file-card:hover .file-card-checkbox,
+.file-card.selected .file-card-checkbox,
+body.select-mode .file-card-checkbox {
+  opacity: 1;
+}
+
+.file-card.selected .file-card-checkbox {
+  background-color: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+}
+
+.file-card-checkbox svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  display: none;
+}
+
+.file-card.selected .file-card-checkbox svg {
+  display: block;
+}
+
+/* Thumbnail Visuals */
+.file-card-thumb-container {
+  aspect-ratio: 16/10;
+  background-color: var(--md-sys-color-surface-variant);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.file-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-card-placeholder-icon {
+  width: 48px;
+  height: 48px;
+  fill: currentColor;
+  opacity: 0.6;
+}
+
+/* Badges (duration, size overlay) */
+.file-card-duration-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Card details metadata */
+.file-card-details {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+}
+
+.file-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-card-name {
+  color: var(--md-sys-color-on-surface);
+  padding-right: 28px; /* Room for individual download button */
+}
+
+.file-card-subinfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.file-card-type-badge {
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.file-card-download-btn {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--md-sys-color-primary);
+  transition: background-color var(--transition-fast);
+}
+
+.file-card-download-btn:hover {
+  background-color: var(--md-sys-color-primary-container);
+}
+
+.file-card-download-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* LIST VIEW LAYOUT (TRANSFORMED COMPACT FORMAT) */
+.files-grid.list-view-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.files-grid.list-view-mode .file-card {
+  flex-direction: row;
+  height: 64px;
+  align-items: center;
+  border-radius: 8px;
+}
+
+.files-grid.list-view-mode .file-card-thumb-container {
+  width: 64px;
+  height: 64px;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+}
+
+.files-grid.list-view-mode .file-card-placeholder-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.files-grid.list-view-mode .file-card-details {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  overflow: hidden;
+  gap: 16px;
+}
+
+.files-grid.list-view-mode .file-card-name {
+  padding-right: 0;
+}
+
+.files-grid.list-view-mode .file-card-subinfo {
+  flex-shrink: 0;
+}
+
+.files-grid.list-view-mode .file-card-download-btn {
+  position: static;
+  flex-shrink: 0;
+}
+
+.files-grid.list-view-mode .file-card-checkbox {
+  position: static;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Empty State Details */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-state-illustration {
+  width: 80px;
+  height: 80px;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-state-illustration svg {
+  width: 40px;
+  height: 40px;
+  fill: var(--md-sys-color-primary);
+}
+
+/* Floating bottom action bar */
+.selection-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px;
+  background: linear-gradient(0deg, var(--md-sys-color-background) 30%, transparent 100%);
+  display: flex;
+  justify-content: center;
+  z-index: 150;
+  pointer-events: none;
+}
+
+.selection-bar-card {
+  pointer-events: auto;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: 16px;
+  padding: 12px 24px;
+  box-shadow: var(--elevation-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+  animation: slide-up var(--transition-medium) forwards;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.selection-bar-text {
+  color: var(--md-sys-color-on-surface);
+}
+
+.selection-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   7. CUSTOM VIDEO, AUDIO AND MEDIA VIEWERS
+   ========================================================================== */
+
+/* Fullscreen Dialog Modal */
+.viewer-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+.modal-window {
+  position: relative;
+  background-color: var(--md-sys-color-surface-container-low);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: var(--elevation-4);
+  overflow: hidden;
+  transition: transform var(--transition-medium), opacity var(--transition-medium);
+  animation: modal-enter var(--transition-medium) forwards;
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media(min-width: 900px) {
+  .viewer-modal {
+    padding: 32px;
+  }
+  .modal-window {
+    height: 85vh;
+    max-height: 800px;
+    max-width: 1000px;
+    border-radius: 28px;
+  }
+}
+
+.modal-header {
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container);
+  flex-shrink: 0;
+}
+
+.modal-title-container {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding-right: 16px;
+}
+
+.modal-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.modal-body {
+  flex: 1;
+  position: relative;
+  background-color: #000; /* Dark canvas for video/image viewing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.viewer-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom Video Player CSS */
+.custom-video-player {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.custom-video-player video {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Controls overlay - controls are pinned to bottom */
+.video-controls-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.0) 45%, rgba(0,0,0,0.35) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  z-index: 5;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.custom-video-player:hover .video-controls-overlay,
+.custom-video-player.controls-active .video-controls-overlay {
+  opacity: 1;
+}
+
+.video-controls-overlay * {
+  pointer-events: auto;
+}
+
+/* Big center play */
+.center-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.center-play-btn:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.center-play-icon {
+  width: 32px;
+  height: 32px;
+  fill: #fff;
+}
+
+/* Scrubber / Slider layout */
+.controls-bar-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.timeline-container {
+  position: relative;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.timeline-slider {
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  position: relative;
+  border-radius: 2px;
+  transition: height var(--transition-fast);
+}
+
+.timeline-container:hover .timeline-slider {
+  height: 6px;
+}
+
+.timeline-track {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+
+.timeline-buffer {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  width: 0%;
+}
+
+.timeline-progress {
+  position: absolute;
+  top: 0; left: 0; height: 100%;
+  background-color: var(--md-sys-color-primary);
+  border-radius: 2px;
+  width: 0%;
+}
+
+.timeline-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  left: 0%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  transition: transform var(--transition-fast);
+}
+
+.timeline-container:hover .timeline-handle {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.timeline-hover-time {
+  position: absolute;
+  bottom: 20px;
+  background-color: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  pointer-events: none;
+  transform: translateX(-50%);
+  display: none;
+}
+
+.timeline-container:hover .timeline-hover-time {
+  display: block;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controls-left, .controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-btn {
+  color: #fff;
+}
+
+.video-time-display {
+  color: #fff;
+}
+
+/* Volume Slider UI */
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.volume-slider {
+  width: 0;
+  height: 4px;
+  border-radius: 2px;
+  -webkit-appearance: none;
+  background-color: rgba(255,255,255,0.3);
+  outline: none;
+  transition: width var(--transition-medium);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.volume-container:hover .volume-slider,
+.volume-slider:focus {
+  width: 60px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: -60px 0 0 60px var(--md-sys-color-primary);
+}
+
+/* Speed Dropdown Menu */
+.playback-speed-container {
+  position: relative;
+}
+
+.video-speed-menu {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  border-radius: 8px;
+  list-style: none;
+  padding: 8px 0;
+  width: 100px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-speed-menu li {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.video-speed-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.video-speed-menu li.active {
+  color: var(--md-sys-color-primary);
+  font-weight: bold;
+}
+
+/* Audio Player UI inside Modal */
+.custom-audio-player-modal {
+  width: 100%;
+  max-width: 450px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 24px;
+}
+
+.audio-cover-art-container {
+  width: 200px;
+  height: 200px;
+  background-color: var(--md-sys-color-primary-container);
+  border-radius: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--elevation-2);
+}
+
+.audio-large-cover {
+  width: 120px;
+  height: 120px;
+  opacity: 0.8;
+}
+
+/* Decorative waveform animation */
+.audio-waveform-visualization {
+  position: absolute;
+  bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 40px;
+  gap: 4px;
+  width: 100%;
+}
+
+.wave-bar {
+  width: 4px;
+  background-color: var(--md-sys-color-primary);
+  border-radius: 2px;
+  height: 4px;
+  transition: height var(--transition-fast);
+}
+
+.custom-audio-player-modal.playing .wave-bar {
+  animation: bounce 0.8s ease-in-out infinite alternate;
+}
+
+/* Offset animation timing */
+.custom-audio-player-modal.playing .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(2) { animation-delay: 0.4s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(4) { animation-delay: 0.6s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(6) { animation-delay: 0.5s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(7) { animation-delay: 0.1s; }
+.custom-audio-player-modal.playing .wave-bar:nth-child(8) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  from { height: 4px; }
+  to { height: 32px; }
+}
+
+.audio-time-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.audio-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.m3-btn-large {
+  width: 48px;
+  height: 48px;
+}
+
+.m3-btn-xlarge {
+  width: 64px;
+  height: 64px;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+.m3-btn-xlarge svg {
+  width: 32px;
+  height: 32px;
+}
+
+.audio-secondary-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.audio-secondary-row .volume-slider {
+  width: 100px;
+}
+
+/* Lightbox Image UI */
+.lightbox-image-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform var(--transition-fast);
+  cursor: zoom-in;
+}
+
+.lightbox-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 24px;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.lightbox-zoom-controls button {
+  color: #fff;
+}
+
+/* Document Embed Iframe */
+.document-viewer-frame-container {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.document-viewer-frame-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Fallback Card details */
+.fallback-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 20px;
+  padding: 48px 24px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: var(--elevation-2);
+}
+
+.fallback-icon-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.fallback-icon-circle svg {
+  width: 36px;
+  height: 36px;
+  fill: currentColor;
+  overflow: visible;
+}
+
+.fallback-preview-card h3 {
+  margin-bottom: 8px;
+  color: var(--md-sys-color-on-surface);
+  width: 100%;
+}
+
+.fallback-preview-card p {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 8px;
+}
+
+.fallback-preview-card .warning-msg {
+  color: var(--md-sys-color-error);
+  margin-bottom: 24px;
+}
+
+/* Swipe down bar visual */
+.modal-swipe-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--md-sys-color-outline-variant);
+  opacity: 0.8;
+  display: none;
+}
+
+@media(max-width: 900px) {
+  .modal-swipe-bar {
+    display: block;
+  }
+}
+
+/* ==========================================================================
+   8. VLC BUTTON + TEXT FILE VIEWER
+   ========================================================================== */
+
+/* VLC / Open External Player Button */
+.modal-vlc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: #FF7700;
+  position: relative;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.modal-vlc-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  overflow: visible;
+}
+
+.modal-vlc-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.modal-vlc-btn:hover::after {
+  opacity: 0.12;
+}
+
+.modal-vlc-btn:active {
+  transform: scale(0.92);
+}
+
+/* Text File Inline Viewer */
+.text-viewer-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--md-sys-color-surface-container-lowest, #fafafa);
+  -webkit-overflow-scrolling: touch;
+}
+
+.dark .text-viewer-container {
+  background-color: #1a1a2e;
+}
+
+.text-viewer-pre {
+  margin: 0;
+  padding: 20px 24px;
+  font-family: 'Courier New', 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--md-sys-color-on-surface);
+  white-space: pre-wrap;
+  word-break: break-word;
+  tab-size: 2;
+  min-height: 100%;
+}
+
+.text-viewer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+  gap: 12px;
+}
+
+/* ==========================================================================
+   9. DOCKED MINI AUDIO PLAYER (PERSISTENT FOOTER BAR)
+   ========================================================================== */
+
+.audio-mini-player {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  z-index: 180;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--elevation-3);
+  animation: slide-up var(--transition-medium) forwards;
+  transition: bottom var(--transition-medium);
+}
+
+body.select-mode .audio-mini-player {
+  bottom: 88px;
+}
+
+.mini-player-progress-bar {
+  height: 3px;
+  background-color: var(--md-sys-color-surface-variant);
+  cursor: pointer;
+  position: relative;
+}
+
+.mini-player-progress-fill {
+  height: 100%;
+  background-color: var(--md-sys-color-primary);
+  width: 0%;
+}
+
+.mini-player-content {
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mini-audio-cover {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: var(--md-sys-color-primary-container);
+}
+
+.mini-player-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mini-player-text span {
+  color: var(--md-sys-color-on-surface);
+}
+
+.mini-player-text .mini-audio-artist {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.mini-player-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   9. DEVICE USABILITY OPTIMIZATIONS
+   ========================================================================== */
+
+/* Expand touch target to 48x48px for icon buttons on touch screens */
+.m3-icon-btn::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: -4px; right: -4px; bottom: -4px;
+}
+
+.file-card-download-btn::before {
+  content: '';
+  position: absolute;
+  top: -8px; left: -8px; right: -8px; bottom: -8px;
+}
+
+/* Mobile: show volume slider with fixed width (hover doesn't work on touch) */
+@media(max-width: 600px) {
+  .volume-slider {
+    width: 50px !important;
+    overflow: hidden;
+  }
+  .controls-bar-container {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+  .controls-left, .controls-right {
+    gap: 6px;
+  }
+  .video-time-display {
+    font-size: 0.75rem;
+  }
+}
+
+/* Row layout for search and actions in toolbar on tablet/desktop viewports */
+@media(min-width: 600px) {
+  .toolbar-section {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .search-bar-container {
+    max-width: 480px;
+  }
+}
