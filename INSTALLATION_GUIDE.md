@@ -1,6 +1,15 @@
-# 🌊 FluxMedia OS-Specific Installation, Setup & Usage Guide
+<div align="center">
 
-This guide provides step-by-step instructions for installing, setting up, and using **FluxMedia** across different platforms: **Windows**, **macOS**, **Linux**, and **Android (Termux)**.
+# 🛠️ FluxMedia Installation & Setup Guide
+
+**A comprehensive, step-by-step guide to installing, configuring, and running FluxMedia on your favorite operating system.**
+
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](#-windows-setup-guide)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](#-macos-setup-guide)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](#-linux-setup-guide)
+[![Termux](https://img.shields.io/badge/Android_(Termux)-34A853?style=for-the-badge&logo=android&logoColor=white)](#-android-termux-setup-guide)
+
+</div>
 
 ---
 
@@ -8,7 +17,8 @@ This guide provides step-by-step instructions for installing, setting up, and us
 
 ### 1. Install Python
 1. Download and run the Python installer from [python.org](https://www.python.org/downloads/).
-2. **CRITICAL**: Check the box that says **"Add python.exe to PATH"** before clicking *Install Now*.
+> [!IMPORTANT]  
+> **CRITICAL**: Check the box that says **"Add python.exe to PATH"** before clicking *Install Now*.
 
 ### 2. Install FluxMedia
 Open PowerShell or Command Prompt and run:
@@ -17,12 +27,12 @@ pip install fluxmedia
 ```
 
 ### 3. Setup FFmpeg (Recommended)
-FFmpeg is required to merge high-definition video formats and encode audio.
-Open a fresh PowerShell window and run:
+FFmpeg is required to merge high-definition video formats and encode audio. Open a fresh PowerShell window and run:
 ```powershell
 winget install Gyan.FFmpeg
 ```
-*(Restart your terminal window after the installation completes so the PATH variables refresh).*
+> [!NOTE]  
+> *Restart your terminal window after the installation completes so the PATH variables refresh.*
 
 ### 4. Basic Usage
 To launch the interactive TUI interface, open your command prompt/PowerShell and run:
@@ -64,7 +74,8 @@ fluxmedia
 
 ## 🐧 Linux Setup Guide
 
-*Most modern distributions (such as Ubuntu 23.04+, Debian 12+, Arch, etc.) prevent global pip installs via PEP 668 to protect system libraries, which raises the `externally-managed-environment` error.*
+> [!WARNING]  
+> *Most modern distributions (such as Ubuntu 23.04+, Debian 12+, Arch, etc.) prevent global pip installs via PEP 668 to protect system libraries, which raises the `externally-managed-environment` error.*
 
 ### 1. Install Python & pipx (Recommended)
 - **Ubuntu/Debian**:
@@ -82,12 +93,13 @@ fluxmedia
   ```
 
 ### 2. Install FluxMedia
-Use `pipx` to automatically manage isolated virtualenv files for FluxMedia CLI:
+Use `pipx` to automatically manage isolated virtual environments for the FluxMedia CLI:
 ```bash
 pipx install fluxmedia
 pipx ensurepath
 ```
-*(Note: If you run `pipx ensurepath`, close and reopen your terminal window to reload the PATH configurations).*
+> [!NOTE]  
+> *If you run `pipx ensurepath`, close and reopen your terminal window to reload the PATH configurations.*
 
 ### 3. Basic Usage
 To launch the interactive TUI interface, run:
@@ -99,7 +111,8 @@ fluxmedia
 
 ## 🤖 Android (Termux) Setup Guide
 
-*Run FluxMedia natively on your Android device using the Termux terminal emulator.*
+> [!TIP]  
+> *Run FluxMedia natively on your Android device using the Termux terminal emulator!*
 
 ### 1. Setup Termux
 1. **CRITICAL**: Do **NOT** install Termux from the Google Play Store (as it is outdated). Install the latest Termux build from [F-Droid](https://f-droid.org/en/packages/com.termux/).
@@ -119,7 +132,8 @@ Provide storage access permissions so FluxMedia can save downloaded videos direc
 ```bash
 termux-setup-storage
 ```
-*Accept the storage access popup prompt on your Android screen.*
+> [!IMPORTANT]  
+> *Accept the storage access popup prompt on your Android screen.*
 
 ### 4. Install FluxMedia
 ```bash
@@ -138,10 +152,16 @@ fluxmedia
 
 Once launched, FluxMedia features an easy-to-use numbered menu:
 
-1. **Download Video**: Paste a link (from YouTube, Instagram, Facebook, TikTok, etc.), select a resolution (1080p, 720p, etc.), and download.
-2. **Download Audio**: Downloads a video stream and extracts it to a standalone audio file (MP3/M4A/FLAC). If the `mutagen` package is installed, you will be prompted if you want to customize metadata tags (Title, Artist, Album, Genre, Track) and embed the front cover art.
-3. **Download Playlist**: Downloads an entire YouTube playlist, grouping them in a folder named after the playlist.
-4. **Download Channel**: Downloads recent video uploads from a specific creator's channel URL.
-5. **Trim & Download**: Enter start and end timestamps (e.g. `00:01:10` to `00:02:30`) to extract and download a specific segment of a video.
-6. **Share Downloads via QR-Code**: Launches a local HTTP web server pointing to your downloads directory and displays a gorgeous QR Code in the console. Scan this QR Code on your mobile phone or tablet to play, search, filter, and download files directly from your computer over the local Wi-Fi.
-7. **Settings**: Edit configurations (download directory, filename structures, audio formats, default theme, proxy credentials, cookies browser, etc.).
+| Option | Feature | Description |
+|:---:|:---|:---|
+| `1` | **Download Video** | Paste a link, select a resolution (1080p, 720p, etc.), and download. |
+| `2` | **Download Audio** | Extract stream to MP3/M4A/FLAC. Auto-prompts for tags and cover art. |
+| `3` | **Download Playlist** | Downloads an entire playlist, grouping them in a folder. |
+| `4` | **Download Channel** | Downloads recent video uploads from a specific creator's channel URL. |
+| `5` | **Trim & Download** | Enter start and end timestamps (e.g. `00:01:10` to `00:02:30`) to extract a segment. |
+| `6` | **QR-Code Share** | Launches a local HTTP web server pointing to your downloads directory and displays a gorgeous QR Code. |
+| `7` | **Settings** | Edit configurations (download directory, filename structures, audio formats, default theme, proxy credentials, etc.). |
+
+<div align="center">
+  <i>Ready to download? Enjoy using FluxMedia! 🚀</i>
+</div>
