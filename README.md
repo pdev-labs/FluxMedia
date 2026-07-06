@@ -146,7 +146,7 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.4]
+### Latest Release: [v1.6.5]
 - **Automated PyPI Publishing**: Implemented GitHub Actions CI/CD workflows for secure Trusted Publishing to PyPI.
 - **PyPI README Fixes**: Resolved 404 broken link errors on PyPI by utilizing absolute GitHub blob URLs.
 - **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.
