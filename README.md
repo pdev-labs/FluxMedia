@@ -20,7 +20,7 @@
 ## 🚀 Quick Start
 
 > [!TIP]
-> Looking for detailed step-by-step installation instructions for your specific OS (Windows, macOS, Linux, or Termux)? Check out the [Detailed OS-Specific Setup Guide](INSTALLATION_GUIDE.md).
+> Looking for detailed step-by-step installation instructions for your specific OS (Windows, macOS, Linux, or Termux)? Check out the [Detailed OS-Specific Setup Guide](https://github.com/pdev-labs/FluxMedia-py/blob/main/INSTALLATION_GUIDE.md).
 
 ### 1. Installation
 Install FluxMedia globally on any system running Python 3.10+ directly via `pip`:
@@ -144,7 +144,7 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 ## 📜 Changelog
 
-Check out the full [CHANGELOG.md](CHANGELOG.md) for detailed release history.
+Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
 ### Latest Release: [v1.6.2]
 - **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.
