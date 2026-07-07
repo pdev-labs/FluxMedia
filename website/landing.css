@@ -637,12 +637,16 @@ html[data-theme="system"] .system-icon { display: block; }
     margin: 0 auto;
 }
 
-.bg-blue-light { background: var(--c-blue-light); color: var(--c-blue); }
-.bg-pink-light { background: var(--c-pink-light); color: var(--c-pink); }
-.bg-green-light { background: var(--c-green-light); color: var(--c-green); }
-.bg-yellow-light { background: var(--c-yellow-light); color: var(--c-yellow); }
-.bg-purple-light { background: var(--c-purple-light); color: var(--c-purple); }
-.bg-orange-light { background: var(--c-orange-light); color: var(--c-orange); }
+.bg-blue-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-blue-light), var(--c-blue-light)); color: var(--c-blue); }
+.bg-pink-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-pink-light), var(--c-pink-light)); color: var(--c-pink); }
+.bg-green-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-green-light), var(--c-green-light)); color: var(--c-green); }
+.bg-yellow-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-yellow-light), var(--c-yellow-light)); color: var(--c-yellow); }
+.bg-purple-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-purple-light), var(--c-purple-light)); color: var(--c-purple); }
+.bg-orange-light { background-color: var(--card-bg); background-image: linear-gradient(var(--c-orange-light), var(--c-orange-light)); color: var(--c-orange); }
+
+.bg-cyan-light { background-color: var(--card-bg); background-image: linear-gradient(var(--b-cyan), var(--b-cyan)); }
+.bg-fuchsia-light { background-color: var(--card-bg); background-image: linear-gradient(var(--b-fuchsia), var(--b-fuchsia)); }
+.bg-emerald-light { background-color: var(--card-bg); background-image: linear-gradient(var(--b-emerald), var(--b-emerald)); }
 
 .flip-card-front h3 {
     font-size: 1.25rem;
