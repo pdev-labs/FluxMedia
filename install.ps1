@@ -68,7 +68,15 @@ function Uninstall-FFmpeg {
 
 function Uninstall-Python {
     Write-Host "⏳ " -NoNewline; Write-Host "Removing Python..." -ForegroundColor Yellow
-    winget uninstall -e --id Python.Python.3.11 --silent --accept-source-agreements | Out-Null
+    
+    # Iterate through and uninstall any Python 3.x version present (3.8 through 3.14)
+    for ($i = 8; $i -le 14; $i++) {
+        winget uninstall -e --id Python.Python.3.$i --silent --accept-source-agreements 2>&1 | Out-Null
+    }
+    
+    # Also attempt to remove Windows Store versions of Python if present
+    Get-AppxPackage *PythonSoftwareFoundation* 2>&1 | Remove-AppxPackage 2>&1 | Out-Null
+
     Write-Host "✅ " -NoNewline; Write-Host "Python removed." -ForegroundColor Green
 }
 
