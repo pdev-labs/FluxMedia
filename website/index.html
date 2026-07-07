@@ -1,212 +1,281 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="system">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FluxMedia | Powerful Media Downloader</title>
     <meta name="description" content="A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed.">
-    <!-- AOS Animation CSS -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link rel="stylesheet" href="landing.css">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="landing.css">
+    <script src="app.js" defer></script>
 </head>
 <body>
-    <div class="background-effects">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
-        <div class="glow-orb orb-3"></div>
-        <div class="mesh-overlay"></div>
-    </div>
+    <div class="grid-bg"></div>
 
-    <nav class="navbar" data-aos="fade-down" data-aos-duration="1000">
+    <nav class="navbar">
         <div class="container nav-content">
-            <div class="logo">
-                <span class="logo-emoji">🌊</span>
-                <span class="logo-text">FluxMedia</span>
+            <div class="logo group">
+                <a href="index.html" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="logo-emoji">🌊</span>
+                    <span class="logo-text">FluxMedia</span>
+                </a>
             </div>
             <div class="nav-links">
                 <a href="#features">Features</a>
-                <a href="#tools">Advanced</a>
+                <a href="troubleshooting.html">Troubleshooting</a>
                 <a href="#install">Install</a>
-                <a href="https://github.com/pdev-labs" target="_blank" class="btn btn-outline nav-github">
+                
+                <!-- Theme Toggle -->
+                <div class="theme-switch-wrapper">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        <svg class="system-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                    </button>
+                    <div class="theme-menu" id="theme-menu">
+                        <button data-set-theme="light">Light</button>
+                        <button data-set-theme="dark">Dark</button>
+                        <button data-set-theme="system">System</button>
+                    </div>
+                </div>
+
+                <a href="https://github.com/pdev-labs/FluxMedia-py" target="_blank" class="btn btn-icon btn-github" aria-label="GitHub">
                     <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                     </svg>
-                    GitHub
                 </a>
             </div>
         </div>
     </nav>
 
     <header class="hero">
-        <div class="container hero-content">
-            <div class="hero-badge" data-aos="zoom-in" data-aos-delay="100">
-                <span class="badge-dot"></span> v1.6.6 is out now ✨
+        <div class="marquee-background">
+            <div class="marquee-text marquee-left">
+                <span>— Python — FFmpeg — CLI — Media — Downloader — Open Source — YouTube — Audio — Video — FLAC — MP3 — MP4 — Automation — Scripting </span>
+                <span>— Python — FFmpeg — CLI — Media — Downloader — Open Source — YouTube — Audio — Video — FLAC — MP3 — MP4 — Automation — Scripting </span>
             </div>
-            <h1 class="hero-title" data-aos="fade-up" data-aos-delay="200">
-                Download Media.<br> <span class="gradient-text">Simply & Fast.</span>
+            <div class="marquee-text marquee-right">
+                <span>— Fast — Reliable — Cross-Platform — TUI — Beautiful — Interactive — Local Server — QR Code — LAN Share — Batch — Configurable </span>
+                <span>— Fast — Reliable — Cross-Platform — TUI — Beautiful — Interactive — Local Server — QR Code — LAN Share — Batch — Configurable </span>
+            </div>
+        </div>
+
+        <div class="container hero-content">
+            <p class="hero-intro reveal">👋 Hey, meet FluxMedia...</p>
+            <h1 class="hero-title reveal text-interactive">
+                Download Media.<br> <span class="hero-highlight">Simply & Fast.</span>
             </h1>
-            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="300">
+            <p class="hero-subtitle reveal">
                 A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Featuring a customizable LAN QR share portal and rich media player.
             </p>
             
-            <div class="hero-actions" data-aos="fade-up" data-aos-delay="400">
-                <a href="#install" class="btn btn-primary btn-glow">Get Started</a>
+            <div class="hero-actions reveal">
+                <a href="#install" class="btn btn-primary">Get Started</a>
                 <a href="https://pypi.org/project/fluxmedia/" target="_blank" class="btn btn-secondary">View on PyPI</a>
             </div>
-
-            <div class="terminal-mockup" data-aos="zoom-in-up" data-aos-delay="500">
-                <div class="terminal-header">
-                    <div class="terminal-dots">
-                        <span class="dot dot-red"></span>
-                        <span class="dot dot-yellow"></span>
-                        <span class="dot dot-green"></span>
+            
+            <div class="terminal-container reveal mt-12">
+                <div class="terminal-mockup draggable">
+                    <div class="terminal-header handle">
+                        <div class="terminal-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <span class="terminal-title">Terminal</span>
                     </div>
-                    <span class="terminal-title">bash - fluxmedia</span>
-                </div>
-                <div class="terminal-body">
-                    <p><span class="prompt">$</span> pip install fluxmedia</p>
-                    <p class="output success">Successfully installed fluxmedia-1.6.6</p>
-                    <p><span class="prompt">$</span> fluxmedia</p>
-                    <p class="output text-blue">🌊 Welcome to FluxMedia TUI...</p>
+                    <div class="terminal-body">
+                        <p><span class="prompt">$</span> pip install fluxmedia</p>
+                        <p class="output success">Successfully installed fluxmedia-1.6.6</p>
+                        <p><span class="prompt">$</span> fluxmedia</p>
+                        <p class="output text-blue type-effect">🌊 Welcome to FluxMedia TUI...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <section id="features" class="features">
+    <section id="features" class="section">
         <div class="container">
-            <h2 class="section-title" data-aos="fade-up">Everything you need in one tool</h2>
-            
-            <div class="features-grid">
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">🎨</div>
+            <h2 class="section-title reveal text-center">Everything you need</h2>
+        
+            <div class="features-grid mt-12">
+                <!-- Feature 1 -->
+                <div class="feature-card-wrapper reveal flip-card" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-blue-light">🎨</div>
+                            <h3>Dynamic Console TUI</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-blue-light">
+                            <p>Experience a next-gen interactive terminal interface with live progress and beautiful panels.</p>
+                        </div>
                     </div>
-                    <h3>Dynamic Console TUI</h3>
-                    <p>Experience a next-generation terminal user interface. FluxMedia renders rich interactive tables, beautifully structured configuration panels, and live progress bars showing real-time download speeds, ETA, and exact file sizes directly in your command prompt.</p>
+                    <div class="feature-card-shadow shadow-blue"></div>
+                    <div class="feature-card-shadow-outer"></div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 100ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-pink-light">🎵</div>
+                            <h3>Smart Audio Extraction</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-pink-light">
+                            <p>Automatically extract high-quality audio, embed cover art, and write ID3 metadata seamlessly.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card-shadow shadow-pink"></div>
+                    <div class="feature-card-shadow-outer"></div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 200ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-green-light">🌐</div>
+                            <h3>LAN QR Share Portal</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-green-light">
+                            <p>Instantly host a beautiful web interface on your local network. Scan the QR code to stream.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card-shadow shadow-green"></div>
+                    <div class="feature-card-shadow-outer"></div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="feature-card-wrapper reveal flip-card" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-yellow-light">📚</div>
+                            <h3>Batch Playlists</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-yellow-light">
+                            <p>Save massive amounts of content with a single command. Skips existing files intelligently.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card-shadow shadow-yellow"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
                 
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">🎵</div>
+                <!-- Feature 5 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 100ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-purple-light">🏷️</div>
+                            <h3>Rich Metadata</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-purple-light">
+                            <p>Perfect for Plex/Jellyfin. Captures descriptions, dates, and thumbnails automatically.</p>
+                        </div>
                     </div>
-                    <h3>Smart Audio Extraction</h3>
-                    <p>Looking to build your local music library? FluxMedia can automatically download video files, extract the audio tracks seamlessly, and convert them into high-quality MP3s. It embeds the video thumbnail as cover art and writes all metadata directly into the file!</p>
+                    <div class="feature-card-shadow shadow-purple"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
-                
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">🌐</div>
+
+                <!-- Feature 6 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 200ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-orange-light">⚙️</div>
+                            <h3>Deep Configuration</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card bg-orange-light">
+                            <p>Set default folders, define filename structures, and switch between premium color themes.</p>
+                        </div>
                     </div>
-                    <h3>LAN QR Share Portal</h3>
-                    <p>Stop transferring files via USB. With our built-in LAN sharing tool, you can instantly host a beautiful web interface on your local network. It generates a scannable QR code right in your terminal, allowing any phone or TV to stream your collection.</p>
+                    <div class="feature-card-shadow shadow-orange"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
-                
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">📚</div>
+
+                <!-- Feature 7 -->
+                <div class="feature-card-wrapper reveal flip-card" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-cyan" style="background:var(--b-cyan)">📝</div>
+                            <h3>Subtitles Capturing</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card" style="background:var(--b-cyan);color:var(--text-primary)">
+                            <p>Download caption files for specified language codes and embed them as soft-subs.</p>
+                        </div>
                     </div>
-                    <h3>Batch Playlist Downloads</h3>
-                    <p>Save massive amounts of content with a single command. FluxMedia supports fetching entire playlists, recent channel uploads, or custom URL lists. It intelligently skips already downloaded files and tracks failed downloads.</p>
+                    <div class="feature-card-shadow" style="background-color:var(--b-cyan);border-color:var(--b-cyan);"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
-                
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">🏷️</div>
+
+                <!-- Feature 8 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 100ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-fuchsia" style="background:var(--b-fuchsia)">🍪</div>
+                            <h3>Cookie Authentication</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card" style="background:var(--b-fuchsia);color:var(--text-primary)">
+                            <p>Pass cookies.txt to authenticate and securely download age-restricted or private videos.</p>
+                        </div>
                     </div>
-                    <h3>Rich Metadata Embedding</h3>
-                    <p>Keep your files perfectly organized for local media servers like Plex or Jellyfin. FluxMedia automatically captures video descriptions, original upload dates, channel names, and high-resolution thumbnails, securely embedding them.</p>
+                    <div class="feature-card-shadow" style="background-color:var(--b-fuchsia);border-color:var(--b-fuchsia);"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
-                
-                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-icon-wrapper">
-                        <div class="feature-icon">⚙️</div>
+
+                <!-- Feature 9 -->
+                <div class="feature-card-wrapper reveal flip-card" style="transition-delay: 200ms" tabindex="0">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front feature-card">
+                            <div class="feature-icon bg-emerald" style="background:var(--b-emerald)">⚡</div>
+                            <h3>Hardware Acceleration</h3>
+                            <p class="text-xs text-muted mt-4">(Click to reveal)</p>
+                        </div>
+                        <div class="flip-card-back feature-card" style="background:var(--b-emerald);color:var(--text-primary)">
+                            <p>Leverage FFmpeg hardware acceleration. Set max speeds and route traffic through proxies.</p>
+                        </div>
                     </div>
-                    <h3>Deep Global Settings</h3>
-                    <p>Make FluxMedia truly yours. The built-in configuration manager allows you to set default download folders, establish strict format preferences, define custom filename structures, and switch between multiple premium terminal color themes.</p>
+                    <div class="feature-card-shadow" style="background-color:var(--b-emerald);border-color:var(--b-emerald);"></div>
+                    <div class="feature-card-shadow-outer"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="tools" class="features" style="padding-top: 0;">
-        <div class="container">
-            <h2 class="section-title" data-aos="fade-up">Advanced CLI Capabilities</h2>
-            
-            <div class="features-grid">
-                <div class="feature-card glass-panel highlight-panel" data-aos="zoom-in" style="grid-column: 1 / -1;">
-                    <div class="highlight-content">
-                        <h3>For the Power Users</h3>
-                        <p class="highlight-desc">While the TUI is great for everyday use, FluxMedia was built from the ground up as a robust CLI application. By passing arguments directly to the program, you can script, automate, and trigger complex download sequences silently in the background.</p>
-                        
-                        <ul class="advanced-list">
-                            <li data-aos="fade-left" data-aos-delay="100">
-                                <span class="bullet"></span>
-                                <div><strong>Subtitles Capturing:</strong> Download caption files directly for specified language codes (e.g., `en`, `es`) and automatically embed them as soft-subs into the video container.</div>
-                            </li>
-                            <li data-aos="fade-left" data-aos-delay="200">
-                                <span class="bullet"></span>
-                                <div><strong>Cookie Authentication:</strong> Pass `cookies.txt` files to authenticate your requests, allowing you to securely download age-restricted, private, or members-only videos.</div>
-                            </li>
-                            <li data-aos="fade-left" data-aos-delay="300">
-                                <span class="bullet"></span>
-                                <div><strong>Hardware Acceleration:</strong> Automatically leverages FFmpeg hardware acceleration on supported systems to drastically speed up audio extraction and video merging.</div>
-                            </li>
-                            <li data-aos="fade-left" data-aos-delay="400">
-                                <span class="bullet"></span>
-                                <div><strong>Rate Limiting & Proxies:</strong> Set maximum download speed limits to prevent network hogging, and route your download traffic through proxies.</div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section id="install" class="installation">
+
+    <section id="install" class="section">
         <div class="container">
-            <div class="glass-panel install-panel" data-aos="flip-up">
-                <h2 class="section-title" style="margin-bottom: 1.5rem;">Quick Installation</h2>
-                <p class="install-desc">Install FluxMedia globally on any system running Python 3.10+ directly via pip:</p>
+            <div class="install-box reveal">
+                <h2 class="section-title text-center">Quick Installation</h2>
+                <p class="text-center mt-4 text-muted">Install FluxMedia globally on any system running Python 3.10+ directly via pip:</p>
                 
-                <div class="code-block">
-                    <code><span style="color:#8b5cf6">pip install</span> fluxmedia</code>
-                    <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install fluxmedia'); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy', 2000);">Copy</button>
+                <div class="code-block mt-8">
+                    <div class="code-inner">
+                        <span class="code-cmd">pip install</span> <span class="code-arg">fluxmedia</span>
+                    </div>
+                    <button class="copy-btn" id="copy-btn" aria-label="Copy code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    </button>
                 </div>
-                
-                <p class="install-note">Requires <strong>FFmpeg</strong> for merging high-definition video formats and converting audio to MP3.</p>
+                <p class="text-center mt-4 text-xs text-muted">Requires <strong>FFmpeg</strong> for merging high-definition video formats and converting audio to MP3.</p>
             </div>
         </div>
     </section>
 
     <footer class="footer">
-        <div class="container">
-            <div class="footer-socials" data-aos="fade-up">
-                <a href="https://github.com/pdev-labs" target="_blank" class="social-icon" aria-label="GitHub">
-                    <svg height="24" width="24" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-                    </svg>
-                </a>
-            </div>
-            <p data-aos="fade-up" data-aos-delay="100">Made with ❤️ by <a href="https://github.com/pdev-labs" target="_blank">pdev-labs</a></p>
-            <p class="disclaimer" data-aos="fade-up" data-aos-delay="200">Disclaimer: Developed strictly for educational and research purposes. Obtain explicit permission from the original content creators before downloading.</p>
+        <div class="container footer-content">
+            <p>Made with ❤️ by <a href="https://github.com/pdev-labs" target="_blank" class="footer-link">pdev-labs</a></p>
+            <p class="disclaimer">Disclaimer: Developed strictly for educational and research purposes.</p>
         </div>
     </footer>
-
-    <!-- AOS JS -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        // Initialize AOS animations
-        AOS.init({
-            once: true,
-            offset: 50,
-            duration: 800,
-            easing: 'ease-out-cubic',
-        });
-    </script>
 </body>
 </html>
