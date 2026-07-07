@@ -31,9 +31,18 @@ function Run-Silent([scriptblock]$Script) {
 }
 
 function Install-Python {
-    Write-Host "⏳ " -NoNewline; Write-Host "Fetching Python via Winget..." -ForegroundColor Yellow
-    winget install -e --id Python.Python.3.11 --accept-package-agreements --accept-source-agreements | Out-Null
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    Write-Host "⏳ " -NoNewline; Write-Host "Fetching Python..." -ForegroundColor Yellow
+    
+    # Bypass winget entirely to avoid corrupted MSI ghost states from our brute-force uninstaller
+    $installer = "$env:TEMP\python-installer.exe"
+    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.12.3/python-3.12.3-amd64.exe" -OutFile $installer -UseBasicParsing
+    
+    # Clean up any broken ghost state first
+    Start-Process -FilePath $installer -ArgumentList "/uninstall", "/quiet" -Wait -NoNewWindow
+    
+    # Install fresh
+    Start-Process -FilePath $installer -ArgumentList "/quiet", "InstallAllUsers=0", "PrependPath=1", "Include_test=0", "Include_doc=0" -Wait -NoNewWindow
+    
     Write-Host "✅ " -NoNewline; Write-Host "Python installed." -ForegroundColor Green
 }
 
