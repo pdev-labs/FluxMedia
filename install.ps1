@@ -213,7 +213,13 @@ function PauseAndReturn {
 
 function Do-Install {
     Write-Header "Step 1: Checking Python Environment"
-    if (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonExists = $false
+    try {
+        $pyVersion = & python --version 2>&1
+        if ($pyVersion -match "Python 3") { $pythonExists = $true }
+    } catch {}
+
+    if ($pythonExists) {
         Write-Host "✅ " -NoNewline; Write-Host "Python is already installed and ready." -ForegroundColor Green
     } else {
         Install-Python
@@ -239,7 +245,11 @@ function Do-Install {
     $launch = Read-Host "🎬 Would you like to launch FluxMedia right now? (Y/n)"
     if ($launch -ne 'n' -and $launch -ne 'N') {
         Clear-Host
-        fluxmedia
+        if (Get-Command fluxmedia -ErrorAction SilentlyContinue) {
+            fluxmedia
+        } else {
+            python -m fluxmedia
+        }
     }
 }
 
