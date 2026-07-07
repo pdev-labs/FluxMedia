@@ -4310,6 +4310,7 @@ def main():
             
             # Categorized sub-menus
             dl_table = Table(show_header=False, box=None, padding=(0, 1))
+            dl_table.add_row("[bold yellow]0.[/bold yellow] Launch Advanced TUI Mode [dim](New)[/dim]")
             dl_table.add_row("[bold cyan]1.[/bold cyan] Download Video [dim](URL)[/dim]")
             dl_table.add_row("[bold cyan]2.[/bold cyan] Search & Download [dim](YT)[/dim]")
             dl_table.add_row("[bold cyan]3.[/bold cyan] Download Audio [dim](MP3)[/dim]")
@@ -4357,10 +4358,17 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 19)], default="18")
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 19)], default="18")
             clear_screen()
             
-            if choice == "1":
+            if choice == "0":
+                try:
+                    from fluxmedia.tui import run_tui
+                    run_tui()
+                except ImportError as e:
+                    console.print(f"[bold red]Failed to load TUI. Ensure textual is installed: {e}[/bold red]")
+                    Prompt.ask("\nPress Enter to continue...")
+            elif choice == "1":
                 operation_download_video(config)
             elif choice == "2":
                 operation_search_and_download_video(config)
