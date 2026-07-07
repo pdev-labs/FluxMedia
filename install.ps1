@@ -80,6 +80,20 @@ function Uninstall-Python {
     
     # 3. Attempt to remove Windows Store versions of Python
     Get-AppxPackage *PythonSoftwareFoundation* 2>&1 | Remove-AppxPackage 2>&1 | Out-Null
+    
+    # 4. Ultimate Brute Force Cleanup (Bypasses Admin/User scope conflict locks)
+    $pythonLocalPath = "$env:LOCALAPPDATA\Programs\Python"
+    if (Test-Path $pythonLocalPath) { Remove-Item -Path $pythonLocalPath -Recurse -Force -ErrorAction SilentlyContinue }
+    if (Test-Path "$env:ProgramFiles\Python*") { Remove-Item -Path "$env:ProgramFiles\Python*" -Recurse -Force -ErrorAction SilentlyContinue }
+    
+    # 5. Clean PATH variable of any Python references
+    $mPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $uPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $newMPath = ($mPath -split ';' | Where-Object { $_ -notmatch 'Python' }) -join ';'
+    $newUPath = ($uPath -split ';' | Where-Object { $_ -notmatch 'Python' }) -join ';'
+    [Environment]::SetEnvironmentVariable("Path", $newMPath, "Machine")
+    [Environment]::SetEnvironmentVariable("Path", $newUPath, "User")
+    $env:Path = $newMPath + ";" + $newUPath
 
     Write-Host "✅ " -NoNewline; Write-Host "Python removed." -ForegroundColor Green
 }
