@@ -5,19 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FluxMedia | Powerful Media Downloader</title>
     <meta name="description" content="A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed.">
+    <!-- AOS Animation CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="landing.css">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="background-effects">
         <div class="glow-orb orb-1"></div>
         <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+        <div class="mesh-overlay"></div>
     </div>
 
-    <nav class="navbar">
+    <nav class="navbar" data-aos="fade-down" data-aos-duration="1000">
         <div class="container nav-content">
             <div class="logo">
                 <span class="logo-emoji">🌊</span>
@@ -25,9 +29,9 @@
             </div>
             <div class="nav-links">
                 <a href="#features">Features</a>
-                <a href="#tools">Advanced Tools</a>
+                <a href="#tools">Advanced</a>
                 <a href="#install">Install</a>
-                <a href="https://github.com/pdev-labs" target="_blank" class="btn btn-outline" style="display: flex; align-items: center; gap: 8px;">
+                <a href="https://github.com/pdev-labs" target="_blank" class="btn btn-outline nav-github">
                     <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                     </svg>
@@ -39,20 +43,28 @@
 
     <header class="hero">
         <div class="container hero-content">
-            <div class="hero-badge">v1.6.6 is out now ✨</div>
-            <h1 class="hero-title">Download Media.<br> <span class="gradient-text">Simply & Fast.</span></h1>
-            <p class="hero-subtitle">A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Featuring a customizable LAN QR share portal and rich media player.</p>
+            <div class="hero-badge" data-aos="zoom-in" data-aos-delay="100">
+                <span class="badge-dot"></span> v1.6.6 is out now ✨
+            </div>
+            <h1 class="hero-title" data-aos="fade-up" data-aos-delay="200">
+                Download Media.<br> <span class="gradient-text">Simply & Fast.</span>
+            </h1>
+            <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="300">
+                A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Featuring a customizable LAN QR share portal and rich media player.
+            </p>
             
-            <div class="hero-actions">
-                <a href="#install" class="btn btn-primary">Get Started</a>
+            <div class="hero-actions" data-aos="fade-up" data-aos-delay="400">
+                <a href="#install" class="btn btn-primary btn-glow">Get Started</a>
                 <a href="https://pypi.org/project/fluxmedia/" target="_blank" class="btn btn-secondary">View on PyPI</a>
             </div>
 
-            <div class="terminal-mockup">
+            <div class="terminal-mockup" data-aos="zoom-in-up" data-aos-delay="500">
                 <div class="terminal-header">
-                    <span class="dot dot-red"></span>
-                    <span class="dot dot-yellow"></span>
-                    <span class="dot dot-green"></span>
+                    <div class="terminal-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
                     <span class="terminal-title">bash - fluxmedia</span>
                 </div>
                 <div class="terminal-body">
@@ -67,43 +79,55 @@
 
     <section id="features" class="features">
         <div class="container">
-            <h2 class="section-title">Everything you need in one tool</h2>
+            <h2 class="section-title" data-aos="fade-up">Everything you need in one tool</h2>
             
             <div class="features-grid">
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">🎨</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">🎨</div>
+                    </div>
                     <h3>Dynamic Console TUI</h3>
-                    <p>Experience a next-generation terminal user interface. FluxMedia renders rich interactive tables, beautifully structured configuration panels, and live progress bars showing real-time download speeds, ETA, and exact file sizes directly in your command prompt. It's fully responsive to your terminal window size!</p>
+                    <p>Experience a next-generation terminal user interface. FluxMedia renders rich interactive tables, beautifully structured configuration panels, and live progress bars showing real-time download speeds, ETA, and exact file sizes directly in your command prompt.</p>
                 </div>
                 
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">🎵</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">🎵</div>
+                    </div>
                     <h3>Smart Audio Extraction</h3>
-                    <p>Looking to build your local music library? FluxMedia can automatically download video files, extract the audio tracks seamlessly, and convert them into high-quality MP3s (up to 192kbps). Even better, it embeds the YouTube video thumbnail as the album cover art and writes all song metadata directly into the file!</p>
+                    <p>Looking to build your local music library? FluxMedia can automatically download video files, extract the audio tracks seamlessly, and convert them into high-quality MP3s. It embeds the video thumbnail as cover art and writes all metadata directly into the file!</p>
                 </div>
                 
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">🌐</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">🌐</div>
+                    </div>
                     <h3>LAN QR Share Portal</h3>
-                    <p>Stop transferring files via USB. With our built-in LAN sharing tool, you can instantly host a beautiful web interface on your local network. It generates a scannable QR code right in your terminal, allowing any phone, tablet, or smart TV on your Wi-Fi to browse, stream, and download your entire media collection instantly.</p>
+                    <p>Stop transferring files via USB. With our built-in LAN sharing tool, you can instantly host a beautiful web interface on your local network. It generates a scannable QR code right in your terminal, allowing any phone or TV to stream your collection.</p>
                 </div>
                 
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">📚</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">📚</div>
+                    </div>
                     <h3>Batch Playlist Downloads</h3>
-                    <p>Save massive amounts of content with a single command. FluxMedia supports fetching entire playlists, recent channel uploads, or custom URL lists. It intelligently skips already downloaded files, tracks failed downloads, and organizes everything into neatly named directories so you never lose track of your series.</p>
+                    <p>Save massive amounts of content with a single command. FluxMedia supports fetching entire playlists, recent channel uploads, or custom URL lists. It intelligently skips already downloaded files and tracks failed downloads.</p>
                 </div>
                 
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">🏷️</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">🏷️</div>
+                    </div>
                     <h3>Rich Metadata Embedding</h3>
-                    <p>Keep your files perfectly organized for local media servers like Plex, Jellyfin, or Kodi. FluxMedia automatically captures video descriptions, original upload dates, channel names, and high-resolution thumbnails, and securely embeds them into the `.mp4` or `.mkv` file properties natively.</p>
+                    <p>Keep your files perfectly organized for local media servers like Plex or Jellyfin. FluxMedia automatically captures video descriptions, original upload dates, channel names, and high-resolution thumbnails, securely embedding them.</p>
                 </div>
                 
-                <div class="feature-card glass-panel">
-                    <div class="feature-icon">⚙️</div>
+                <div class="feature-card glass-panel" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon-wrapper">
+                        <div class="feature-icon">⚙️</div>
+                    </div>
                     <h3>Deep Global Settings</h3>
-                    <p>Make FluxMedia truly yours. The built-in configuration manager allows you to set default download folders, establish strict format preferences (e.g., "always download 1080p MP4"), define custom filename structures to include upload dates, and switch between multiple premium terminal color themes.</p>
+                    <p>Make FluxMedia truly yours. The built-in configuration manager allows you to set default download folders, establish strict format preferences, define custom filename structures, and switch between multiple premium terminal color themes.</p>
                 </div>
             </div>
         </div>
@@ -111,19 +135,33 @@
 
     <section id="tools" class="features" style="padding-top: 0;">
         <div class="container">
-            <h2 class="section-title">Advanced CLI Capabilities</h2>
+            <h2 class="section-title" data-aos="fade-up">Advanced CLI Capabilities</h2>
             
             <div class="features-grid">
-                <div class="feature-card glass-panel" style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 1rem;">
-                    <h3>For the Power Users</h3>
-                    <p style="color: var(--text-muted); font-size: 1.1rem;">While the TUI is great for everyday use, FluxMedia was built from the ground up as a robust CLI application. By passing arguments directly to the program, you can script, automate, and trigger complex download sequences silently in the background.</p>
-                    
-                    <ul style="color: var(--text-muted); margin-left: 2rem; margin-top: 1rem; line-height: 1.8;">
-                        <li><strong>Subtitles Capturing:</strong> Download caption files directly for specified language codes (e.g., `en`, `es`) and automatically embed them as soft-subs into the video container.</li>
-                        <li><strong>Cookie Authentication:</strong> Pass `cookies.txt` files to authenticate your requests, allowing you to securely download age-restricted, private, or members-only videos from your own account.</li>
-                        <li><strong>Hardware Acceleration:</strong> Automatically leverages FFmpeg hardware acceleration on supported systems to drastically speed up audio extraction and video merging processes without bottlenecking your CPU.</li>
-                        <li><strong>Rate Limiting & Proxies:</strong> Set maximum download speed limits to prevent network hogging, and route your download traffic through HTTP/SOCKS5 proxies to bypass regional restrictions.</li>
-                    </ul>
+                <div class="feature-card glass-panel highlight-panel" data-aos="zoom-in" style="grid-column: 1 / -1;">
+                    <div class="highlight-content">
+                        <h3>For the Power Users</h3>
+                        <p class="highlight-desc">While the TUI is great for everyday use, FluxMedia was built from the ground up as a robust CLI application. By passing arguments directly to the program, you can script, automate, and trigger complex download sequences silently in the background.</p>
+                        
+                        <ul class="advanced-list">
+                            <li data-aos="fade-left" data-aos-delay="100">
+                                <span class="bullet"></span>
+                                <div><strong>Subtitles Capturing:</strong> Download caption files directly for specified language codes (e.g., `en`, `es`) and automatically embed them as soft-subs into the video container.</div>
+                            </li>
+                            <li data-aos="fade-left" data-aos-delay="200">
+                                <span class="bullet"></span>
+                                <div><strong>Cookie Authentication:</strong> Pass `cookies.txt` files to authenticate your requests, allowing you to securely download age-restricted, private, or members-only videos.</div>
+                            </li>
+                            <li data-aos="fade-left" data-aos-delay="300">
+                                <span class="bullet"></span>
+                                <div><strong>Hardware Acceleration:</strong> Automatically leverages FFmpeg hardware acceleration on supported systems to drastically speed up audio extraction and video merging.</div>
+                            </li>
+                            <li data-aos="fade-left" data-aos-delay="400">
+                                <span class="bullet"></span>
+                                <div><strong>Rate Limiting & Proxies:</strong> Set maximum download speed limits to prevent network hogging, and route your download traffic through proxies.</div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,13 +169,13 @@
 
     <section id="install" class="installation">
         <div class="container">
-            <div class="glass-panel install-panel">
-                <h2 class="section-title">Quick Installation</h2>
+            <div class="glass-panel install-panel" data-aos="flip-up">
+                <h2 class="section-title" style="margin-bottom: 1.5rem;">Quick Installation</h2>
                 <p class="install-desc">Install FluxMedia globally on any system running Python 3.10+ directly via pip:</p>
                 
                 <div class="code-block">
-                    <code>pip install fluxmedia</code>
-                    <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install fluxmedia')">Copy</button>
+                    <code><span style="color:#8b5cf6">pip install</span> fluxmedia</code>
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install fluxmedia'); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy', 2000);">Copy</button>
                 </div>
                 
                 <p class="install-note">Requires <strong>FFmpeg</strong> for merging high-definition video formats and converting audio to MP3.</p>
@@ -147,16 +185,28 @@
 
     <footer class="footer">
         <div class="container">
-            <div style="margin-bottom: 2rem; display: flex; justify-content: center;">
-                <a href="https://github.com/pdev-labs" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(255,255,255,0.05); border-radius: 50%; transition: all 0.3s; border: 1px solid var(--glass-border);">
+            <div class="footer-socials" data-aos="fade-up">
+                <a href="https://github.com/pdev-labs" target="_blank" class="social-icon" aria-label="GitHub">
                     <svg height="24" width="24" viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
                     </svg>
                 </a>
             </div>
-            <p>Made with ❤️ by <a href="https://github.com/pdev-labs" target="_blank">pdev-labs</a></p>
-            <p class="disclaimer">Disclaimer: Developed strictly for educational and research purposes. Obtain explicit permission from the original content creators before downloading.</p>
+            <p data-aos="fade-up" data-aos-delay="100">Made with ❤️ by <a href="https://github.com/pdev-labs" target="_blank">pdev-labs</a></p>
+            <p class="disclaimer" data-aos="fade-up" data-aos-delay="200">Disclaimer: Developed strictly for educational and research purposes. Obtain explicit permission from the original content creators before downloading.</p>
         </div>
     </footer>
+
+    <!-- AOS JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            once: true,
+            offset: 50,
+            duration: 800,
+            easing: 'ease-out-cubic',
+        });
+    </script>
 </body>
 </html>
