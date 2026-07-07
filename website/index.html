@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FluxMedia | Powerful Media Downloader</title>
+    <meta name="description" content="A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container nav-content">
+            <div class="logo">
+                <span class="logo-emoji">🌊</span>
+                <span class="logo-text">FluxMedia</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#install">Install</a>
+                <a href="https://github.com/pdev-labs/FluxMedia-py" target="_blank" class="btn btn-outline">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container hero-content">
+            <div class="hero-badge">v1.6.6 is out now ✨</div>
+            <h1 class="hero-title">Download Media.<br> <span class="gradient-text">Simply & Fast.</span></h1>
+            <p class="hero-subtitle">A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed. Featuring a customizable LAN QR share portal and rich media player.</p>
+            
+            <div class="hero-actions">
+                <a href="#install" class="btn btn-primary">Get Started</a>
+                <a href="https://pypi.org/project/fluxmedia/" target="_blank" class="btn btn-secondary">View on PyPI</a>
+            </div>
+
+            <div class="terminal-mockup">
+                <div class="terminal-header">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="terminal-title">bash - fluxmedia</span>
+                </div>
+                <div class="terminal-body">
+                    <p><span class="prompt">$</span> pip install fluxmedia</p>
+                    <p class="output success">Successfully installed fluxmedia-1.6.6</p>
+                    <p><span class="prompt">$</span> fluxmedia</p>
+                    <p class="output text-blue">🌊 Welcome to FluxMedia TUI...</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Everything you need in one tool</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Dynamic Console TUI</h3>
+                    <p>Renders rich tables, panels, and live progress bars for download speeds, ETA, and file sizes directly in your terminal.</p>
+                </div>
+                
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">🎵</div>
+                    <h3>Smart Audio Extraction</h3>
+                    <p>Automatically extract and convert media into high-quality MP3 (192kbps) with embedded cover art and metadata.</p>
+                </div>
+                
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">🌐</div>
+                    <h3>LAN QR Share Portal</h3>
+                    <p>Easily share downloaded media over your local network using an interactive web portal generated on the fly.</p>
+                </div>
+                
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">📚</div>
+                    <h3>Batch Downloads</h3>
+                    <p>Save entire playlists or recent uploads from content creator channels with just a few keystrokes.</p>
+                </div>
+                
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">🏷️</div>
+                    <h3>Metadata Embedding</h3>
+                    <p>Automatically write video thumbnails and details (description, uploader, dates) directly into your downloads.</p>
+                </div>
+                
+                <div class="feature-card glass-panel">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Global Settings</h3>
+                    <p>Customize download folders, default formats, filename structures, and UI themes inside the app.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="install" class="installation">
+        <div class="container">
+            <div class="glass-panel install-panel">
+                <h2 class="section-title">Quick Installation</h2>
+                <p class="install-desc">Install FluxMedia globally on any system running Python 3.10+ directly via pip:</p>
+                
+                <div class="code-block">
+                    <code>pip install fluxmedia</code>
+                    <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install fluxmedia')">Copy</button>
+                </div>
+                
+                <p class="install-note">Requires <strong>FFmpeg</strong> for merging high-definition video formats and converting audio to MP3.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>Made with ❤️ by <a href="https://github.com/pdev-labs" target="_blank">pdev-labs</a></p>
+            <p class="disclaimer">Disclaimer: Developed strictly for educational and research purposes. Obtain explicit permission from the original content creators before downloading.</p>
+        </div>
+    </footer>
+</body>
+</html>
