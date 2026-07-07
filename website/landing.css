@@ -64,23 +64,23 @@
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
     
     /* Feature Card Colors (Dark) */
-    --c-blue-light: #1e3a8a;
-    --c-blue: #3b82f6;
-    --c-pink-light: #831843;
-    --c-pink: #ec4899;
-    --c-green-light: #14532d;
-    --c-green: #22c55e;
-    --c-yellow-light: #713f12;
-    --c-yellow: #eab308;
-    --c-purple-light: #581c87;
-    --c-purple: #a855f7;
-    --c-orange-light: #7c2d12;
-    --c-orange: #f97316;
+    --c-blue-light: rgba(59, 130, 246, 0.15);
+    --c-blue: #60a5fa;
+    --c-pink-light: rgba(236, 72, 153, 0.15);
+    --c-pink: #f472b6;
+    --c-green-light: rgba(34, 197, 94, 0.15);
+    --c-green: #4ade80;
+    --c-yellow-light: rgba(234, 179, 8, 0.15);
+    --c-yellow: #fde047;
+    --c-purple-light: rgba(168, 85, 247, 0.15);
+    --c-purple: #c084fc;
+    --c-orange-light: rgba(249, 115, 22, 0.15);
+    --c-orange: #fb923c;
     
     /* Bento Colors (Dark) */
-    --b-cyan: #164e63;
-    --b-fuchsia: #701a75;
-    --b-emerald: #064e3b;
+    --b-cyan: rgba(6, 182, 212, 0.15);
+    --b-fuchsia: rgba(217, 70, 239, 0.15);
+    --b-emerald: rgba(16, 185, 129, 0.15);
     
     --terminal-bg: #0f172a;
     --terminal-header: #1e293b;
@@ -104,16 +104,16 @@
         --primary-hover: #60a5fa;
         --marquee-text: rgba(248, 250, 252, 0.03);
         
-        --c-blue-light: #1e3a8a; --c-blue: #3b82f6;
-        --c-pink-light: #831843; --c-pink: #ec4899;
-        --c-green-light: #14532d; --c-green: #22c55e;
-        --c-yellow-light: #713f12; --c-yellow: #eab308;
-        --c-purple-light: #581c87; --c-purple: #a855f7;
-        --c-orange-light: #7c2d12; --c-orange: #f97316;
+        --c-blue-light: rgba(59, 130, 246, 0.15); --c-blue: #60a5fa;
+        --c-pink-light: rgba(236, 72, 153, 0.15); --c-pink: #f472b6;
+        --c-green-light: rgba(34, 197, 94, 0.15); --c-green: #4ade80;
+        --c-yellow-light: rgba(234, 179, 8, 0.15); --c-yellow: #fde047;
+        --c-purple-light: rgba(168, 85, 247, 0.15); --c-purple: #c084fc;
+        --c-orange-light: rgba(249, 115, 22, 0.15); --c-orange: #fb923c;
         
-        --b-cyan: #164e63;
-        --b-fuchsia: #701a75;
-        --b-emerald: #064e3b;
+        --b-cyan: rgba(6, 182, 212, 0.15);
+        --b-fuchsia: rgba(217, 70, 239, 0.15);
+        --b-emerald: rgba(16, 185, 129, 0.15);
         
         --terminal-bg: #0f172a;
         --terminal-header: #1e293b;
@@ -652,6 +652,7 @@ html[data-theme="system"] .system-icon { display: block; }
 .flip-card-back p {
     font-size: 1rem;
     font-weight: 500;
+    color: var(--text-primary);
 }
 
 /* Card Shadows */
