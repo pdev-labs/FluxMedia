@@ -52,20 +52,23 @@ function Install-FluxMedia {
 }
 
 function Uninstall-FluxMedia {
-    Write-Host "⏳ " -NoNewline; Write-Host "Removing fluxmedia..." -ForegroundColor Yellow
-    Run-Silent { python -m pip uninstall -y fluxmedia -q }
-    Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core removed." -ForegroundColor Green
+    Write-Host "⏳ " -NoNewline; Write-Host "Removing fluxmedia and all dependencies..." -ForegroundColor Yellow
+    $oldError = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    python -m pip uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments -q 2>&1 | Out-Null
+    $ErrorActionPreference = $oldError
+    Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core and dependencies removed." -ForegroundColor Green
 }
 
 function Uninstall-FFmpeg {
     Write-Host "⏳ " -NoNewline; Write-Host "Removing FFmpeg..." -ForegroundColor Yellow
-    winget uninstall -e --id Gyan.FFmpeg --accept-source-agreements | Out-Null
+    winget uninstall -e --id Gyan.FFmpeg --silent --accept-source-agreements | Out-Null
     Write-Host "✅ " -NoNewline; Write-Host "FFmpeg removed." -ForegroundColor Green
 }
 
 function Uninstall-Python {
     Write-Host "⏳ " -NoNewline; Write-Host "Removing Python..." -ForegroundColor Yellow
-    winget uninstall -e --id Python.Python.3.11 --accept-source-agreements | Out-Null
+    winget uninstall -e --id Python.Python.3.11 --silent --accept-source-agreements | Out-Null
     Write-Host "✅ " -NoNewline; Write-Host "Python removed." -ForegroundColor Green
 }
 

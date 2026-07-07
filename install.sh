@@ -72,17 +72,17 @@ install_fluxmedia() {
 }
 
 uninstall_fluxmedia() {
-    echo -e "${YELLOW}⏳ Removing FluxMedia Core...${NC}"
+    echo -e "${YELLOW}⏳ Removing FluxMedia Core and dependencies...${NC}"
     if command -v pipx &> /dev/null; then
         pipx uninstall fluxmedia > /dev/null 2>&1 || true
     else
-        if pip3 uninstall -y fluxmedia --break-system-packages > /dev/null 2>&1; then
+        if pip3 uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments --break-system-packages > /dev/null 2>&1; then
             :
         else
-            pip3 uninstall -y fluxmedia > /dev/null 2>&1 || true
+            pip3 uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments > /dev/null 2>&1 || true
         fi
     fi
-    echo -e "${GREEN}✅ FluxMedia Core removed.${NC}"
+    echo -e "${GREEN}✅ FluxMedia Core and dependencies removed.${NC}"
 }
 
 uninstall_ffmpeg() {
