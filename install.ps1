@@ -60,8 +60,12 @@ if (Get-Command ffmpeg -ErrorAction SilentlyContinue) {
 
 Write-Header "Step 3: Installing FluxMedia Core"
 Write-Host "⏳ " -NoNewline; Write-Host "Upgrading pip and fetching fluxmedia..." -ForegroundColor Yellow
-Start-Process python -ArgumentList "-m", "pip", "install", "--upgrade", "pip", "-q" -NoNewWindow -Wait
-Start-Process python -ArgumentList "-m", "pip", "install", "-U", "fluxmedia", "-q" -NoNewWindow -Wait
+
+$oldError = $ErrorActionPreference
+$ErrorActionPreference = 'SilentlyContinue'
+python -m pip install --upgrade pip -q 2>&1 | Out-Null
+python -m pip install -U fluxmedia -q 2>&1 | Out-Null
+$ErrorActionPreference = $oldError
 Write-Host "✅ " -NoNewline; Write-Host "FluxMedia successfully installed." -ForegroundColor Green
 
 Write-Host "`n🎉 " -NoNewline; Write-Host "SUCCESS! All components are fully installed." -ForegroundColor Green
