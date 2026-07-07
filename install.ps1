@@ -11,7 +11,6 @@ function Write-Header([String]$Text) {
     Write-Host "----------------------------------------" -ForegroundColor DarkGray
 }
 
-Clear-Host
 $logo = @"
     ______ __               __  ___          ___ 
    / ____// /_  __  __ _  //  |/  /___  ____/ (_)____
@@ -21,62 +20,199 @@ $logo = @"
 
 "@
 
-Write-Color $logo "Cyan"
-Write-Color "          Welcome to the FluxMedia Installer!    " "White"
-Write-Color "          Fast, Aesthetic, and Powerful.         " "DarkGray"
-Write-Host ""
-
-Write-Host "📦 " -NoNewline; Write-Host "What we will install today:" -ForegroundColor White
-Write-Host "   🔹 " -NoNewline; Write-Host "Python 3.11" -ForegroundColor DarkCyan -NoNewline; Write-Host " (if missing)" -ForegroundColor DarkGray
-Write-Host "   🔹 " -NoNewline; Write-Host "FFmpeg Engine" -ForegroundColor DarkCyan -NoNewline; Write-Host " (if missing)" -ForegroundColor DarkGray
-Write-Host "   🔹 " -NoNewline; Write-Host "FluxMedia Core" -ForegroundColor DarkCyan
-Write-Host ""
-
-$response = Read-Host "🚀 Ready to begin? (Y/n)"
-if ($response -eq 'n' -or $response -eq 'N') {
-    Write-Color "`n❌ Installation gracefully aborted." "Red"
-    exit
+# Helper to swallow output and errors silently
+function Run-Silent([scriptblock]$Script) {
+    $oldError = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    try {
+        & $Script 2>&1 | Out-Null
+    } catch {}
+    $ErrorActionPreference = $oldError
 }
 
-Write-Header "Step 1: Checking Python Environment"
-if (Get-Command python -ErrorAction SilentlyContinue) {
-    Write-Host "✅ " -NoNewline; Write-Host "Python is already installed and ready." -ForegroundColor Green
-} else {
-    Write-Host "⏳ " -NoNewline; Write-Host "Python not found. Fetching via Winget..." -ForegroundColor Yellow
-    winget install -e --id Python.Python.3.11 --accept-package-agreements --accept-source-agreements
+function Install-Python {
+    Write-Host "⏳ " -NoNewline; Write-Host "Fetching Python via Winget..." -ForegroundColor Yellow
+    winget install -e --id Python.Python.3.11 --accept-package-agreements --accept-source-agreements | Out-Null
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-    Write-Host "✅ " -NoNewline; Write-Host "Python successfully installed." -ForegroundColor Green
+    Write-Host "✅ " -NoNewline; Write-Host "Python installed." -ForegroundColor Green
 }
 
-Write-Header "Step 2: Checking Media Engine (FFmpeg)"
-if (Get-Command ffmpeg -ErrorAction SilentlyContinue) {
-    Write-Host "✅ " -NoNewline; Write-Host "FFmpeg is already installed and ready." -ForegroundColor Green
-} else {
-    Write-Host "⏳ " -NoNewline; Write-Host "FFmpeg not found. Fetching via Winget..." -ForegroundColor Yellow
-    winget install -e --id Gyan.FFmpeg --accept-package-agreements --accept-source-agreements
+function Install-FFmpeg {
+    Write-Host "⏳ " -NoNewline; Write-Host "Fetching FFmpeg via Winget..." -ForegroundColor Yellow
+    winget install -e --id Gyan.FFmpeg --accept-package-agreements --accept-source-agreements | Out-Null
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-    Write-Host "✅ " -NoNewline; Write-Host "FFmpeg successfully installed." -ForegroundColor Green
+    Write-Host "✅ " -NoNewline; Write-Host "FFmpeg installed." -ForegroundColor Green
 }
 
-Write-Header "Step 3: Installing FluxMedia Core"
-Write-Host "⏳ " -NoNewline; Write-Host "Upgrading pip and fetching fluxmedia..." -ForegroundColor Yellow
-
-$oldError = $ErrorActionPreference
-$ErrorActionPreference = 'SilentlyContinue'
-python -m pip install --upgrade pip -q 2>&1 | Out-Null
-python -m pip install -U fluxmedia -q 2>&1 | Out-Null
-$ErrorActionPreference = $oldError
-Write-Host "✅ " -NoNewline; Write-Host "FluxMedia successfully installed." -ForegroundColor Green
-
-Write-Host "`n🎉 " -NoNewline; Write-Host "SUCCESS! All components are fully installed." -ForegroundColor Green
-Write-Host "------------------------------------------------" -ForegroundColor DarkGray
-Write-Host "You can now run FluxMedia from anywhere by typing: " -NoNewline
-Write-Host "fluxmedia" -ForegroundColor Cyan
-Write-Host "------------------------------------------------" -ForegroundColor DarkGray
-Write-Host ""
-
-$launch = Read-Host "🎬 Would you like to launch FluxMedia right now? (Y/n)"
-if ($launch -ne 'n' -and $launch -ne 'N') {
-    Clear-Host
-    fluxmedia
+function Install-FluxMedia {
+    Write-Host "⏳ " -NoNewline; Write-Host "Fetching fluxmedia..." -ForegroundColor Yellow
+    Run-Silent { python -m pip install --upgrade pip -q }
+    Run-Silent { python -m pip install -U fluxmedia -q }
+    Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core installed." -ForegroundColor Green
 }
+
+function Uninstall-FluxMedia {
+    Write-Host "⏳ " -NoNewline; Write-Host "Removing fluxmedia..." -ForegroundColor Yellow
+    Run-Silent { python -m pip uninstall -y fluxmedia -q }
+    Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core removed." -ForegroundColor Green
+}
+
+function Uninstall-FFmpeg {
+    Write-Host "⏳ " -NoNewline; Write-Host "Removing FFmpeg..." -ForegroundColor Yellow
+    winget uninstall -e --id Gyan.FFmpeg --accept-source-agreements | Out-Null
+    Write-Host "✅ " -NoNewline; Write-Host "FFmpeg removed." -ForegroundColor Green
+}
+
+function Uninstall-Python {
+    Write-Host "⏳ " -NoNewline; Write-Host "Removing Python..." -ForegroundColor Yellow
+    winget uninstall -e --id Python.Python.3.11 --accept-source-agreements | Out-Null
+    Write-Host "✅ " -NoNewline; Write-Host "Python removed." -ForegroundColor Green
+}
+
+function Show-MainMenu {
+    while ($true) {
+        Clear-Host
+        Write-Color $logo "Cyan"
+        Write-Color "          Welcome to the FluxMedia Toolkit!      " "White"
+        Write-Color "          Fast, Aesthetic, and Powerful.         " "DarkGray"
+        Write-Host ""
+        Write-Color "Please select an action:" "White"
+        Write-Color "  [1] Install FluxMedia (Default setup)" "Cyan"
+        Write-Color "  [2] Reinstall components" "Yellow"
+        Write-Color "  [3] Uninstall components" "Red"
+        Write-Color "  [0] Exit" "DarkGray"
+        Write-Host ""
+        
+        $choice = Read-Host "Choice"
+        switch ($choice) {
+            '1' { Do-Install; return }
+            '2' { Show-ReinstallMenu }
+            '3' { Show-UninstallMenu }
+            '0' { Write-Color "`nGoodbye!" "Cyan"; exit }
+        }
+    }
+}
+
+function Show-UninstallMenu {
+    while ($true) {
+        Clear-Host
+        Write-Header "Uninstall Menu"
+        Write-Color "  [1] Uninstall FluxMedia Core Only" "Red"
+        Write-Color "  [2] Uninstall FluxMedia + FFmpeg" "Red"
+        Write-Color "  [3] Uninstall Everything (FluxMedia, FFmpeg, and Python)" "Red"
+        Write-Color "  [0] Back to Main Menu" "DarkGray"
+        Write-Host ""
+        
+        $choice = Read-Host "Choice"
+        switch ($choice) {
+            '1' {
+                Uninstall-FluxMedia
+                PauseAndReturn
+                return
+            }
+            '2' {
+                Uninstall-FluxMedia
+                Uninstall-FFmpeg
+                PauseAndReturn
+                return
+            }
+            '3' {
+                Write-Host ""
+                Write-Color "⚠️  CRITICAL WARNING ⚠️" "Red"
+                Write-Color "Removing Python completely from your system may break other tools or scripts that depend on it." "Yellow"
+                $confirm = Read-Host "Are you absolutely sure you want to remove Python? (y/N)"
+                if ($confirm -eq 'y' -or $confirm -eq 'Y') {
+                    Uninstall-FluxMedia
+                    Uninstall-FFmpeg
+                    Uninstall-Python
+                    PauseAndReturn
+                    return
+                } else {
+                    Write-Color "Python removal aborted." "Green"
+                    Start-Sleep 2
+                }
+            }
+            '0' { return }
+        }
+    }
+}
+
+function Show-ReinstallMenu {
+    while ($true) {
+        Clear-Host
+        Write-Header "Reinstall Menu"
+        Write-Color "  [1] Reinstall FluxMedia Core Only" "Yellow"
+        Write-Color "  [2] Reinstall FFmpeg Only" "Yellow"
+        Write-Color "  [3] Reinstall Python Only" "Yellow"
+        Write-Color "  [4] Reinstall Everything" "Yellow"
+        Write-Color "  [0] Back to Main Menu" "DarkGray"
+        Write-Host ""
+        
+        $choice = Read-Host "Choice"
+        switch ($choice) {
+            '1' {
+                Uninstall-FluxMedia; Install-FluxMedia
+                PauseAndReturn
+                return
+            }
+            '2' {
+                Uninstall-FFmpeg; Install-FFmpeg
+                PauseAndReturn
+                return
+            }
+            '3' {
+                Uninstall-Python; Install-Python
+                PauseAndReturn
+                return
+            }
+            '4' {
+                Uninstall-FluxMedia; Uninstall-FFmpeg; Uninstall-Python
+                Install-Python; Install-FFmpeg; Install-FluxMedia
+                PauseAndReturn
+                return
+            }
+            '0' { return }
+        }
+    }
+}
+
+function PauseAndReturn {
+    Write-Host ""
+    Write-Color "Operation completed successfully!" "Green"
+    Read-Host "Press Enter to return to main menu..."
+}
+
+function Do-Install {
+    Write-Header "Step 1: Checking Python Environment"
+    if (Get-Command python -ErrorAction SilentlyContinue) {
+        Write-Host "✅ " -NoNewline; Write-Host "Python is already installed and ready." -ForegroundColor Green
+    } else {
+        Install-Python
+    }
+
+    Write-Header "Step 2: Checking Media Engine (FFmpeg)"
+    if (Get-Command ffmpeg -ErrorAction SilentlyContinue) {
+        Write-Host "✅ " -NoNewline; Write-Host "FFmpeg is already installed and ready." -ForegroundColor Green
+    } else {
+        Install-FFmpeg
+    }
+
+    Write-Header "Step 3: Installing FluxMedia Core"
+    Install-FluxMedia
+    
+    Write-Host "`n🎉 " -NoNewline; Write-Host "SUCCESS! All components are fully installed." -ForegroundColor Green
+    Write-Host "------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "You can now run FluxMedia from anywhere by typing: " -NoNewline
+    Write-Host "fluxmedia" -ForegroundColor Cyan
+    Write-Host "------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host ""
+
+    $launch = Read-Host "🎬 Would you like to launch FluxMedia right now? (Y/n)"
+    if ($launch -ne 'n' -and $launch -ne 'N') {
+        Clear-Host
+        fluxmedia
+    }
+}
+
+# Start the application
+Show-MainMenu
