@@ -138,6 +138,12 @@ body {
     line-height: 1.6;
     overflow-x: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
+    
+    /* Disable Text Selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 h1, h2, h3, h4, .logo-text, .terminal-title {
@@ -748,6 +754,12 @@ html[data-theme="system"] .system-icon { display: block; }
     padding: 1rem;
     font-family: 'ui-monospace', monospace;
     font-size: 1rem;
+    
+    /* Re-enable selection for code blocks */
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .code-cmd { color: var(--primary-color); }
