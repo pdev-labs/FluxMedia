@@ -249,7 +249,7 @@ show_main_menu() {
         echo -e "${CYAN}/_/    /_/\__,_/_/|_|(_)/_/  /_/ \___/\__,_//_/\__,_/ ${NC}"
         echo ""
         echo -e "${WHITE}          Welcome to the FluxMedia Toolkit!      ${NC}"
-        echo -e "${GRAY}          Fast, Aesthetic, and Powerful.         ${NC}"
+        echo -e "${GRAY}          Fast and Powerful.                     ${NC}"
         echo ""
         echo -e "${WHITE}Please select an action:${NC}"
         echo -e "${CYAN}  [1] Install FluxMedia (Default setup)${NC}"

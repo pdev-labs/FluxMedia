@@ -103,7 +103,7 @@ function Show-MainMenu {
         Clear-Host
         Write-Color $logo "Cyan"
         Write-Color "          Welcome to the FluxMedia Toolkit!      " "White"
-        Write-Color "          Fast, Aesthetic, and Powerful.         " "DarkGray"
+        Write-Color "          Fast and Powerful.                     " "DarkGray"
         Write-Host ""
         Write-Color "Please select an action:" "White"
         Write-Color "  [1] Install FluxMedia (Default setup)" "Cyan"
