@@ -46,16 +46,20 @@ function Install-FFmpeg {
 
 function Install-FluxMedia {
     Write-Host "⏳ " -NoNewline; Write-Host "Fetching fluxmedia..." -ForegroundColor Yellow
-    Run-Silent { python -m pip install --upgrade pip -q }
-    Run-Silent { python -m pip install -U fluxmedia -q }
+    
+    $pyCmd = if (Get-Command py -ErrorAction SilentlyContinue) { "py" } else { "python" }
+    
+    Run-Silent { & $pyCmd -m pip install --upgrade pip -q }
+    Run-Silent { & $pyCmd -m pip install -U fluxmedia -q }
     Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core installed." -ForegroundColor Green
 }
 
 function Uninstall-FluxMedia {
     Write-Host "⏳ " -NoNewline; Write-Host "Removing fluxmedia and all dependencies..." -ForegroundColor Yellow
+    $pyCmd = if (Get-Command py -ErrorAction SilentlyContinue) { "py" } else { "python" }
     $oldError = $ErrorActionPreference
     $ErrorActionPreference = 'SilentlyContinue'
-    python -m pip uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments -q 2>&1 | Out-Null
+    & $pyCmd -m pip uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments -q 2>&1 | Out-Null
     $ErrorActionPreference = $oldError
     Write-Host "✅ " -NoNewline; Write-Host "FluxMedia Core and dependencies removed." -ForegroundColor Green
 }
@@ -215,7 +219,8 @@ function Do-Install {
     Write-Header "Step 1: Checking Python Environment"
     $pythonExists = $false
     try {
-        $pyVersion = & python --version 2>&1
+        $pyCmd = if (Get-Command py -ErrorAction SilentlyContinue) { "py" } else { "python" }
+        $pyVersion = & $pyCmd --version 2>&1
         if ($pyVersion -match "Python 3") { $pythonExists = $true }
     } catch {}
 
@@ -245,10 +250,11 @@ function Do-Install {
     $launch = Read-Host "🎬 Would you like to launch FluxMedia right now? (Y/n)"
     if ($launch -ne 'n' -and $launch -ne 'N') {
         Clear-Host
+        $pyCmd = if (Get-Command py -ErrorAction SilentlyContinue) { "py" } else { "python" }
         if (Get-Command fluxmedia -ErrorAction SilentlyContinue) {
             fluxmedia
         } else {
-            python -m fluxmedia
+            & $pyCmd -m fluxmedia
         }
     }
 }
