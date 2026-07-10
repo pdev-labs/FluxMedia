@@ -1,20 +1,31 @@
 #!/usr/bin/env bash
+
 set -e
 
-# Colors
-CYAN='\033[1;36m'
-GREEN='\033[1;32m'
+# --- UI Colors and Styles ---
+CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+DARKGRAY='\033[1;30m'
 WHITE='\033[1;37m'
-RED='\033[1;31m'
-GRAY='\033[0;90m'
-NC='\033[0m'
+BG_CYAN='\033[46;1m'
+FG_BLACK='\033[30;1m'
+NC='\033[0m' # No Color
 
-# Helper Functions
 print_header() {
-    echo ""
-    echo -e "${CYAN}✨ $1 ✨${NC}"
-    echo -e "${GRAY}----------------------------------------${NC}"
+    echo -e "\n  ${CYAN}✨ $1 ✨${NC}"
+    echo -e "  ${DARKGRAY}------------------------------------------------${NC}"
+}
+
+print_logo() {
+    echo -e "${CYAN}    ______ __               __  ___          ___ "
+    echo -e "   / ____// /_  __  __ _  //  |/  /___  ____/ (_)____"
+    echo -e "  / /_   / / / / / |/_/(_)/ /|_/ // _ \/ __  // / __ \ "
+    echo -e " / __/  / / /_/ />  < _  / /  / //  __/ /_/ // / /_/ / "
+    echo -e "/_/    /_/\__,_/_/|_|(_)/_/  /_/ \___/\__,_//_/\__,_/  ${NC}\n"
+    echo -e "${WHITE}          Welcome to the FluxMedia Toolkit!      ${NC}"
+    echo -e "${DARKGRAY}          Fast and Powerful.                     ${NC}\n"
 }
 
 pause_and_return() {
@@ -23,168 +34,238 @@ pause_and_return() {
     read -p "Press Enter to return to main menu..."
 }
 
-install_python() {
-    echo -e "${YELLOW}⏳ Fetching Python via package manager...${NC}"
-    OS="$(uname -s)"
-    if [ "$OS" = "Darwin" ]; then
-        brew install python > /dev/null 2>&1 || true
-    elif [ "$OS" = "Linux" ]; then
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get install -yqq python3 python3-pip > /dev/null 2>&1 || true
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -Sy --noconfirm python python-pip > /dev/null 2>&1 || true
-        elif command -v dnf &> /dev/null; then
-            sudo dnf install -yq python3 python3-pip > /dev/null 2>&1 || true
-        fi
+# --- Real-Time Progress Spinner ---
+run_with_spinner() {
+    local msg="$1"
+    shift
+    
+    tput civis 2>/dev/null || true
+    
+    "$@" >/dev/null 2>&1 &
+    local pid=$!
+    
+    local delay=0.1
+    local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    
+    while kill -0 $pid 2>/dev/null; do
+        local temp=${spinstr#?}
+        printf "\r⏳ ${YELLOW}%s...${NC} ${CYAN}%c${NC} " "$msg" "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+    done
+    
+    wait $pid
+    local exit_code=$?
+    
+    tput cnorm 2>/dev/null || true
+    
+    if [ $exit_code -eq 0 ]; then
+        printf "\r✅ ${GREEN}%s complete.                           ${NC}\n" "$msg"
+    else
+        printf "\r❌ ${RED}%s failed.                               ${NC}\n" "$msg"
     fi
-    echo -e "${GREEN}✅ Python installed.${NC}"
+    return $exit_code
 }
 
-install_ffmpeg() {
-    echo -e "${YELLOW}⏳ Fetching FFmpeg via package manager...${NC}"
-    OS="$(uname -s)"
-    if [ "$OS" = "Darwin" ]; then
-        brew install ffmpeg > /dev/null 2>&1 || true
+# --- Interactive Arrow Key Menu ---
+show_menu() {
+    local prompt="$1"
+    shift
+    local options=("$@")
+    local selected=0
+    local key
+
+    # Hide cursor
+    tput civis 2>/dev/null || true
+    
+    while true; do
+        clear
+        print_logo
+        print_header "$prompt"
+        
+        for i in "${!options[@]}"; do
+            if [ "$i" -eq "$selected" ]; then
+                # Highlighted row
+                echo -e "  ${BG_CYAN}${FG_BLACK} ❯ ${options[$i]} ${NC}"
+            else
+                # Normal row
+                echo -e "     ${options[$i]}"
+            fi
+        done
+        
+        # Read 1 char. If it's escape, read two more for arrow sequences.
+        read -rsn1 key
+        if [[ $key == $'\e' ]]; then
+            read -rsn2 key
+            if [[ $key == "[A" ]]; then # Up arrow
+                ((selected--))
+                if [ $selected -lt 0 ]; then selected=$((${#options[@]} - 1)); fi
+            elif [[ $key == "[B" ]]; then # Down arrow
+                ((selected++))
+                if [ $selected -ge ${#options[@]} ]; then selected=0; fi
+            fi
+        elif [[ $key == "" ]]; then # Enter key
+            break
+        fi
+    done
+    
+    # Show cursor
+    tput cnorm 2>/dev/null || true
+    return $selected
+}
+
+# --- OS Detection ---
+OS="$(uname -s)"
+DISTRO=""
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO=$ID
+fi
+
+is_termux() {
+    if [[ "$PREFIX" == *com.termux* ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# --- Installation Logic ---
+install_dependencies() {
+    local cmd=""
+    if is_termux; then
+        cmd="pkg install python python-pip ffmpeg termux-api -y"
+    elif [ "$OS" = "Darwin" ]; then
+        if ! command -v brew &> /dev/null; then
+            echo -e "\n${RED}Homebrew is required on macOS. Please install it first.${NC}"
+            exit 1
+        fi
+        cmd="brew install python ffmpeg"
     elif [ "$OS" = "Linux" ]; then
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get install -yqq ffmpeg > /dev/null 2>&1 || true
+        if command -v apt &> /dev/null; then
+            sudo apt update >/dev/null 2>&1
+            cmd="sudo apt install python3-pip python3-venv pipx ffmpeg -y"
         elif command -v pacman &> /dev/null; then
-            sudo pacman -Sy --noconfirm ffmpeg > /dev/null 2>&1 || true
+            cmd="sudo pacman -S python-pip pipx ffmpeg --noconfirm"
         elif command -v dnf &> /dev/null; then
-            sudo dnf install -yq ffmpeg > /dev/null 2>&1 || true
+            cmd="sudo dnf install python3-pip pipx ffmpeg -y"
         fi
     fi
-    echo -e "${GREEN}✅ FFmpeg installed.${NC}"
+    
+    if [ -n "$cmd" ]; then
+        run_with_spinner "Checking/Installing Dependencies (Python & FFmpeg)" bash -c "$cmd"
+    fi
 }
 
 install_fluxmedia() {
-    echo -e "${YELLOW}⏳ Fetching FluxMedia Core...${NC}"
-    if command -v pipx &> /dev/null; then
-        pipx install fluxmedia > /dev/null 2>&1 || true
+    local cmd=""
+    if is_termux || [ "$OS" = "Darwin" ]; then
+        cmd="pip install --upgrade pip -q && pip install -U fluxmedia -q"
     else
-        if pip3 install -U fluxmedia --break-system-packages > /dev/null 2>&1; then
-            :
+        if command -v pipx &> /dev/null; then
+            cmd="pipx install fluxmedia --force && pipx ensurepath"
         else
-            pip3 install -U fluxmedia > /dev/null 2>&1 || true
+            cmd="pip3 install --upgrade pip -q && pip3 install -U fluxmedia -q || pip3 install -U fluxmedia --break-system-packages -q"
         fi
     fi
-    echo -e "${GREEN}✅ FluxMedia Core installed.${NC}"
+    run_with_spinner "Fetching fluxmedia" bash -c "$cmd"
 }
 
 uninstall_fluxmedia() {
-    echo -e "${YELLOW}⏳ Removing FluxMedia Core and dependencies...${NC}"
+    local cmd="pip uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments -q || true; pip3 uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments -q || true"
     if command -v pipx &> /dev/null; then
-        pipx uninstall fluxmedia > /dev/null 2>&1 || true
-    else
-        if pip3 uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments --break-system-packages > /dev/null 2>&1; then
-            :
-        else
-            pip3 uninstall -y fluxmedia rich requests yt-dlp textual markdown-it-py pygments > /dev/null 2>&1 || true
-        fi
+        cmd="pipx uninstall fluxmedia || true; $cmd"
     fi
-    echo -e "${GREEN}✅ FluxMedia Core and dependencies removed.${NC}"
+    run_with_spinner "Removing fluxmedia" bash -c "$cmd"
 }
 
 uninstall_ffmpeg() {
-    echo -e "${YELLOW}⏳ Removing FFmpeg...${NC}"
-    OS="$(uname -s)"
-    if [ "$OS" = "Darwin" ]; then
-        brew uninstall ffmpeg > /dev/null 2>&1 || true
+    local cmd=""
+    if is_termux; then
+        cmd="pkg uninstall ffmpeg -y || true"
+    elif [ "$OS" = "Darwin" ]; then
+        cmd="brew uninstall ffmpeg || true"
     elif [ "$OS" = "Linux" ]; then
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get remove -yqq ffmpeg > /dev/null 2>&1 || true
+        if command -v apt &> /dev/null; then
+            cmd="sudo apt remove ffmpeg -y || true"
         elif command -v pacman &> /dev/null; then
-            sudo pacman -Rns --noconfirm ffmpeg > /dev/null 2>&1 || true
+            cmd="sudo pacman -R ffmpeg --noconfirm || true"
         elif command -v dnf &> /dev/null; then
-            sudo dnf remove -yq ffmpeg > /dev/null 2>&1 || true
+            cmd="sudo dnf remove ffmpeg -y || true"
         fi
     fi
-    echo -e "${GREEN}✅ FFmpeg removed.${NC}"
+    
+    if [ -n "$cmd" ]; then
+        run_with_spinner "Removing FFmpeg" bash -c "$cmd"
+    fi
 }
 
 uninstall_python() {
-    echo -e "${YELLOW}⏳ Removing Python...${NC}"
-    OS="$(uname -s)"
-    if [ "$OS" = "Darwin" ]; then
-        brew uninstall python > /dev/null 2>&1 || true
-    elif [ "$OS" = "Linux" ]; then
-        if command -v apt-get &> /dev/null; then
-            sudo apt-get remove -yqq python3 python3-pip > /dev/null 2>&1 || true
-        elif command -v pacman &> /dev/null; then
-            sudo pacman -Rns --noconfirm python python-pip > /dev/null 2>&1 || true
-        elif command -v dnf &> /dev/null; then
-            sudo dnf remove -yq python3 python3-pip > /dev/null 2>&1 || true
-        fi
+    local cmd=""
+    if is_termux; then
+        cmd="pkg uninstall python python-pip -y || true"
+    elif [ "$OS" = "Darwin" ]; then
+        cmd="brew uninstall python || true"
     fi
-    echo -e "${GREEN}✅ Python removed.${NC}"
+    
+    if [ -n "$cmd" ]; then
+        run_with_spinner "Removing Python" bash -c "$cmd"
+    elif [ "$OS" = "Linux" ]; then
+        echo -e "\n⚠️  ${RED}Skipped: Uninstalling Python on Linux can break the OS.${NC}"
+    fi
 }
 
 do_install() {
-    print_header "Step 1: Checking Python Environment"
-    if command -v python3 &> /dev/null; then
-        echo -e "${GREEN}✅ Python is already installed and ready.${NC}"
-    else
-        install_python
-    fi
-
-    print_header "Step 2: Checking Media Engine (FFmpeg)"
-    if command -v ffmpeg &> /dev/null; then
-        echo -e "${GREEN}✅ FFmpeg is already installed and ready.${NC}"
-    else
-        install_ffmpeg
-    fi
-
+    clear
+    print_logo
+    print_header "Step 1 & 2: Environment Setup"
+    install_dependencies
+    
     print_header "Step 3: Installing FluxMedia Core"
     install_fluxmedia
-
-    echo ""
-    echo -e "${GREEN}🎉 SUCCESS! All components are fully installed.${NC}"
-    echo -e "${GRAY}------------------------------------------------${NC}"
-    echo -e "You can now run FluxMedia from anywhere by typing:"
+    
+    echo -e "\n🎉 ${GREEN}SUCCESS! All components are fully installed.${NC}"
+    echo -e "${DARKGRAY}------------------------------------------------${NC}"
+    echo -ne "You can now run FluxMedia from anywhere by typing: "
     echo -e "${CYAN}fluxmedia${NC}"
-    echo -e "${GRAY}------------------------------------------------${NC}"
-    echo ""
-
-    read -p "🎬 Would you like to launch FluxMedia right now? (Y/n) " launch
-    if [[ ! "$launch" =~ ^[nN]$ ]]; then
+    echo -e "${DARKGRAY}------------------------------------------------${NC}\n"
+    
+    # Quick Yes/No menu for launching
+    local launch_opts=("Yes, launch it now" "No, exit")
+    show_menu "Would you like to launch FluxMedia right now?" "${launch_opts[@]}"
+    local choice=$?
+    
+    if [ "$choice" -eq 0 ]; then
         clear
         if command -v fluxmedia &> /dev/null; then
             fluxmedia
         else
-            python3 -m fluxmedia
+            python3 -m fluxmedia || python -m fluxmedia
         fi
     fi
+    exit 0
 }
 
 show_uninstall_menu() {
+    local opts=(
+        "Uninstall FluxMedia Core Only"
+        "Uninstall FluxMedia + FFmpeg"
+        "Uninstall Everything (FluxMedia, FFmpeg, Python)"
+        "Back to Main Menu"
+    )
     while true; do
-        clear
-        print_header "Uninstall Menu"
-        echo -e "${RED}  [1] Uninstall FluxMedia Core Only${NC}"
-        echo -e "${RED}  [2] Uninstall FluxMedia + FFmpeg${NC}"
-        echo -e "${RED}  [3] Uninstall Everything (FluxMedia, FFmpeg, and Python)${NC}"
-        echo -e "${GRAY}  [0] Back to Main Menu${NC}"
-        echo ""
-        
-        read -p "Choice: " choice
+        show_menu "Uninstall Menu" "${opts[@]}"
+        local choice=$?
         case $choice in
-            1)
-                uninstall_fluxmedia
-                pause_and_return
-                return
-                ;;
-            2)
-                uninstall_fluxmedia
-                uninstall_ffmpeg
-                pause_and_return
-                return
-                ;;
-            3)
-                echo ""
-                echo -e "${RED}⚠️  CRITICAL WARNING ⚠️${NC}"
-                echo -e "${YELLOW}Removing Python completely from Unix environments (macOS/Linux) can severely break system tools, package managers, and essential OS scripts that rely on it.${NC}"
-                read -p "Are you absolutely sure you want to forcibly remove Python? (y/N) " confirm
-                if [[ "$confirm" =~ ^[yY]$ ]]; then
+            0) uninstall_fluxmedia; pause_and_return; return ;;
+            1) uninstall_fluxmedia; uninstall_ffmpeg; pause_and_return; return ;;
+            2) 
+                clear
+                print_logo
+                echo -e "\n⚠️  ${RED}CRITICAL WARNING${NC} ⚠️"
+                echo -e "${YELLOW}Removing Python completely may break other scripts or tools.${NC}"
+                read -p "Are you absolutely sure you want to remove Python? (y/N) " confirm
+                if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
                     uninstall_fluxmedia
                     uninstall_ffmpeg
                     uninstall_python
@@ -195,88 +276,46 @@ show_uninstall_menu() {
                     sleep 2
                 fi
                 ;;
-            0) return ;;
+            3) return ;;
         esac
     done
 }
 
 show_reinstall_menu() {
+    local opts=(
+        "Reinstall FluxMedia Core Only"
+        "Reinstall Everything (Deps + Core)"
+        "Back to Main Menu"
+    )
     while true; do
-        clear
-        print_header "Reinstall Menu"
-        echo -e "${YELLOW}  [1] Reinstall FluxMedia Core Only${NC}"
-        echo -e "${YELLOW}  [2] Reinstall FFmpeg Only${NC}"
-        echo -e "${YELLOW}  [3] Reinstall Python Only${NC}"
-        echo -e "${YELLOW}  [4] Reinstall Everything${NC}"
-        echo -e "${GRAY}  [0] Back to Main Menu${NC}"
-        echo ""
-        
-        read -p "Choice: " choice
+        show_menu "Reinstall Menu" "${opts[@]}"
+        local choice=$?
         case $choice in
-            1)
-                uninstall_fluxmedia; install_fluxmedia
-                pause_and_return
-                return
-                ;;
-            2)
-                uninstall_ffmpeg; install_ffmpeg
-                pause_and_return
-                return
-                ;;
-            3)
-                uninstall_python; install_python
-                pause_and_return
-                return
-                ;;
-            4)
-                uninstall_fluxmedia; uninstall_ffmpeg; uninstall_python
-                install_python; install_ffmpeg; install_fluxmedia
-                pause_and_return
-                return
-                ;;
-            0) return ;;
+            0) uninstall_fluxmedia; install_fluxmedia; pause_and_return; return ;;
+            1) uninstall_fluxmedia; do_install; pause_and_return; return ;;
+            2) return ;;
         esac
     done
 }
 
 show_main_menu() {
+    local opts=(
+        "Install FluxMedia (Default setup)"
+        "Reinstall components"
+        "Uninstall components"
+        "Exit"
+    )
     while true; do
-        clear
-        echo -e "${CYAN}    ______ __               __  ___          ___ ${NC}"
-        echo -e "${CYAN}   / ____// /_  __  __ _  //  |/  /___  ____/ (_)____${NC}"
-        echo -e "${CYAN}  / /_   / / / / / |/_/(_)/ /|_/ // _ \/ __  // / __ \\${NC}"
-        echo -e "${CYAN} / __/  / / /_/ />  < _  / /  / //  __/ /_/ // / /_/ /${NC}"
-        echo -e "${CYAN}/_/    /_/\__,_/_/|_|(_)/_/  /_/ \___/\__,_//_/\__,_/ ${NC}"
-        echo ""
-        echo -e "${WHITE}          Welcome to the FluxMedia Toolkit!      ${NC}"
-        echo -e "${GRAY}          Fast and Powerful.                     ${NC}"
-        echo ""
-        echo -e "${WHITE}Please select an action:${NC}"
-        echo -e "${CYAN}  [1] Install FluxMedia (Default setup)${NC}"
-        echo -e "${YELLOW}  [2] Reinstall components${NC}"
-        echo -e "${RED}  [3] Uninstall components${NC}"
-        echo -e "${GRAY}  [0] Exit${NC}"
-        echo ""
-        
-        read -p "Choice: " choice
+        show_menu "Please select an action:" "${opts[@]}"
+        local choice=$?
         case $choice in
-            1) do_install; return ;;
-            2) show_reinstall_menu ;;
-            3) show_uninstall_menu ;;
-            0)
-                echo -e "\n${CYAN}Goodbye!${NC}"
-                exit 0
-                ;;
+            0) do_install; return ;;
+            1) show_reinstall_menu ;;
+            2) show_uninstall_menu ;;
+            3) tput cnorm 2>/dev/null || true; echo -e "\n${CYAN}Goodbye!${NC}"; exit 0 ;;
         esac
     done
 }
 
-OS="$(uname -s)"
-if [ "$OS" = "Darwin" ]; then
-    if ! command -v brew &> /dev/null; then
-        echo -e "${YELLOW}⏳ Homebrew not found. Installing Homebrew for package management...${NC}"
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
-fi
-
+# Start
 show_main_menu

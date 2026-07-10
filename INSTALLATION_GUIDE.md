@@ -13,6 +13,22 @@
 
 ---
 
+## ⚡ One-Liner Installation (TUI)
+
+The fastest and easiest way to install FluxMedia is using our automated TUI (Text User Interface) installer. Open your terminal and run the command for your Operating System:
+
+### macOS / Linux / Termux
+```bash
+curl -fsSL https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.sh | bash
+```
+
+### Windows (PowerShell)
+```powershell
+iwr -useb https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.ps1 | iex
+```
+
+---
+
 ## 🪟 Windows Setup Guide
 
 ### 1. Install Python
