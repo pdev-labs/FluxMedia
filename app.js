@@ -48,7 +48,8 @@ const state = {
   zoomScale: 1,
   zoomTranslate: { x: 0, y: 0 },
   isDraggingImage: false,
-  dragStart: { x: 0, y: 0 }
+  dragStart: { x: 0, y: 0 },
+  playlist: JSON.parse(safeStorage.getItem('flux-playlist')) || []
 };
 
 // Global DOM references
@@ -498,7 +499,10 @@ function renderFileDisplay() {
   // Apply Search (Case insensitive matching)
   if (state.searchQuery.trim()) {
     const q = state.searchQuery.toLowerCase();
-    filtered = filtered.filter(f => f.name.toLowerCase().includes(q));
+    filtered = filtered.filter(f => {
+      const searchStr = `${f.name} ${f.type} ${formatSize(f.size)} ${f.duration ? formatDuration(f.duration) : ''} ${new Date(f.added_at).toLocaleString()}`.toLowerCase();
+      return searchStr.includes(q);
+    });
   }
 
   // Sort logic
@@ -929,6 +933,9 @@ function setupVideoPlayer(file) {
     const cur = video.currentTime;
     const dur = video.duration || 0;
     
+    // Save watch history
+    safeStorage.setItem(`video-progress-${file.id}`, cur);
+
     curTimeText.textContent = formatDuration(cur) || '0:00';
     durTimeText.textContent = formatDuration(dur) || '0:00';
 
@@ -949,6 +956,12 @@ function setupVideoPlayer(file) {
 
   video.onloadedmetadata = () => {
     durTimeText.textContent = formatDuration(video.duration);
+    
+    // Restore watch history
+    const savedTime = parseFloat(safeStorage.getItem(`video-progress-${file.id}`));
+    if (!isNaN(savedTime) && savedTime > 0 && savedTime < video.duration) {
+      video.currentTime = savedTime;
+    }
   };
 
   // Play controls
@@ -996,12 +1009,33 @@ function setupVideoPlayer(file) {
   // Video ended handling
   video.onended = () => {
     updatePlayIcon(true);
+    
+    // Auto-play Next logic
+    if (state.playlist && state.playlist.length > 0) {
+      const currentIdx = state.playlist.findIndex(item => item.id === file.id);
+      if (currentIdx !== -1 && currentIdx < state.playlist.length - 1) {
+        const nextItem = state.playlist[currentIdx + 1];
+        const nextFileIdx = state.files.findIndex(f => f.id === nextItem.id);
+        if (nextFileIdx !== -1) {
+          openPreviewModal(nextItem.id, nextFileIdx);
+        }
+      }
+    } else {
+      // Auto-play next in current view
+      if (state.activeFileIndex !== -1 && state.activeFileIndex < state.files.length - 1) {
+        const nextFile = state.files[state.activeFileIndex + 1];
+        if (nextFile.type === 'video' || nextFile.type === 'audio') {
+          openPreviewModal(nextFile.id, state.activeFileIndex + 1);
+        }
+      }
+    }
   };
 
   // Volume
   const updateVolume = () => {
     video.volume = volumeSlider.value;
     video.muted = (video.volume === 0);
+    safeStorage.setItem('flux-vol', video.volume);
     
     if (video.muted) {
       volumeBtn.innerHTML = `<svg><use href="#icon-volume-off"></use></svg>`;
@@ -1009,6 +1043,14 @@ function setupVideoPlayer(file) {
       volumeBtn.innerHTML = `<svg><use href="#icon-volume-up"></use></svg>`;
     }
   };
+
+  // Restore volume
+  const savedVol = parseFloat(safeStorage.getItem('flux-vol'));
+  if (!isNaN(savedVol)) {
+    video.volume = savedVol;
+    volumeSlider.value = savedVol;
+  }
+  updateVolume();
 
   volumeSlider.oninput = updateVolume;
   volumeBtn.onclick = () => {
@@ -1077,20 +1119,56 @@ function setupVideoPlayer(file) {
     e.stopPropagation();
     speedMenu.classList.toggle('hidden');
   };
+  
+  // Speed scrolling (0.1x to 8x)
+  speedBtn.onwheel = (e) => {
+    e.preventDefault();
+    let currentSpeed = video.playbackRate;
+    if (e.deltaY < 0) {
+      currentSpeed += 0.1;
+    } else {
+      currentSpeed -= 0.1;
+    }
+    // Clamp between 0.1x and 8.0x
+    currentSpeed = Math.max(0.1, Math.min(8.0, currentSpeed));
+    // Round to 1 decimal place to avoid float precision issues
+    currentSpeed = Math.round(currentSpeed * 10) / 10;
+    
+    video.playbackRate = currentSpeed;
+    safeStorage.setItem('flux-speed', currentSpeed);
+    
+    // Update tooltip or indicator if desired
+    speedBtn.title = `${currentSpeed}x`;
+  };
 
   speedMenu.onclick = (e) => {
-    const item = e.target.closest('li');
-    if (item) {
-      const speed = parseFloat(item.dataset.speed);
+    if (e.target.tagName === 'LI') {
+      const speed = parseFloat(e.target.dataset.speed);
       video.playbackRate = speed;
+      safeStorage.setItem('flux-speed', speed);
+      speedBtn.title = `${speed}x`;
       
-      // Update classes
-      speedMenu.querySelectorAll('li').forEach(el => el.classList.remove('active'));
-      item.classList.add('active');
+      Array.from(speedMenu.children).forEach(el => el.classList.remove('active'));
+      e.target.classList.add('active');
       speedMenu.classList.add('hidden');
       showToast(`Playback speed: ${speed}x`);
     }
   };
+
+  // Restore speed
+  const savedSpeed = parseFloat(safeStorage.getItem('flux-speed'));
+  if (!isNaN(savedSpeed)) {
+    video.playbackRate = savedSpeed;
+    speedBtn.title = `${savedSpeed}x`;
+    // Update menu active state if it matches a preset
+    Array.from(speedMenu.children).forEach(el => {
+      if (parseFloat(el.dataset.speed) === savedSpeed) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    });
+  }
 
   document.addEventListener('click', () => {
     speedMenu.classList.add('hidden');
@@ -1715,6 +1793,69 @@ function setupEventListeners() {
   document.getElementById('selection-clear-btn').addEventListener('click', clearSelection);
   document.getElementById('selection-cancel-btn').addEventListener('click', clearSelection);
   document.getElementById('selection-select-all-btn').addEventListener('click', selectAllFiltered);
+  
+  // Custom Playlist logic
+  const playlistBtn = document.getElementById('selection-playlist-btn');
+  const playlistToggleBtn = document.getElementById('playlist-toggle-btn');
+  const playlistSidebar = document.getElementById('playlist-sidebar');
+  const playlistCloseBtn = document.getElementById('playlist-close-btn');
+  const playlistClearBtn = document.getElementById('playlist-clear-btn');
+  
+  const renderPlaylist = () => {
+    const container = document.getElementById('playlist-items-container');
+    if (state.playlist.length === 0) {
+      container.innerHTML = '<div class="empty-playlist m3-body-medium">Your playlist is empty. Select files to add them here.</div>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    state.playlist.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = `playlist-item ${state.activeFileIndex !== -1 && state.files[state.activeFileIndex]?.id === item.id ? 'playing' : ''}`;
+      div.innerHTML = `
+        <svg style="width:24px;height:24px" viewBox="0 0 24 24"><use href="#icon-${item.type === 'video' ? 'video' : item.type === 'audio' ? 'audio' : 'other'}"></use></svg>
+        <div class="playlist-item-text m3-body-medium">${item.name}</div>
+      `;
+      div.onclick = () => {
+        const fileIdx = state.files.findIndex(f => f.id === item.id);
+        if (fileIdx !== -1) {
+          openPreviewModal(item.id, fileIdx);
+        }
+      };
+      container.appendChild(div);
+    });
+  };
+
+  playlistToggleBtn.addEventListener('click', () => {
+    playlistSidebar.classList.toggle('hidden');
+    renderPlaylist();
+  });
+
+  playlistCloseBtn.addEventListener('click', () => {
+    playlistSidebar.classList.add('hidden');
+  });
+
+  playlistClearBtn.addEventListener('click', () => {
+    state.playlist = [];
+    safeStorage.setItem('flux-playlist', JSON.stringify(state.playlist));
+    renderPlaylist();
+    showToast('Queue cleared');
+  });
+
+  if (playlistBtn) {
+    playlistBtn.addEventListener('click', () => {
+      const selected = Array.from(state.selectedFiles);
+      const toAdd = state.files.filter(f => selected.includes(f.id));
+      state.playlist = state.playlist.concat(toAdd);
+      safeStorage.setItem('flux-playlist', JSON.stringify(state.playlist));
+      clearSelection();
+      showToast(`Added ${toAdd.length} items to playlist`);
+      renderPlaylist();
+      if (playlistSidebar.classList.contains('hidden')) {
+        playlistSidebar.classList.remove('hidden');
+      }
+    });
+  }
 
   // Close modals
   document.getElementById('modal-close-btn').onclick = closePreviewModal;

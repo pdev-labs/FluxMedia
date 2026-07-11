@@ -136,6 +136,14 @@
       <g id="icon-vlc">
         <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
       </g>
+      <!-- Playlist Icon -->
+      <g id="icon-playlist">
+        <path d="M3 10h14V8H3v2zm0 4h14v-2H3v2zm0-8h14V4H3v2zm16 4v8.5c0 1.93-1.57 3.5-3.5 3.5s-3.5-1.57-3.5-3.5 1.57-3.5 3.5-3.5c.87 0 1.66.32 2.28.84V6h5v2h-3v6z"/>
+      </g>
+      <!-- Add to Playlist Icon -->
+      <g id="icon-playlist-add">
+        <path d="M14 10H3v2h11v-2zm0-4H3v2h11V6zM3 16h7v-2H3v2zm11-1v-3h2v3h3v2h-3v3h-2v-3h-3v-2h3z"/>
+      </g>
     </defs>
   </svg>
 
@@ -192,6 +200,11 @@
         </div>
       </div>
       <div class="header-actions">
+        <!-- Playlist Toggle -->
+        <button id="playlist-toggle-btn" class="m3-icon-btn" aria-label="Toggle Playlist">
+          <svg><use href="#icon-playlist"></use></svg>
+        </button>
+
         <!-- Settings -->
         <button id="settings-btn" class="m3-icon-btn" aria-label="Settings">
           <svg><use href="#icon-settings"></use></svg>
@@ -389,6 +402,10 @@
           <span id="selection-bar-count" class="m3-title-medium">0 files selected</span>
         </div>
         <div class="selection-bar-actions">
+          <button id="selection-playlist-btn" class="m3-btn m3-btn-text">
+            <svg class="btn-icon"><use href="#icon-playlist-add"></use></svg>
+            <span>Add to Playlist</span>
+          </button>
           <button id="selection-download-btn" class="m3-btn m3-btn-filled">
             <svg class="btn-icon"><use href="#icon-download"></use></svg>
             <span>Download All</span>
@@ -399,6 +416,21 @@
         </div>
       </div>
     </div>
+
+    <!-- CUSTOM PLAYLIST SIDEBAR -->
+    <aside id="playlist-sidebar" class="playlist-sidebar hidden">
+      <div class="playlist-header">
+        <h3 class="m3-title-large">Up Next</h3>
+        <button id="playlist-close-btn" class="m3-icon-btn"><svg><use href="#icon-close"></use></svg></button>
+      </div>
+      <div class="playlist-actions">
+        <button id="playlist-clear-btn" class="m3-btn m3-btn-text m3-color-error">Clear Queue</button>
+      </div>
+      <div id="playlist-items-container" class="playlist-items">
+        <!-- Dynamically populated -->
+        <div class="empty-playlist m3-body-medium">Your playlist is empty. Select files to add them here.</div>
+      </div>
+    </aside>
 
   </div>
 
