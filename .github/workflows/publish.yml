@@ -10,7 +10,8 @@ jobs:
   build-and-publish:
     name: Build and publish Python distribution 📦
     runs-on: ubuntu-latest
-    environment: pypi
+    environment:
+      name: pypi
 
     # This permission is required for Trusted Publishing (OIDC) to PyPI
     permissions:
