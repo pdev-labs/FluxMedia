@@ -1139,6 +1139,7 @@ function setupVideoPlayer(file) {
     
     // Update tooltip or indicator if desired
     speedBtn.title = `${currentSpeed}x`;
+    showToast(`Playback speed: ${currentSpeed}x`);
   };
 
   speedMenu.onclick = (e) => {
