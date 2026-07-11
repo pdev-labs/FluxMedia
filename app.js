@@ -1156,19 +1156,20 @@ function setupVideoPlayer(file) {
   };
 
   // Restore speed
-  const savedSpeed = parseFloat(safeStorage.getItem('flux-speed'));
-  if (!isNaN(savedSpeed)) {
-    video.playbackRate = savedSpeed;
-    speedBtn.title = `${savedSpeed}x`;
-    // Update menu active state if it matches a preset
-    Array.from(speedMenu.children).forEach(el => {
-      if (parseFloat(el.dataset.speed) === savedSpeed) {
-        el.classList.add('active');
-      } else {
-        el.classList.remove('active');
-      }
-    });
+  let savedSpeed = parseFloat(safeStorage.getItem('flux-speed'));
+  if (isNaN(savedSpeed)) {
+    savedSpeed = 1.0;
   }
+  video.playbackRate = savedSpeed;
+  speedBtn.title = `${savedSpeed}x`;
+  // Update menu active state if it matches a preset
+  Array.from(speedMenu.children).forEach(el => {
+    if (parseFloat(el.dataset.speed) === savedSpeed) {
+      el.classList.add('active');
+    } else {
+      el.classList.remove('active');
+    }
+  });
 
   document.addEventListener('click', () => {
     speedMenu.classList.add('hidden');
