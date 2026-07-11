@@ -4,7 +4,7 @@
 
 **The official Python module and PyPI package for FluxMedia, featuring a customizable LAN QR share portal and rich media player.**
 
-[![PyPI version](https://img.shields.io/pypi/v/fluxmedia.svg?style=for-the-badge&color=cyan&v=1.6.6)](https://pypi.org/project/fluxmedia/)
+[![PyPI version](https://img.shields.io/pypi/v/fluxmedia.svg?style=for-the-badge&color=cyan&v=1.6.7)](https://pypi.org/project/fluxmedia/)
 [![Python versions](https://img.shields.io/pypi/pyversions/fluxmedia.svg?style=for-the-badge&color=blue)](https://pypi.org/project/fluxmedia/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -146,7 +146,8 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.6]
+### Latest Release: [v1.6.7]
+- **Media Player Updates**: Added double-click to skip 10 seconds, `hours:minutes:seconds` format support for longer videos, and comprehensive YouTube-style keyboard shortcuts (`k`, `j`, `l`, `f`, `m`, and `0-9`).
 - **Automated PyPI Publishing**: Implemented GitHub Actions CI/CD workflows for secure Trusted Publishing to PyPI.
 - **PyPI README Fixes**: Resolved 404 broken link errors on PyPI by utilizing absolute GitHub blob URLs.
 - **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.

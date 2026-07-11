@@ -447,9 +447,14 @@ function formatSize(bytes) {
 
 function formatDuration(sec) {
   if (!sec) return '';
-  const m = Math.floor(sec / 60);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
   const s = Math.floor(sec % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  if (h > 0) {
+    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  } else {
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 }
 
 // URL builder including authentication token query param
@@ -977,6 +982,16 @@ function setupVideoPlayer(file) {
   playBtn.onclick = togglePlay;
   centerPlay.onclick = togglePlay;
   video.onclick = togglePlay;
+  
+  video.ondblclick = (e) => {
+    const rect = video.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    if (clickX > rect.width / 2) {
+      video.currentTime += 10;
+    } else {
+      video.currentTime -= 10;
+    }
+  };
 
   // Video ended handling
   video.onended = () => {
@@ -1709,9 +1724,42 @@ function setupEventListeners() {
   document.addEventListener('keydown', (e) => {
     const modal = document.getElementById('viewer-modal');
     if (!modal.classList.contains('hidden')) {
-      if (e.key === 'Escape') closePreviewModal();
-      else if (e.key === 'ArrowRight') navigateModal(1);
-      else if (e.key === 'ArrowLeft') navigateModal(-1);
+      const videoContainer = document.getElementById('viewer-video-container');
+      const isVideo = !videoContainer.classList.contains('hidden');
+      const video = document.getElementById('native-video-el');
+
+      if (e.key === 'Escape') {
+        closePreviewModal();
+      } else if (isVideo && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        const key = e.key.toLowerCase();
+        if (e.key === 'ArrowRight' || key === 'l') {
+          video.currentTime += 10;
+        } else if (e.key === 'ArrowLeft' || key === 'j') {
+          video.currentTime -= 10;
+        } else if (e.key === ' ' || e.code === 'Space' || key === 'k') {
+          e.preventDefault();
+          if (video.paused) video.play();
+          else video.pause();
+        } else if (e.key === '>' || (e.key === '.' && e.shiftKey)) {
+          video.playbackRate = Math.min(video.playbackRate + 0.25, 2.0);
+          if (typeof showToast !== 'undefined') showToast(`Playback speed: ${video.playbackRate}x`);
+        } else if (e.key === '<' || (e.key === ',' && e.shiftKey)) {
+          video.playbackRate = Math.max(video.playbackRate - 0.25, 0.25);
+          if (typeof showToast !== 'undefined') showToast(`Playback speed: ${video.playbackRate}x`);
+        } else if (key === 'f') {
+          document.getElementById('video-fullscreen-btn')?.click();
+        } else if (key === 'm') {
+          document.getElementById('video-volume-btn')?.click();
+        } else if (e.key >= '0' && e.key <= '9') {
+          const percent = parseInt(e.key) * 10;
+          if (video.duration) {
+            video.currentTime = (video.duration * percent) / 100;
+          }
+        }
+      } else {
+        if (e.key === 'ArrowRight') navigateModal(1);
+        else if (e.key === 'ArrowLeft') navigateModal(-1);
+      }
     }
   });
 
