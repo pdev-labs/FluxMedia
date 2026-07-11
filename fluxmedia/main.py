@@ -4269,13 +4269,66 @@ def operation_updates_manager(config: Dict[str, Any]):
 
 def main():
     """Primary routing flow block."""
+    import argparse
+    parser = argparse.ArgumentParser(description="FluxMedia CLI - Command-Line Media Downloader")
+    parser.add_argument("urls", nargs="*", help="URLs to download")
+    parser.add_argument("-a", "--audio", action="store_true", help="Download audio only")
+    parser.add_argument("-o", "--output", type=str, help="Destination directory")
+    args, unknown = parser.parse_known_args()
+    
+    if args.urls:
+        verify_and_install_requirements()
+        init_dependencies()
+        config = load_config()
+        global CLEAN_LOGS_ENABLED
+        CLEAN_LOGS_ENABLED = config.get("clean_logs_enabled", True)
+        
+        dest_dir = args.output if args.output else config.get("download_dir", os.path.join(os.path.expanduser("~"), "Downloads"))
+        os.makedirs(dest_dir, exist_ok=True)
+        ffmpeg_available = shutil.which("ffmpeg") is not None
+        
+        valid_urls = []
+        for u in args.urls:
+            n = normalize_and_validate_url(u)
+            if n: valid_urls.append(n)
+            
+        if not valid_urls:
+            print("No valid URLs provided.")
+            sys.exit(1)
+            
+        if args.audio:
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': os.path.join(dest_dir, config["filename_format"]),
+                'quiet': True, 'no_warnings': True, 'noprogress': True,
+            }
+            if ffmpeg_available:
+                ydl_opts['postprocessors'] = [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': config.get("audio_format", "mp3"),
+                    'preferredquality': '192',
+                }]
+        else:
+            format_str = get_format_string("10", ffmpeg_available)  # 10 is 'best' in our mapping
+            ydl_opts = {
+                'format': format_str,
+                'outtmpl': os.path.join(dest_dir, config["filename_format"]),
+                'quiet': True, 'no_warnings': True, 'noprogress': True,
+            }
+            if ffmpeg_available:
+                ydl_opts['merge_output_format'] = config.get("video_format", "default") if config.get("video_format", "default") != "default" else "mp4"
+                
+        ydl_opts = apply_common_ydl_opts(ydl_opts, config)
+        print(f"Downloading {len(valid_urls)} item(s) to {dest_dir}...")
+        run_ydl_download(ydl_opts, valid_urls)
+        sys.exit(0)
+
     verify_and_install_requirements()
     init_dependencies()
     
     check_fluxmedia_update_sync()
     start_version_check()
     config = load_config()
-    global CLEAN_LOGS_ENABLED
     CLEAN_LOGS_ENABLED = config.get("clean_logs_enabled", True)
     apply_theme_colors(config.get("theme", "dark"))
     
