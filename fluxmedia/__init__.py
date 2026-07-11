@@ -4,5 +4,5 @@ FluxMedia - Cross-platform Command-Line Media Downloader
 
 from .main import main
 
-__version__ = "1.6.11"
+__version__ = "1.6.12"
 __all__ = ["main"]
