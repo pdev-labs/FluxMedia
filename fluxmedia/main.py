@@ -2477,6 +2477,43 @@ def start_share_server(config: Dict[str, Any]):
                     self.send_response(404)
                     self.end_headers()
                     return
+                # 5. API: Subtitles (/api/subtitles/{id})
+                if path.startswith("/api/subtitles/"):
+                    if not self.check_auth():
+                        self.send_response(401)
+                        self.end_headers()
+                        return
+                        
+                    try:
+                        file_idx = int(path.split('/')[-1])
+                        files = sorted([f for f in os.listdir('.') if os.path.isfile(f)])
+                        if 0 <= file_idx < len(files):
+                            filename = files[file_idx]
+                            base_name = os.path.splitext(filename)[0]
+                            
+                            sub_path = None
+                            for ext in ['.vtt', '.srt', '.en.vtt', '.en.srt']:
+                                if os.path.exists(base_name + ext):
+                                    sub_path = base_name + ext
+                                    break
+                                    
+                            if sub_path:
+                                self.send_response(200)
+                                if sub_path.endswith('.vtt'):
+                                    self.send_header("Content-Type", "text/vtt")
+                                else:
+                                    self.send_header("Content-Type", "text/plain")
+                                self.send_header("Content-Length", str(os.path.getsize(sub_path)))
+                                self.end_headers()
+                                with open(sub_path, "rb") as f:
+                                    shutil.copyfileobj(f, self.wfile)
+                                return
+                    except Exception:
+                        pass
+                        
+                    self.send_response(404)
+                    self.end_headers()
+                    return
 
                 # Route: Profile Photo
                 if path == '/profile_photo':

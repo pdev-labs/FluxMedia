@@ -146,7 +146,7 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.12]
+### Latest Release: [v1.6.7]
 - **Media Player Updates**: Added double-click to skip 10 seconds, `hours:minutes:seconds` format support for longer videos, and comprehensive YouTube-style keyboard shortcuts (`k`, `j`, `l`, `f`, `m`, and `0-9`).
 - **Automated PyPI Publishing**: Implemented GitHub Actions CI/CD workflows for secure Trusted Publishing to PyPI.
 - **PyPI README Fixes**: Resolved 404 broken link errors on PyPI by utilizing absolute GitHub blob URLs.

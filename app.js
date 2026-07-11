@@ -911,6 +911,41 @@ function setupVideoPlayer(file) {
   const streamUrl = getStreamUrl(file.id);
   video.src = streamUrl;
 
+  // Setup Subtitles
+  Array.from(video.querySelectorAll('track')).forEach(t => t.remove()); // Clear previous tracks
+  const ccBtn = document.getElementById('video-cc-btn');
+  if (ccBtn) {
+    ccBtn.classList.add('hidden'); // Default hidden
+    ccBtn.style.color = '';
+    // Reset click handler
+    ccBtn.onclick = null;
+  }
+  
+  fetch(`/api/subtitles/${file.id}`, { method: 'HEAD' })
+    .then(res => {
+      if (res.ok && ccBtn) {
+        ccBtn.classList.remove('hidden');
+        const track = document.createElement('track');
+        track.src = `/api/subtitles/${file.id}`;
+        track.kind = 'subtitles';
+        track.srclang = 'en';
+        track.label = 'English';
+        track.default = false; 
+        video.appendChild(track);
+        
+        let subtitlesOn = false;
+        ccBtn.onclick = () => {
+          subtitlesOn = !subtitlesOn;
+          if (video.textTracks && video.textTracks[0]) {
+             video.textTracks[0].mode = subtitlesOn ? 'showing' : 'hidden';
+          }
+          ccBtn.style.color = subtitlesOn ? 'var(--primary)' : '';
+        };
+      }
+    })
+    .catch(err => console.log('No subtitles found'));
+
+
   const playBtn = document.getElementById('video-play-btn');
   const centerPlay = document.getElementById('video-center-play');
   const volumeBtn = document.getElementById('video-volume-btn');
@@ -1110,6 +1145,40 @@ function setupVideoPlayer(file) {
     };
   } else {
     pipBtn.classList.add('hidden');
+  }
+
+  // Casting (Remote Playback API)
+  const castBtn = document.getElementById('video-cast-btn');
+  if (video.remote && video.remote.state !== 'disconnected') {
+    // If it's supported, we show it (note: some browsers only populate 'remote' when devices are found)
+    castBtn.classList.remove('hidden');
+    
+    const updateCastIcon = () => {
+      if (video.remote.state === 'connected') {
+        castBtn.style.color = 'var(--primary)'; // highlight when connected
+      } else {
+        castBtn.style.color = ''; 
+      }
+    };
+    
+    video.remote.addEventListener('connect', updateCastIcon);
+    video.remote.addEventListener('disconnect', updateCastIcon);
+    
+    castBtn.onclick = () => {
+      video.remote.prompt().catch(err => {
+        showToast("Casting prompt failed or cancelled");
+      });
+    };
+  } else if (video.remote) {
+      // In many cases, state is 'disconnected' initially, but we can still prompt
+      castBtn.classList.remove('hidden');
+      castBtn.onclick = () => {
+          video.remote.prompt().catch(err => {
+              showToast("No cast devices found or prompt cancelled");
+          });
+      };
+  } else {
+    castBtn.classList.add('hidden'); // Not supported
   }
 
   // Speed selection
