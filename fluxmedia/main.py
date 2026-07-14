@@ -2148,7 +2148,6 @@ def start_share_server(config: Dict[str, Any]):
 
         class SilentHandler(SimpleHTTPRequestHandler):
             def log_message(self, format, *args):
-                global CLEAN_LOGS_ENABLED
                 if not CLEAN_LOGS_ENABLED:
                     super().log_message(format, *args)
                 
