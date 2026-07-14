@@ -223,4 +223,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // Mobile Menu Toggle
+    const mobileMenuBtns = document.querySelectorAll('.mobile-menu-btn');
+    const navLinks = document.getElementById('nav-links');
+    
+    mobileMenuBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navLinks.classList.toggle('active');
+        });
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (navLinks && navLinks.classList.contains('active')) {
+            let isClickInsideMenu = navLinks.contains(e.target);
+            let isClickOnBtn = Array.from(mobileMenuBtns).some(btn => btn.contains(e.target));
+            
+            if (!isClickInsideMenu && !isClickOnBtn) {
+                navLinks.classList.remove('active');
+            }
+        }
+    });
+    
+    // Close mobile menu when a link is clicked
+    if (navLinks) {
+        const links = navLinks.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+}); // Ensure it closes any previous scope if needed, wait, I will just append it before the final '});' of DOMContentLoaded
 });
