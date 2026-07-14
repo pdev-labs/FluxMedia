@@ -20,6 +20,7 @@ dependencies = [
     "requests>=2.31.0",
     "yt-dlp>=2025.2.18",
     "textual>=0.50.0",
+    "mutagen>=1.47.0",
 ]
 
 [project.urls]
