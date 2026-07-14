@@ -2137,3 +2137,42 @@ body.select-mode .audio-mini-player {
     max-width: 480px;
   }
 }
+
+
+/* --- ADDITIONAL RESPONSIVE OPTIMIZATIONS --- */
+@media (max-width: 600px) {
+  .app-main {
+    padding: 12px;
+  }
+  .app-header {
+    padding: 0 12px;
+    height: 64px;
+  }
+  .toolbar-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .file-card-details {
+    padding: 8px;
+  }
+  .file-card-name {
+    font-size: 0.85rem;
+  }
+  .m3-title-large {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .app-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
