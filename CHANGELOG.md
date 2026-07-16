@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.6.20] - 2026-07-16
+### Added
+- Advanced filtering inside the Instagram Profile Fetcher (Photos only, Videos only, Tagged).
+- Support for downloading specific Instagram Posts/Reels by providing multiple space-separated URLs.
+
+### Fixed
+- Fixed a TypeError where `prompt_destination_dir` was incorrectly receiving a dictionary instead of a string.
+- Fixed an UnboundLocalError crash caused by a local `import os` statement shadowing the global module.
+- Patched a missing `NoneType` check when users canceled directory creation prompts.
+
 All notable changes to the **FluxMedia** project are documented in this file.
 
 ## [v1.6.18] - 2026-07-16

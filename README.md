@@ -146,7 +146,7 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.18]
+### Latest Release: [v1.6.20]
 - **Changelog Maintenance**: Added automated rules for maintaining `CHANGELOG.md` and `README.md`.
 - **Global Video Download Countdown**: Added a 5-second interactive terminal countdown prompt when standard video files already exist on disk (yt-dlp).
 - **Instagram Profile Countdown**: Added smart 5-second interactive Terminal prompts to the Instagram downloader.

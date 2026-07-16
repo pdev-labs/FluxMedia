@@ -64,7 +64,6 @@ def init_dependencies():
     from rich import box
     import requests
     import yt_dlp
-    import instaloader
     
     # Customize default rendering to format as (default: value)
     def _custom_render_default(self, default) -> Text:
@@ -2951,7 +2950,7 @@ def operation_troubleshooting_guide():
         
         console.print("\n[dim]🔗 Detailed troubleshooting guide online: https://github.com/pdev-labs/FluxMedia-py#troubleshooting[/dim]\n")
         
-        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(1, 15)], default="14")
+        choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)], default="19")
         clear_screen()
         
         if choice == "14":
@@ -4221,109 +4220,273 @@ def get_unique_filename(base_path, base_name, ext):
         i += 1
     return f"{os.path.join(base_path, base_name)} ({i}){ext}", i
 
-def operation_download_instagram_profile(config: Dict[str, Any]):
-    """Downloads an entire Instagram profile using instaloader."""
+
+def get_ig_session_file():
+    cfg_dir = os.path.join(os.path.expanduser("~"), ".fluxmedia")
+    os.makedirs(cfg_dir, exist_ok=True)
+    return os.path.join(cfg_dir, "ig_session")
+
+def operation_instagram_fetcher(config: Dict[str, Any]):
+    while True:
+        clear_screen()
+        print_header()
+        console.print(Panel("[bold cyan]📸 Instagram Profile Fetcher[/bold cyan]", box=box.ROUNDED, border_style="cyan"))
+        
+        session_file = get_ig_session_file()
+        if os.path.exists(session_file):
+            console.print("[green]Status: Authenticated (Private + Public Profiles)[/green]")
+        else:
+            console.print("[yellow]Status: Anonymous Mode (Public Profiles Only)[/yellow]")
+            
+        console.print("\n[bold]Options:[/bold]")
+        console.print("1. Download Profile")
+        console.print("2. Settings (Login/Logout)")
+        console.print("3. Back to Main Menu")
+        
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="1")
+        if choice == "1":
+            operation_download_instagram_profile(config)
+        elif choice == "2":
+            operation_instagram_settings()
+        elif choice == "3":
+            break
+
+def operation_instagram_settings():
     clear_screen()
     print_header()
-    console.print(Panel("[bold cyan]📥 Download Instagram Profile[/bold cyan]\n\n"
-                        "This will fetch all public posts, reels, and videos from the specified Instagram profile.",
-                        box=box.ROUNDED, border_style="cyan"))
+    console.print(Panel("[bold cyan]⚙️ Instagram Fetcher Settings[/bold cyan]", box=box.ROUNDED, border_style="cyan"))
     
-    username = Prompt.ask("[bold yellow]Enter the Instagram username to download[/bold yellow]")
-    if not username.strip():
-        console.print("[red]Username cannot be empty.[/red]")
-        Prompt.ask("\nPress Enter to return to main menu...")
+    session_file = get_ig_session_file()
+    if os.path.exists(session_file):
+        console.print("[green]You are currently logged in with a saved session.[/green]")
+        logout = Prompt.ask("Do you want to log out? (y/n)", default="n")
+        if logout.lower() == 'y':
+            try:
+                os.remove(session_file)
+                console.print("[green]Successfully logged out. Session deleted.[/green]")
+            except Exception as e:
+                console.print(f"[red]Error deleting session: {e}[/red]")
+        Prompt.ask("\nPress Enter to continue...")
         return
         
-    username = username.strip()
-    dest_dir = prompt_destination_dir(config)
-    profile_dir = os.path.join(dest_dir, f"IG_{username}")
-    import os
-    os.makedirs(profile_dir, exist_ok=True)
+    console.print("[yellow]Enter your Instagram credentials to authenticate.[/yellow]")
+    console.print("[dim]This allows you to fetch media from private accounts you follow. Leave blank to stay anonymous.[/dim]\n")
     
-    console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+    username = Prompt.ask("Username (leave blank to cancel)", default="")
+    if not username.strip():
+        return
+        
+    password = Prompt.ask("Password", password=True)
+    
     try:
         import instaloader
-        L = instaloader.Instaloader(
-            dirname_pattern=profile_dir,
-            download_videos=True,
-            download_video_thumbnails=False,
-            download_geotags=False,
-            download_comments=False,
-            save_metadata=False,
-            compress_json=False,
-            post_metadata_txt_pattern=""
-        )
+        L = instaloader.Instaloader()
+        console.print(f"Logging in as {username}...")
+        L.login(username, password)
+        L.save_session_to_file(session_file)
+        # We also need to save the username to load it later, Instaloader requires username to load session.
+        with open(session_file + "_user", "w") as f:
+            f.write(username)
+        console.print("[bold green]Successfully logged in and saved session![/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]Login failed: {e}[/bold red]")
         
-        console.print(f"[yellow]Fetching profile: {username}[/yellow]")
-        profile = instaloader.Profile.from_username(L.context, username)
+    Prompt.ask("\nPress Enter to continue...")
+
+def operation_download_instagram_profile(config: Dict[str, Any]):
+    """Downloads Instagram content using instaloader."""
+    clear_screen()
+    print_header()
+    console.print(Panel("[bold cyan]📥 Download Instagram Content[/bold cyan]\n\n"
+                        "Choose to download an entire profile or specific Posts/Reels by URL.",
+                        box=box.ROUNDED, border_style="cyan"))
+    
+    console.print("1. Download Profile by Username (Filters available)")
+    console.print("2. Download Specific Post(s) or Reel(s) by URL")
+    
+    dl_mode = Prompt.ask("Choose an option", choices=["1", "2"], default="1")
+    
+    if dl_mode == "1":
+        username = Prompt.ask("[bold yellow]Enter the Instagram username to download[/bold yellow]")
+        if not username.strip():
+            console.print("[red]Username cannot be empty.[/red]")
+            Prompt.ask("\nPress Enter to return to main menu...")
+            return
         
-        posts = profile.get_posts()
-        count = profile.mediacount
+        username = username.strip()
         
-        console.print(f"[green]Found {count} posts. Starting download...[/green]")
+        console.print("\n[bold cyan]What would you like to download?[/bold cyan]")
+        console.print("1. Everything (Posts + Videos + Reels)")
+        console.print("2. Only Photos")
+        console.print("3. Only Videos & Reels")
+        console.print("4. Only Tagged Posts")
+        filter_mode = Prompt.ask("Choose filter", choices=["1", "2", "3", "4"], default="1")
         
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            console=console
-        ) as progress:
-            task = progress.add_task(f"Downloading @{username}", total=count)
-            for post in posts:
-                import time
-                title = sanitize_filename(post.caption)
-                ext = ".mp4" if post.is_video else ".jpg"
-                
-                expected_path, attempt = get_unique_filename(profile_dir, title, ext)
-                
-                skip_post = False
-                if attempt > 0:
-                    original_desc = progress.tasks[task].description
-                    user_choice = None
-                    for rem in range(5, 0, -1):
-                        progress.update(task, description=f"[bold red]File '{title}{ext}' exists! Skip (s) or Continue (c)? {rem}s[/bold red]")
+        dest_dir = prompt_destination_dir(config.get("download_dir", ""))
+        if not dest_dir:
+            return
+        profile_dir = os.path.join(dest_dir, f"IG_{username}")
+        os.makedirs(profile_dir, exist_ok=True)
+        
+        console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+        try:
+            import instaloader
+            L = instaloader.Instaloader(
+                dirname_pattern=profile_dir,
+                download_videos=True,
+                download_video_thumbnails=False,
+                download_geotags=False,
+                download_comments=False,
+                save_metadata=False,
+                compress_json=False,
+                post_metadata_txt_pattern=""
+            )
+            
+            console.print(f"[yellow]Fetching profile: {username}[/yellow]")
+            profile = instaloader.Profile.from_username(L.context, username)
+            
+            if filter_mode == "4":
+                posts = profile.get_tagged_posts()
+                count = profile.mediacount
+            else:
+                posts = profile.get_posts()
+                count = profile.mediacount
+            
+            console.print(f"[green]Found ~{count} posts. Starting download...[/green]")
+            
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                console=console
+            ) as progress:
+                task = progress.add_task(f"Downloading @{username}", total=count)
+                for post in posts:
+                    import time
+                    
+                    if filter_mode == "2" and post.is_video:
+                        progress.advance(task)
+                        continue
+                    if filter_mode == "3" and not post.is_video:
+                        progress.advance(task)
+                        continue
                         
-                        # small loop to check input frequently
-                        for _ in range(10):
-                            user_choice = check_input_non_blocking()
+                    title = sanitize_filename(post.caption) if post.caption else f"post_{post.shortcode}"
+                    ext = ".mp4" if post.is_video else ".jpg"
+                    
+                    expected_path, attempt = get_unique_filename(profile_dir, title, ext)
+                    
+                    skip_post = False
+                    if attempt > 0:
+                        original_desc = progress.tasks[task].description
+                        user_choice = None
+                        for rem in range(5, 0, -1):
+                            progress.update(task, description=f"[bold red]File '{title}{ext}' exists! Skip (s) or Continue (c)? {rem}s[/bold red]")
+                            
+                            # small loop to check input frequently
+                            for _ in range(10):
+                                user_choice = check_input_non_blocking()
+                                if user_choice:
+                                    break
+                                time.sleep(0.1)
+                                
                             if user_choice:
                                 break
-                            time.sleep(0.1)
-                            
-                        if user_choice:
-                            break
-                            
-                    progress.update(task, description=original_desc)
+                                
+                        progress.update(task, description=original_desc)
+                        
+                        if user_choice == 's':
+                            skip_post = True
                     
-                    if user_choice == 's':
-                        skip_post = True
-                    # if user_choice == 'c' or None, we continue and attempt > 0 will append (1)
-                
-                if not skip_post:
-                    try:
-                        # Find existing files before download
-                        before_files = set(os.listdir(profile_dir))
-                        L.download_post(post, target=profile_dir)
-                        after_files = set(os.listdir(profile_dir))
-                        
-                        new_files = after_files - before_files
-                        
-                        # Rename new files to the title
-                        for nf in new_files:
-                            nf_ext = os.path.splitext(nf)[1]
-                            new_path, _ = get_unique_filename(profile_dir, title, nf_ext)
-                            os.rename(os.path.join(profile_dir, nf), new_path)
+                    if not skip_post:
+                        try:
+                            before_files = set(os.listdir(profile_dir))
+                            L.download_post(post, target=profile_dir)
+                            after_files = set(os.listdir(profile_dir))
                             
-                    except Exception as e:
-                        pass
-                
-                progress.advance(task)
-                
-        console.print(f"\n[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")
-    except Exception as e:
-        console.print(f"[bold red]An error occurred: {e}[/bold red]")
+                            new_files = after_files - before_files
+                            for nf in new_files:
+                                nf_ext = os.path.splitext(nf)[1]
+                                new_path, _ = get_unique_filename(profile_dir, title, nf_ext)
+                                os.rename(os.path.join(profile_dir, nf), new_path)
+                                
+                        except Exception as e:
+                            pass
+                    
+                    progress.advance(task)
+                    
+            console.print(f"\n[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")
+        except Exception as e:
+            console.print(f"[bold red]An error occurred: {e}[/bold red]")
+            
+    elif dl_mode == "2":
+        url_input = Prompt.ask("[bold yellow]Enter Instagram URL(s) [dim](separate multiple URLs with space)[/dim][/bold yellow]")
+        if not url_input.strip():
+            console.print("[red]No URLs provided.[/red]")
+            Prompt.ask("\nPress Enter to return to main menu...")
+            return
+            
+        urls = url_input.strip().split()
         
+        dest_dir = prompt_destination_dir(config.get("download_dir", ""))
+        if not dest_dir:
+            return
+        target_dir = os.path.join(dest_dir, "IG_Downloads")
+        os.makedirs(target_dir, exist_ok=True)
+        
+        console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+        try:
+            import instaloader
+            L = instaloader.Instaloader(
+                dirname_pattern=target_dir,
+                download_videos=True,
+                download_video_thumbnails=False,
+                download_geotags=False,
+                download_comments=False,
+                save_metadata=False,
+                compress_json=False,
+                post_metadata_txt_pattern=""
+            )
+            
+            import re
+            
+            total = len(urls)
+            for idx, url in enumerate(urls, 1):
+                console.print(f"\n[bold cyan]--- URL [{idx}/{total}] ---[/bold cyan]")
+                
+                # Extract shortcode from URL: /p/SHORTCODE/ or /reel/SHORTCODE/
+                match = re.search(r'/(?:p|reel|tv|reels)/([^/?]+)', url)
+                if not match:
+                    console.print(f"[red]Could not extract shortcode from: {url}[/red]")
+                    continue
+                    
+                shortcode = match.group(1)
+                console.print(f"[yellow]Fetching shortcode: {shortcode}[/yellow]")
+                
+                try:
+                    post = instaloader.Post.from_shortcode(L.context, shortcode)
+                    title = sanitize_filename(post.caption) if post.caption else f"post_{shortcode}"
+                    
+                    console.print(f"[green]Downloading: {title}[/green]")
+                    
+                    before_files = set(os.listdir(target_dir))
+                    L.download_post(post, target=target_dir)
+                    after_files = set(os.listdir(target_dir))
+                    
+                    new_files = after_files - before_files
+                    for nf in new_files:
+                        nf_ext = os.path.splitext(nf)[1]
+                        new_path, _ = get_unique_filename(target_dir, title, nf_ext)
+                        os.rename(os.path.join(target_dir, nf), new_path)
+                        
+                    console.print("[bold green]✅ Download complete.[/bold green]")
+                except Exception as e:
+                    console.print(f"[bold red]Failed to download {url}: {e}[/bold red]")
+                    
+            console.print(f"\n[bold green]✅ All requested URLs processed. Saved to {target_dir}[/bold green]")
+        except Exception as e:
+            console.print(f"[bold red]An error occurred: {e}[/bold red]")
+            
     Prompt.ask("\nPress Enter to return to main menu...")
 
 def operation_download_queue(config: Dict[str, Any]):
@@ -4622,6 +4785,7 @@ def main():
             dl_table.add_row("[bold cyan]5.[/bold cyan] Download Channel [dim](Batch)[/dim]")
             dl_table.add_row("[bold cyan]6.[/bold cyan] Download Subtitles [dim](Subs)[/dim]")
             dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
+            dl_table.add_row("[bold cyan]8.[/bold cyan] Instagram Profile [dim](Fetcher)[/dim]")
             
             mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
             mgmt_table.add_row("[bold green]9.[/bold green] View History Logs")
@@ -4635,8 +4799,8 @@ def main():
             info_table = Table(show_header=False, box=None, padding=(0, 1))
             info_table.add_row("[bold magenta]16.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
             info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
-            info_table.add_row("[bold magenta]19.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-            info_table.add_row("[bold red]110.[/bold red] Exit Application [dim](Quit)[/dim]")
+            info_table.add_row("[bold magenta]18.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold red]19.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
             if console.width >= 100:
@@ -4662,7 +4826,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 19)], default="18")
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)], default="19")
             clear_screen()
             
             if choice == "0":
@@ -4687,26 +4851,28 @@ def main():
             elif choice == "7":
                 operation_trim_and_download_video(config)
             elif choice == "8":
-                operation_view_history()
+                operation_instagram_fetcher(config)
             elif choice == "9":
-                operation_download_queue(config)
+                operation_view_history()
             elif choice == "10":
-                config = operation_settings(config)
+                operation_download_queue(config)
             elif choice == "11":
-                operation_updates_manager(config)
+                config = operation_settings(config)
             elif choice == "12":
-                operation_open_downloads_folder(config)
+                operation_updates_manager(config)
             elif choice == "13":
-                operation_transcode_media(config)
+                operation_open_downloads_folder(config)
             elif choice == "14":
-                operation_share_via_qr(config)
+                operation_transcode_media(config)
             elif choice == "15":
-                operation_troubleshooting_guide()
+                operation_share_via_qr(config)
             elif choice == "16":
-                operation_about_creator()
+                operation_troubleshooting_guide()
             elif choice == "17":
-                operation_report_bug_feedback()
+                operation_about_creator()
             elif choice == "18":
+                operation_report_bug_feedback()
+            elif choice == "19":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
         except KeyboardInterrupt:
