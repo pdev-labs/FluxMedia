@@ -2,6 +2,23 @@
 
 All notable changes to the **FluxMedia** project are documented in this file.
 
+## [v1.6.18] - 2026-07-16
+### Added
+- **Changelog Maintenance**: Added an automated rule to maintain and update the `CHANGELOG.md` file whenever new features or fixes are pushed to GitHub.
+
+## [v1.6.17] - 2026-07-16
+### Added
+- **Global Video Download Countdown**: Intercepts `yt-dlp` to show a 5-second interactive terminal countdown prompt when standard video files already exist on disk, allowing users to safely skip or automatically auto-increment filenames.
+
+## [v1.6.16] - 2026-07-16
+### Added
+- **Instagram Profile Countdown**: Added smart 5-second interactive Terminal prompts to the Instagram downloader, automatically renaming media based on post captions and prompting when files exist.
+
+## [v1.6.15] - 2026-07-16
+### Added
+- **Instagram Profile Scraper**: Implemented a new scraper option via `instaloader` to bulk download all public videos, photos, and reels from an Instagram profile.
+- **TUI Instagram Support**: Added a dedicated `📸 Instagram` tab to the advanced Textual UI interface.
+
 ## [v1.6.2] - 2026-07-04
 ### Added
 - **Keyboard Shortcuts UI**: Added a dedicated Keyboard Shortcuts section to the Settings modal in the web portal to improve accessibility and user discoverability.

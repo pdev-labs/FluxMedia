@@ -1,10 +1,11 @@
 # FluxMedia Agent Rules
 
-## Automated Releases and Versioning
+## Automated Releases, Versioning and Changelogs
 Whenever you modify code and push it to the GitHub repository, you MUST:
-1. Increment the version number in `pyproject.toml` (e.g. from `1.6.13` to `1.6.14`).
-2. Commit and push the changes.
-3. Automatically create a GitHub release for the new version using the GitHub CLI:
+1. Update `CHANGELOG.md` with a summary of your changes under a new version heading. If `CHANGELOG.md` does not exist, create it.
+2. Increment the version number in `pyproject.toml` (e.g. from `1.6.13` to `1.6.14`).
+3. Commit and push the changes.
+4. Automatically create a GitHub release for the new version using the GitHub CLI:
    ```bash
    gh release create v1.x.x --generate-notes
    ```
