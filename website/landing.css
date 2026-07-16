@@ -438,9 +438,12 @@ html[data-theme="system"] .system-icon { display: block; }
 .hero-highlight {
     background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
     -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     -webkit-text-fill-color: transparent;
     background-size: 200% auto;
     animation: gradientFlow 5s ease infinite;
+    display: inline-block;
 }
 
 @keyframes gradientFlow {
@@ -810,13 +813,15 @@ html[data-theme="system"] .system-icon { display: block; }
 }
 
 /* Scroll Reveal Animations */
-.reveal {
+/* Only hide .reveal elements when JS is loaded — prevents blank page if JS fails */
+.js-loaded .reveal {
     opacity: 0;
     transform: translateY(30px);
     transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.reveal.active {
+.reveal.active,
+.js-loaded .reveal.active {
     opacity: 1;
     transform: translateY(0);
 }

@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Mark JS as loaded — enables CSS-gated reveal animations
+    document.documentElement.classList.add('js-loaded');
     // 1. Theme Management
     const themeToggle = document.getElementById('theme-toggle');
     const themeMenu = document.getElementById('theme-menu');
@@ -49,15 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const revealElements = document.querySelectorAll('.reveal');
     
     const revealOptions = {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px"
+        threshold: 0.05,
+        rootMargin: "0px 0px 0px 0px"
     };
 
     const revealOnScroll = new IntersectionObserver(function(entries, observer) {
         entries.forEach(entry => {
-            if (!entry.isIntersecting) {
-                return;
-            } else {
+            if (entry.isIntersecting) {
                 entry.target.classList.add('active');
                 observer.unobserve(entry.target);
             }
@@ -65,8 +65,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }, revealOptions);
 
     revealElements.forEach(el => {
-        revealOnScroll.observe(el);
+        // Immediately reveal elements already in the viewport (fixes GitHub Pages blank issue)
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom >= 0) {
+            el.classList.add('active');
+        } else {
+            revealOnScroll.observe(el);
+        }
     });
+
+    // Safety fallback: reveal all elements after 1.5s in case IntersectionObserver fails
+    setTimeout(() => {
+        document.querySelectorAll('.reveal:not(.active)').forEach(el => {
+            el.classList.add('active');
+        });
+    }, 1500);
 
     // 3. Copy Commands (Supports multiple buttons)
     const copyBtns = document.querySelectorAll('.copy-btn');
@@ -257,4 +270,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 }); // Ensure it closes any previous scope if needed, wait, I will just append it before the final '});' of DOMContentLoaded
-});
