@@ -146,14 +146,12 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.7]
-- **Media Player Updates**: Added double-click to skip 10 seconds, `hours:minutes:seconds` format support for longer videos, and comprehensive YouTube-style keyboard shortcuts (`k`, `j`, `l`, `f`, `m`, and `0-9`).
-- **Automated PyPI Publishing**: Implemented GitHub Actions CI/CD workflows for secure Trusted Publishing to PyPI.
-- **PyPI README Fixes**: Resolved 404 broken link errors on PyPI by utilizing absolute GitHub blob URLs.
-- **Share Portal Customization Submenu**: Added a settings panel to configure profile display name, profile image (local/URL), custom website file/folder, and password configurations directly.
-- **Premium Material 3 Tones**: Introduced 4 new theme tones (Royal Purple, Crimson Rose, Sunset Orange, Indigo Breeze) across all templates.
-- **Responsive Layout Optimizations**: Optimized page header to stack controls cleanly on mobile viewports while preserving standard inline spacing on desktops.
-- **Port Overriding**: Enabled running the sharing server on a custom port if the default port 8000 is occupied.
+### Latest Release: [v1.6.18]
+- **Changelog Maintenance**: Added automated rules for maintaining `CHANGELOG.md` and `README.md`.
+- **Global Video Download Countdown**: Added a 5-second interactive terminal countdown prompt when standard video files already exist on disk (yt-dlp).
+- **Instagram Profile Countdown**: Added smart 5-second interactive Terminal prompts to the Instagram downloader.
+- **Instagram Profile Scraper**: Implemented a new scraper option via `instaloader` to bulk download all public media.
+- **TUI Instagram Support**: Added a dedicated `📸 Instagram` tab to the advanced Textual UI interface.
 
 <div align="center">
   <i>Made with ❤️ by pdev-labs</i>
