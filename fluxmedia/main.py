@@ -4113,6 +4113,82 @@ def view_completed_queue_tasks():
     Prompt.ask("\nPress Enter to continue...")
 
 
+def sanitize_filename(name):
+    if not name:
+        return "Instagram_Media"
+    import re
+    name = re.sub(r'[\\/*?:"<>|]', "", name)
+    name = name.replace('\n', ' ').replace('\r', ' ')
+    name = name.strip()
+    return name[:50] or "Instagram_Media"
+
+def check_input_non_blocking():
+    import sys
+    if sys.platform == 'win32':
+        import msvcrt
+        while msvcrt.kbhit():
+            try:
+                char = msvcrt.getch().decode('utf-8', errors='ignore').lower()
+                if char in ['s', 'c']:
+                    return char
+            except Exception:
+                pass
+    else:
+        import select
+        dr, dw, de = select.select([sys.stdin], [], [], 0.0)
+        if dr:
+            char = sys.stdin.read(1).lower()
+            if char in ['s', 'c']:
+                return char
+    return None
+
+def get_unique_filename(base_path, base_name, ext):
+    import os
+    if not os.path.exists(f"{os.path.join(base_path, base_name)}{ext}"):
+        return f"{os.path.join(base_path, base_name)}{ext}", 0
+    i = 1
+    while os.path.exists(f"{os.path.join(base_path, base_name)} ({i}){ext}"):
+        i += 1
+    return f"{os.path.join(base_path, base_name)} ({i}){ext}", i
+
+def sanitize_filename(name):
+    if not name:
+        return "Instagram_Media"
+    import re
+    name = re.sub(r'[\\/*?:"<>|]', "", name)
+    name = name.replace('\n', ' ').replace('\r', ' ')
+    name = name.strip()
+    return name[:50] or "Instagram_Media"
+
+def check_input_non_blocking():
+    import sys
+    if sys.platform == 'win32':
+        import msvcrt
+        while msvcrt.kbhit():
+            try:
+                char = msvcrt.getch().decode('utf-8', errors='ignore').lower()
+                if char in ['s', 'c']:
+                    return char
+            except Exception:
+                pass
+    else:
+        import select
+        dr, dw, de = select.select([sys.stdin], [], [], 0.0)
+        if dr:
+            char = sys.stdin.read(1).lower()
+            if char in ['s', 'c']:
+                return char
+    return None
+
+def get_unique_filename(base_path, base_name, ext):
+    import os
+    if not os.path.exists(f"{os.path.join(base_path, base_name)}{ext}"):
+        return f"{os.path.join(base_path, base_name)}{ext}", 0
+    i = 1
+    while os.path.exists(f"{os.path.join(base_path, base_name)} ({i}){ext}"):
+        i += 1
+    return f"{os.path.join(base_path, base_name)} ({i}){ext}", i
+
 def operation_download_instagram_profile(config: Dict[str, Any]):
     """Downloads an entire Instagram profile using instaloader."""
     clear_screen()
@@ -4130,6 +4206,7 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
     username = username.strip()
     dest_dir = prompt_destination_dir(config)
     profile_dir = os.path.join(dest_dir, f"IG_{username}")
+    import os
     os.makedirs(profile_dir, exist_ok=True)
     
     console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
@@ -4142,7 +4219,8 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
             download_geotags=False,
             download_comments=False,
             save_metadata=False,
-            compress_json=False
+            compress_json=False,
+            post_metadata_txt_pattern=""
         )
         
         console.print(f"[yellow]Fetching profile: {username}[/yellow]")
@@ -4161,10 +4239,53 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
         ) as progress:
             task = progress.add_task(f"Downloading @{username}", total=count)
             for post in posts:
-                try:
-                    L.download_post(post, target=profile_dir)
-                except Exception as e:
-                    pass
+                import time
+                title = sanitize_filename(post.caption)
+                ext = ".mp4" if post.is_video else ".jpg"
+                
+                expected_path, attempt = get_unique_filename(profile_dir, title, ext)
+                
+                skip_post = False
+                if attempt > 0:
+                    original_desc = progress.tasks[task].description
+                    user_choice = None
+                    for rem in range(5, 0, -1):
+                        progress.update(task, description=f"[bold red]File '{title}{ext}' exists! Skip (s) or Continue (c)? {rem}s[/bold red]")
+                        
+                        # small loop to check input frequently
+                        for _ in range(10):
+                            user_choice = check_input_non_blocking()
+                            if user_choice:
+                                break
+                            time.sleep(0.1)
+                            
+                        if user_choice:
+                            break
+                            
+                    progress.update(task, description=original_desc)
+                    
+                    if user_choice == 's':
+                        skip_post = True
+                    # if user_choice == 'c' or None, we continue and attempt > 0 will append (1)
+                
+                if not skip_post:
+                    try:
+                        # Find existing files before download
+                        before_files = set(os.listdir(profile_dir))
+                        L.download_post(post, target=profile_dir)
+                        after_files = set(os.listdir(profile_dir))
+                        
+                        new_files = after_files - before_files
+                        
+                        # Rename new files to the title
+                        for nf in new_files:
+                            nf_ext = os.path.splitext(nf)[1]
+                            new_path, _ = get_unique_filename(profile_dir, title, nf_ext)
+                            os.rename(os.path.join(profile_dir, nf), new_path)
+                            
+                    except Exception as e:
+                        pass
+                
                 progress.advance(task)
                 
         console.print(f"\n[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")
