@@ -99,6 +99,13 @@ class AudioDownloadTab(VerticalScroll):
         yield Button("🚀 Start Audio Download", variant="success", id="btn_download_audio")
 
 
+class InstagramProfileDownloadTab(VerticalScroll):
+    def compose(self) -> ComposeResult:
+        yield Label("📸 Enter Instagram Username:", classes="form-label")
+        yield Input(placeholder="e.g. instagram", id="ig_username")
+        yield Button("🚀 Start Profile Download", variant="primary", id="btn_download_ig")
+
+
 class SettingsTab(VerticalScroll):
     def compose(self) -> ComposeResult:
         config = load_config()
@@ -184,6 +191,7 @@ class FluxMediaApp(App):
         ("q", "quit", "Quit App"),
         ("v", "switch_tab('video')", "Video Tab"),
         ("a", "switch_tab('audio')", "Audio Tab"),
+        ("i", "switch_tab('instagram')", "Instagram Tab"),
         ("s", "switch_tab('settings')", "Settings Tab")
     ]
 
@@ -194,6 +202,7 @@ class FluxMediaApp(App):
                 yield Tabs(
                     Tab("🎥 Video", id="tab-video"),
                     Tab("🎵 Audio", id="tab-audio"),
+                    Tab("📸 Instagram", id="tab-instagram"),
                     Tab("⚙️ Settings", id="tab-settings"),
                     id="tabs"
                 )
@@ -201,6 +210,7 @@ class FluxMediaApp(App):
             with Container(id="content_area"):
                 yield VideoDownloadTab(id="content-video")
                 yield AudioDownloadTab(id="content-audio", classes="hidden")
+                yield InstagramProfileDownloadTab(id="content-instagram", classes="hidden")
                 yield SettingsTab(id="content-settings", classes="hidden")
         with Container(id="log_area"):
             yield Log(id="app_log", highlight=True)
@@ -209,6 +219,7 @@ class FluxMediaApp(App):
     def on_mount(self):
         self.config = load_config()
         self.query_one("#content-audio").display = False
+        self.query_one("#content-instagram").display = False
         self.query_one("#content-settings").display = False
         self.log_msg("[bold cyan]Welcome to FluxMedia Advanced TUI![/bold cyan]")
         self.log_msg("System ready. Select a tab to begin.")
@@ -222,6 +233,7 @@ class FluxMediaApp(App):
         active_id = event.tab.id
         self.query_one("#content-video").display = (active_id == "tab-video")
         self.query_one("#content-audio").display = (active_id == "tab-audio")
+        self.query_one("#content-instagram").display = (active_id == "tab-instagram")
         self.query_one("#content-settings").display = (active_id == "tab-settings")
 
     def action_switch_tab(self, tab_name: str):
@@ -255,6 +267,57 @@ class FluxMediaApp(App):
             return
         self.query_one("#btn_download_audio", Button).disabled = True
         self.start_download(url_input, fmt, type="audio", btn_id="#btn_download_audio")
+
+
+    @on(Button.Pressed, "#btn_download_ig")
+    def handle_ig_download(self):
+        username = self.query_one("#ig_username", Input).value
+        if not username.strip():
+            self.log_msg("[bold red]Please enter a username.[/bold red]")
+            return
+        self.query_one("#btn_download_ig", Button).disabled = True
+        self.start_ig_download(username.strip(), btn_id="#btn_download_ig")
+
+    @work(thread=True)
+    def start_ig_download(self, username: str, btn_id: str):
+        self.call_from_thread(self.log_msg, f"[bold cyan]Initializing Instaloader for @{username}...[/bold cyan]")
+        try:
+            import instaloader
+            dest_dir = self.config.get("download_dir", os.path.expanduser("~/Downloads"))
+            profile_dir = os.path.join(dest_dir, f"IG_{username}")
+            import os
+            os.makedirs(profile_dir, exist_ok=True)
+            
+            L = instaloader.Instaloader(
+                dirname_pattern=profile_dir,
+                download_videos=True,
+                download_video_thumbnails=False,
+                download_geotags=False,
+                download_comments=False,
+                save_metadata=False,
+                compress_json=False
+            )
+            self.call_from_thread(self.log_msg, f"[yellow]Fetching profile: {username}[/yellow]")
+            profile = instaloader.Profile.from_username(L.context, username)
+            posts = profile.get_posts()
+            count = profile.mediacount
+            self.call_from_thread(self.log_msg, f"[green]Found {count} posts. Starting download...[/green]")
+            
+            downloaded = 0
+            for post in posts:
+                try:
+                    L.download_post(post, target=profile_dir)
+                    downloaded += 1
+                    if downloaded % 5 == 0:
+                        self.call_from_thread(self.log_msg, f"Downloaded {downloaded}/{count} posts...")
+                except Exception as e:
+                    pass
+                    
+            self.call_from_thread(self.log_msg, f"[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")
+        except Exception as e:
+            self.call_from_thread(self.log_msg, f"[bold red]Download failed: {e}[/bold red]")
+        finally:
+            self.call_from_thread(lambda: setattr(self.query_one(btn_id, Button), "disabled", False))
 
     @work(thread=True)
     def start_download(self, url_input: str, option: str, type: str, btn_id: str):

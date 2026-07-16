@@ -64,6 +64,7 @@ def init_dependencies():
     from rich import box
     import requests
     import yt_dlp
+    import instaloader
     
     # Customize default rendering to format as (default: value)
     def _custom_render_default(self, default) -> Text:
@@ -4111,6 +4112,67 @@ def view_completed_queue_tasks():
     console.print(table)
     Prompt.ask("\nPress Enter to continue...")
 
+
+def operation_download_instagram_profile(config: Dict[str, Any]):
+    """Downloads an entire Instagram profile using instaloader."""
+    clear_screen()
+    print_header()
+    console.print(Panel("[bold cyan]📥 Download Instagram Profile[/bold cyan]\n\n"
+                        "This will fetch all public posts, reels, and videos from the specified Instagram profile.",
+                        box=box.ROUNDED, border_style="cyan"))
+    
+    username = Prompt.ask("[bold yellow]Enter the Instagram username to download[/bold yellow]")
+    if not username.strip():
+        console.print("[red]Username cannot be empty.[/red]")
+        Prompt.ask("\nPress Enter to return to main menu...")
+        return
+        
+    username = username.strip()
+    dest_dir = prompt_destination_dir(config)
+    profile_dir = os.path.join(dest_dir, f"IG_{username}")
+    os.makedirs(profile_dir, exist_ok=True)
+    
+    console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+    try:
+        import instaloader
+        L = instaloader.Instaloader(
+            dirname_pattern=profile_dir,
+            download_videos=True,
+            download_video_thumbnails=False,
+            download_geotags=False,
+            download_comments=False,
+            save_metadata=False,
+            compress_json=False
+        )
+        
+        console.print(f"[yellow]Fetching profile: {username}[/yellow]")
+        profile = instaloader.Profile.from_username(L.context, username)
+        
+        posts = profile.get_posts()
+        count = profile.mediacount
+        
+        console.print(f"[green]Found {count} posts. Starting download...[/green]")
+        
+        with Progress(
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            console=console
+        ) as progress:
+            task = progress.add_task(f"Downloading @{username}", total=count)
+            for post in posts:
+                try:
+                    L.download_post(post, target=profile_dir)
+                except Exception as e:
+                    pass
+                progress.advance(task)
+                
+        console.print(f"\n[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")
+    except Exception as e:
+        console.print(f"[bold red]An error occurred: {e}[/bold red]")
+        
+    Prompt.ask("\nPress Enter to return to main menu...")
+
 def operation_download_queue(config: Dict[str, Any]):
     """Provides a management interface for the download queue / batch manager."""
     while True:
@@ -4409,19 +4471,19 @@ def main():
             dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
             
             mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
-            mgmt_table.add_row("[bold green]8.[/bold green] View History Logs")
-            mgmt_table.add_row("[bold green]9.[/bold green] Download Queue [dim](Batch)[/dim]")
-            mgmt_table.add_row("[bold green]10.[/bold green] Configuration [dim](Settings)[/dim]")
-            mgmt_table.add_row("[bold green]11.[/bold green] Updates Manager")
-            mgmt_table.add_row("[bold green]12.[/bold green] Open Save Folder")
-            mgmt_table.add_row("[bold green]13.[/bold green] Transcode Media [dim](Converter)[/dim]")
-            mgmt_table.add_row("[bold green]14.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
+            mgmt_table.add_row("[bold green]9.[/bold green] View History Logs")
+            mgmt_table.add_row("[bold green]10.[/bold green] Download Queue [dim](Batch)[/dim]")
+            mgmt_table.add_row("[bold green]11.[/bold green] Configuration [dim](Settings)[/dim]")
+            mgmt_table.add_row("[bold green]12.[/bold green] Updates Manager")
+            mgmt_table.add_row("[bold green]13.[/bold green] Open Save Folder")
+            mgmt_table.add_row("[bold green]14.[/bold green] Transcode Media [dim](Converter)[/dim]")
+            mgmt_table.add_row("[bold green]15.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
             
             info_table = Table(show_header=False, box=None, padding=(0, 1))
-            info_table.add_row("[bold magenta]15.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
-            info_table.add_row("[bold magenta]16.[/bold magenta] About Creator [dim](Credit)[/dim]")
-            info_table.add_row("[bold magenta]17.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-            info_table.add_row("[bold red]18.[/bold red] Exit Application [dim](Quit)[/dim]")
+            info_table.add_row("[bold magenta]16.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
+            info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
+            info_table.add_row("[bold magenta]19.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold red]110.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
             if console.width >= 100:
