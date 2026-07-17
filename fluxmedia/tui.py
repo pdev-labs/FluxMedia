@@ -376,7 +376,8 @@ class FluxMediaApp(App):
                 ydl_opts['postprocessors'].append({'key': 'EmbedThumbnail', 'already_have_thumbnail': False})
                 
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl_opts_any: Any = ydl_opts
+            with yt_dlp.YoutubeDL(ydl_opts_any) as ydl:
                 ydl.download(valid_urls)
             self.call_from_thread(self.log_msg, f"[bold green]Successfully completed {type} download to {dest_dir}![/bold green]")
         except Exception as e:

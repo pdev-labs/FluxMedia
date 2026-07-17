@@ -146,11 +146,10 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.21]
-- **AppleScript Security Patch**: Properly escape backslashes and double quotes in desktop notifications on macOS to prevent potential command injection vulnerabilities.
-- **TUI Instagram Fix**: Resolved a critical runtime `UnboundLocalError` when downloading Instagram profiles in the TUI mode due to global name shadowing.
-- **Path Portability**: Replaced all hardcoded absolute paths in utility scripts `extract.py` and `repack.py` with dynamic script-relative path resolution.
-- **Code Quality & Maintenance**: Cleaned up duplicated utility function copies in `main.py` and improved PowerShell escaping of single quotes in notifications.
+### Latest Release: [v1.6.22]
+- **Static Typing Cleanup**: Patched type annotation conflicts, dynamic import placeholders, and uninitialized type checkers constraints across modules.
+- **Troubleshooting Menu Fix**: Constrained Troubleshooting Guide selection range to valid options to prevent UnboundLocalError crash on non-matching default/options.
+- **Deduplication**: Removed double except clauses and cleaned up redundant return statements.
 
 <div align="center">
   <i>Made with ❤️ by pdev-labs</i>

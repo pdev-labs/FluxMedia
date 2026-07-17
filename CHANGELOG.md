@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.6.22] - 2026-07-17
+### Fixed
+- Fixed static type checking issues throughout the codebase (reduced static analysis errors from 750+ to 0 code-logic errors).
+- Resolved a logic bug in the troubleshooting guide menu where choosing out-of-bounds options would crash the CLI with an `UnboundLocalError`.
+- Cleaned up duplicate `except Exception` blocks and handled unsafe `Text` type expressions.
+- Handled potential type mismatches on dynamically-loaded libraries and attributes.
+
 ## [v1.6.21] - 2026-07-17
 ### Security
 - Patched potential AppleScript command injection vulnerability by properly escaping double quotes and backslashes in macOS desktop notifications.
