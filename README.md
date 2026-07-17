@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia-py/main/website/favicon.ico" alt="FluxMedia Logo" width="120" height="120" />
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/assets/logo.png" alt="FluxMedia Logo" width="120" height="120" />
 
   # FluxMedia
 
@@ -7,7 +7,7 @@
 
   [![PyPI Version](https://img.shields.io/pypi/v/fluxmedia.svg?color=00F2FE&style=flat-square)](https://pypi.org/project/fluxmedia/)
   [![Supported Python Versions](https://img.shields.io/pypi/pyversions/fluxmedia.svg?style=flat-square)](https://pypi.org/project/fluxmedia/)
-  [![License](https://img.shields.io/github/license/pdev-labs/FluxMedia-py.svg?style=flat-square)](LICENSE)
+  [![License](https://img.shields.io/github/license/pdev-labs/FluxMedia.svg?style=flat-square)](LICENSE)
   [![Downloads](https://img.shields.io/pypi/dm/fluxmedia.svg?style=flat-square)](https://pypi.org/project/fluxmedia/)
   [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
 
@@ -29,7 +29,7 @@
 ## 💻 Visual Preview
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia-py/main/website/fluxmedia_preview.png" alt="FluxMedia CLI Dashboard" width="700" style="border-radius: 8px;" />
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/fluxmedia_preview.png" alt="FluxMedia CLI Dashboard" width="700" style="border-radius: 8px;" />
   <p><i>FluxMedia CLI showing QR Share Gateway active on the local network.</i></p>
 </div>
 

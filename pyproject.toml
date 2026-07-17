@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxmedia"
-version = "1.6.24"
+version = "1.6.25"
 description = "A powerful, cross-platform media portal and processing toolkit."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pdev-labs/FluxMedia-py"
+Homepage = "https://github.com/pdev-labs/FluxMedia"
 
 [project.scripts]
 fluxmedia = "fluxmedia.main:main"

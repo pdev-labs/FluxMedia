@@ -6,8 +6,8 @@ Thank you for your interest in contributing to FluxMedia! This document outlines
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/pdev-labs/FluxMedia-py.git
-cd FluxMedia-py
+git clone https://github.com/pdev-labs/FluxMedia.git
+cd FluxMedia
 ```
 
 ### 2. Set Up a Virtual Environment

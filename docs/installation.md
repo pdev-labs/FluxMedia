@@ -36,7 +36,7 @@ Download and run the helper installer script from the repository root:
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/pdev-labs/FluxMedia-py/main/install.ps1'))
+iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.ps1'))
 ```
 
 ---

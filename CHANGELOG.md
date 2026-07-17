@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.6.25] - 2026-07-17
+### Fixed
+- Fixed broken repository naming references (`FluxMedia-py` renamed to `FluxMedia`) across all markdown documents, scripts, HTML portals, and configuration tags.
+- Pointed README header image link directly to the new high-resolution logo asset.
+
 ## [v1.6.24] - 2026-07-17
 ### Added
 - Generated and configured brand logo assets inside `assets/` and `website/` folders.
