@@ -3,6 +3,7 @@ import gzip
 import io
 import sys
 import re
+import os
 
 def decode_resource(data_b64: str) -> str:
     try:
@@ -12,15 +13,18 @@ def decode_resource(data_b64: str) -> str:
     except Exception as e:
         return ''
 
-with open(r'd:\Dev\fluxmedia\fluxmedia\main.py', 'r', encoding='utf-8') as f:
+base_dir = os.path.dirname(os.path.abspath(__file__))
+main_py_path = os.path.join(base_dir, 'fluxmedia', 'main.py')
+
+with open(main_py_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
 html_match = re.search(r'PORTAL_HTML_COMPRESSED = \"(.*?)\"', content)
 css_match = re.search(r'PORTAL_CSS_COMPRESSED = \"(.*?)\"', content)
 js_match = re.search(r'PORTAL_JS_COMPRESSED = \"(.*?)\"', content)
 
-if html_match: open(r'd:\Dev\fluxmedia\index.html', 'w', encoding='utf-8').write(decode_resource(html_match.group(1)))
-if css_match: open(r'd:\Dev\fluxmedia\style.css', 'w', encoding='utf-8').write(decode_resource(css_match.group(1)))
-if js_match: open(r'd:\Dev\fluxmedia\app.js', 'w', encoding='utf-8').write(decode_resource(js_match.group(1)))
+if html_match: open(os.path.join(base_dir, 'index.html'), 'w', encoding='utf-8').write(decode_resource(html_match.group(1)))
+if css_match: open(os.path.join(base_dir, 'style.css'), 'w', encoding='utf-8').write(decode_resource(css_match.group(1)))
+if js_match: open(os.path.join(base_dir, 'app.js'), 'w', encoding='utf-8').write(decode_resource(js_match.group(1)))
 
 print('Extracted to index.html, style.css, app.js')

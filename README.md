@@ -146,12 +146,11 @@ Got an issue, bug, or feature request? I would love to hear from you! Please fil
 
 Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
 
-### Latest Release: [v1.6.20]
-- **Changelog Maintenance**: Added automated rules for maintaining `CHANGELOG.md` and `README.md`.
-- **Global Video Download Countdown**: Added a 5-second interactive terminal countdown prompt when standard video files already exist on disk (yt-dlp).
-- **Instagram Profile Countdown**: Added smart 5-second interactive Terminal prompts to the Instagram downloader.
-- **Instagram Profile Scraper**: Implemented a new scraper option via `instaloader` to bulk download all public media.
-- **TUI Instagram Support**: Added a dedicated `📸 Instagram` tab to the advanced Textual UI interface.
+### Latest Release: [v1.6.21]
+- **AppleScript Security Patch**: Properly escape backslashes and double quotes in desktop notifications on macOS to prevent potential command injection vulnerabilities.
+- **TUI Instagram Fix**: Resolved a critical runtime `UnboundLocalError` when downloading Instagram profiles in the TUI mode due to global name shadowing.
+- **Path Portability**: Replaced all hardcoded absolute paths in utility scripts `extract.py` and `repack.py` with dynamic script-relative path resolution.
+- **Code Quality & Maintenance**: Cleaned up duplicated utility function copies in `main.py` and improved PowerShell escaping of single quotes in notifications.
 
 <div align="center">
   <i>Made with ❤️ by pdev-labs</i>

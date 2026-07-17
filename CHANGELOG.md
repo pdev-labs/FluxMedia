@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.6.21] - 2026-07-17
+### Security
+- Patched potential AppleScript command injection vulnerability by properly escaping double quotes and backslashes in macOS desktop notifications.
+
+### Fixed
+- Fixed a runtime `UnboundLocalError` crash in the TUI Instagram downloader by resolving a shadowed global `os` module import.
+- Replaced hardcoded absolute drive paths in `extract.py` and `repack.py` with dynamic, script-relative paths.
+- Removed duplicate copies of utility functions (`sanitize_filename`, `check_input_non_blocking`, `get_unique_filename`) in `main.py`.
+- Improved single-quote escaping in PowerShell desktop notifications on Windows.
+
 ## [v1.6.20] - 2026-07-16
 ### Added
 - Advanced filtering inside the Instagram Profile Fetcher (Photos only, Videos only, Tagged).

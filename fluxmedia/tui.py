@@ -285,7 +285,6 @@ class FluxMediaApp(App):
             import instaloader
             dest_dir = self.config.get("download_dir", os.path.expanduser("~/Downloads"))
             profile_dir = os.path.join(dest_dir, f"IG_{username}")
-            import os
             os.makedirs(profile_dir, exist_ok=True)
             
             L = instaloader.Instaloader(
