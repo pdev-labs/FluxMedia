@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.24] - 2026-07-17
+### Added
+- Generated and configured brand logo assets inside `assets/` and `website/` folders.
+
 ## [v1.6.23] - 2026-07-17
 ### Added
 - Reorganized monolithic documentation into modular files under `docs/` (`installation.md`, `configuration.md`, `downloader.md`, `qr-share.md`, `troubleshooting.md`, `contributing.md`, `faq.md`, `architecture.md`).
