@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.23] - 2026-07-17
+### Added
+- Reorganized monolithic documentation into modular files under `docs/` (`installation.md`, `configuration.md`, `downloader.md`, `qr-share.md`, `troubleshooting.md`, `contributing.md`, `faq.md`, `architecture.md`).
+- Added structured GitHub community health files under `.github/` (bug, feature, and doc issue templates, Pull Request template, security guide, support channels, and code of conduct).
+- Integrated automated Dependabot updates and Stale issue processor.
+- Added `ROADMAP.md` detailing future development milestones.
+- Redesigned `README.md` into a premium open-source project page with structured badges, feature blocks, and documentation links.
+
 ## [v1.6.22] - 2026-07-17
 ### Fixed
 - Fixed static type checking issues throughout the codebase (reduced static analysis errors from 750+ to 0 code-logic errors).

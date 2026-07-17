@@ -1,156 +1,110 @@
 <div align="center">
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia-py/main/website/favicon.ico" alt="FluxMedia Logo" width="120" height="120" />
 
-# 🌊 FluxMedia
+  # FluxMedia
 
-**The official Python module and PyPI package for FluxMedia, featuring a customizable LAN QR share portal and rich media player.**
+  ### A premium, cross-platform media portal and processing toolkit.
 
-[![PyPI version](https://img.shields.io/pypi/v/fluxmedia.svg?style=for-the-badge&color=cyan)](https://pypi.org/project/fluxmedia/)
-[![Python versions](https://img.shields.io/pypi/pyversions/fluxmedia.svg?style=for-the-badge&color=blue)](https://pypi.org/project/fluxmedia/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+  [![PyPI Version](https://img.shields.io/pypi/v/fluxmedia.svg?color=00F2FE&style=flat-square)](https://pypi.org/project/fluxmedia/)
+  [![Supported Python Versions](https://img.shields.io/pypi/pyversions/fluxmedia.svg?style=flat-square)](https://pypi.org/project/fluxmedia/)
+  [![License](https://img.shields.io/github/license/pdev-labs/FluxMedia-py.svg?style=flat-square)](LICENSE)
+  [![Downloads](https://img.shields.io/pypi/dm/fluxmedia.svg?style=flat-square)](https://pypi.org/project/fluxmedia/)
+  [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/psf/black)
 
-*A powerful, open-source, and cross-platform command-line media downloader designed for simplicity, robustness, and speed.*
-
+  FluxMedia is a production-ready media manager, automated downloader, and local streaming gateway wrapped in a responsive terminal application and web interface.
 </div>
 
 ---
 
-> [!IMPORTANT]
-> **Disclaimer & Educational Notice:** This program is developed strictly for educational and research purposes. You must obtain explicit permission from the original content creators before downloading any videos or media. The author does not assume any liability for unauthorized downloads or usage of this tool.
+## 🌟 Key Features
+
+* **Universal Extraction Core**: Seamlessly download high-quality videos, playlists, audio streams, channel collections, and subtitles powered by a robust wrapper around `yt-dlp`.
+* **Built-in LAN Sharing Gateway**: Share downloaded files instantly to any device on your local network using a built-in password-protected HTTP server with QR code access.
+* **Responsive Interfaces**: Choose between a clean, direct command-line menu, an interactive Textual-powered TUI dashboard, or a lightweight web interface.
+* **Advanced Post-Processing**: Automatically extract audio (MP3/M4A/FLAC), merge separate audio/video formats, inject descriptions and tags, and embed album artwork via FFmpeg.
+* **Network & Account Resilience**: Support for HTTP Range Requests (smooth video scrubbing on mobile browsers), customizable speed throttling, and browser cookie synchronization to bypass security checks.
+
+---
+
+## 💻 Visual Preview
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia-py/main/website/fluxmedia_preview.png" alt="FluxMedia CLI Dashboard" width="700" style="border-radius: 8px;" />
+  <p><i>FluxMedia CLI showing QR Share Gateway active on the local network.</i></p>
+</div>
+
+---
 
 ## 🚀 Quick Start
 
-> [!TIP]
-> Looking for detailed step-by-step installation instructions for your specific OS (Windows, macOS, Linux, or Termux)? Check out the [Detailed OS-Specific Setup Guide](https://github.com/pdev-labs/FluxMedia-py/blob/main/INSTALLATION_GUIDE.md).
-
 ### 1. Installation
-Install FluxMedia globally on any system running Python 3.10+ directly via `pip`:
+
+Install FluxMedia directly via `pip`:
 ```bash
 pip install fluxmedia
 ```
-*If you run into an `externally-managed-environment` error on modern Linux systems, install using `pipx` instead:*
-```bash
-pipx install fluxmedia
-```
+*For detailed, OS-specific installation instructions (including setting up FFmpeg), please check the **[Installation Guide](docs/installation.md)**.*
 
-### 2. Execution
-Run the interface from any terminal or command prompt:
+### 2. Usage
+
+Launch the interactive console portal:
 ```bash
 fluxmedia
 ```
 
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|:---|:---|
-| 🎨 **Dynamic Console TUI** | Renders rich tables, panels, and live progress bars for download speeds, ETA, and file sizes. |
-| 🎵 **Smart Audio Extraction** | Automatically extract and convert media into high-quality MP3 (192kbps) with embedded cover art and metadata. |
-| 🏷️ **Metadata Embedding** | Automatically write video thumbnails and details (description, uploader, dates) directly into your downloads. |
-| 📚 **Batch Downloads** | Save entire playlists or recent uploads from content creator channels. |
-| 📝 **Subtitles Capturing** | Download caption files directly for specified language codes. |
-| ⚙️ **Global Settings** | Customize download folders, default formats, filename structures, and UI themes inside the app. |
-| 🌐 **LAN QR Share Portal** | Easily share downloaded media over your local network using an interactive web portal. |
-
----
-
-## 🛠️ Requirements & Setup
-
-* **Python**: Version 3.10 or higher.
-* **FFmpeg (Highly Recommended)**: Required for merging high-definition video formats and converting audio to MP3.
-
+Or open the Textual TUI dashboard directly:
 ```bash
-# Windows
-winget install Gyan.FFmpeg
-
-# macOS
-brew install ffmpeg
-
-# Linux (Debian/Ubuntu)
-sudo apt install ffmpeg
+fluxmedia --tui
 ```
 
 ---
 
-## 🔍 Troubleshooting
+## 📚 Documentation
 
-<details>
-<summary><b>1. LAN QR Sharing Fails on Phone/Tablet</b></summary>
+Detailed user guides and developer docs are organized in the `docs/` folder:
 
-If your phone cannot load the link generated by the QR Share Server (`http://<IP>:8000`):
-* **Windows Network Profile**: Windows Firewall blocks incoming traffic on **Public** networks. Open Windows Settings ➔ **Network & internet** ➔ **Wi-Fi**, click your connection properties, and change the network profile type to **Private**.
-* **Windows Firewall Inbound Rule**: Add an inbound firewall rule in PowerShell to whitelist port 8000:
-  ```powershell
-  New-NetFirewallRule -DisplayName "FluxMedia LAN Share" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8000-8020
-  ```
-* **Same Network**: Ensure your phone is connected to the exact same Wi-Fi connection (or phone hotspot) as your laptop.
-</details>
-
-<details>
-<summary><b>2. Audio Extraction or Trimming Fails</b></summary>
-
-* **FFmpeg Dependency**: Merging streams, converting to MP3/M4A, and trimming downloads require **FFmpeg**. Make sure you have FFmpeg installed on your machine and added to your system's PATH. 
-</details>
-
-<details>
-<summary><b>3. Permission Denied on Android (Termux)</b></summary>
-
-If downloads fail with `PermissionError` when writing to `/sdcard/Download/FluxMediaDownloads/`:
-* Run the following command in Termux to grant file system storage access permissions:
-  ```bash
-  termux-setup-storage
-  ```
-</details>
-
-<details>
-<summary><b>4. Locked Files on Windows Update</b></summary>
-
-If upgrading FluxMedia or yt-dlp inside the app fails because the files are locked in memory:
-* Close the application and run the update command directly from a standard terminal window:
-  ```bash
-  pip install -U fluxmedia
-  ```
-</details>
-
-<details>
-<summary><b>5. SSL Certificate Verification Failures</b></summary>
-
-If downloads fail with `[SSL: CERTIFICATE_VERIFY_FAILED]`:
-* **macOS Users**: Go to your Applications/Python folder and double-click `Install Certificates.command`.
-* **All Platforms**: Run: `pip install --upgrade certifi`
-</details>
+* 📥 **[Installation Guide](docs/installation.md)** — Step-by-step setup guides for Windows, macOS, Linux, and Android (Termux).
+* ⚙️ **[Configuration Guide](docs/configuration.md)** — Explanations of config options, directories, and customization schemas.
+* 📦 **[Downloader Engine](docs/downloader.md)** — Internals on formatting flags, post-processors, and download strategies.
+* 📶 **[LAN QR Share Portal](docs/qr-share.md)** — Guide to local HTTP streaming, REST API endpoints, and authentication tokens.
+* 🛠️ **[Troubleshooting Guide](docs/troubleshooting.md)** — Common solutions for SSL issues, Windows Defender configurations, and storage permissions.
+* 📖 **[Frequently Asked Questions](docs/faq.md)** — Answers to common developer and user questions.
+* 🏗️ **[Architecture Overview](docs/architecture.md)** — Codebase directory layout, dynamic imports, and module dependencies.
 
 ---
 
-## 👑 Credits & Support
+## 🗺️ Roadmap
 
-This project was created and is fully maintained by **[pdev-labs](https://github.com/pdev-labs)**.
-I am a student in India (Standard 11, PCM with CS) and I spent a couple of weeks designing, coding, and perfecting FluxMedia alone. 
+We are constantly improving the platform. Here are our high-level goals:
+- **Milestone 1**: Parallel multi-threaded downloading and expanded website extractors.
+- **Milestone 2**: In-terminal visual video trimming and custom TUI styling themes.
+- **Milestone 3**: Multi-user permissions on the share portal and upgraded web player seeking.
 
-If you find this tool helpful, please support my work by giving it a star on GitHub! ⭐
-
-[![GitHub](https://img.shields.io/badge/GitHub-pdev--labs-181717?style=for-the-badge&logo=github)](https://github.com/pdev-labs)
-
-* **Support via UPI**: `priyanshuc@fam`
+*Check out **[ROADMAP.md](ROADMAP.md)** for our complete milestones plan.*
 
 ---
 
-## 🐛 Bugs, Errors & Feedback
+## 🤝 Contributing
 
-Got an issue, bug, or feature request? I would love to hear from you! Please file reports directly at:
-👉 **[FluxMedia Issue Tracker](https://github.com/pdev-labs/FluxMedia-py/issues)**
+We welcome all contributions! Whether you are fixing type errors, adding new feature modules, or enhancing the documentation:
+1. Review the **[Contributing Guide](docs/contributing.md)**.
+2. Ensure you adhere to the **[Code of Conduct](CODE_OF_CONDUCT.md)**.
+3. If you modify any frontend web assets, remember to run the repack builder:
+   ```bash
+   python repack.py
+   ```
 
 ---
 
-## 📜 Changelog
+## 📜 License & Credits
 
-Check out the full [CHANGELOG.md](https://github.com/pdev-labs/FluxMedia-py/blob/main/CHANGELOG.md) for detailed release history.
+FluxMedia is open-source software licensed under the **[MIT License](LICENSE)**.
 
-### Latest Release: [v1.6.22]
-- **Static Typing Cleanup**: Patched type annotation conflicts, dynamic import placeholders, and uninitialized type checkers constraints across modules.
-- **Troubleshooting Menu Fix**: Constrained Troubleshooting Guide selection range to valid options to prevent UnboundLocalError crash on non-matching default/options.
-- **Deduplication**: Removed double except clauses and cleaned up redundant return statements.
+### Credits
+- Core extraction engine powered by **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**.
+- Terminal styling and layouts powered by **[rich](https://github.com/Textualize/rich)** and **[textual](https://github.com/Textualize/textual)**.
+- Audio tagging powered by **[mutagen](https://github.com/quodlibet/mutagen)**.
 
 <div align="center">
-  <i>Made with ❤️ by pdev-labs</i>
+  <sub>Made with ❤️ by pdev-labs</sub>
 </div>
