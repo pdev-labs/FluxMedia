@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.28] - 2026-07-18
+### Added
+- Automated self-updating on Windows when files are locked: Spawns a new terminal running `pip install -U fluxmedia` and closes the running application instance.
+
 ## [v1.6.27] - 2026-07-18
 ### Fixed
 - Added a high-quality preview image `fluxmedia_preview.png` inside the website directory, resolving a broken visual preview link in README.md.

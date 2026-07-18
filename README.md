@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.27
+## 📢 Latest Release: v1.6.28
 
-* **Fixed Visual Preview**: Added a high-quality preview image `fluxmedia_preview.png` inside the website directory, resolving the broken visual preview link in README.md.
+* **Automatic Windows Updates**: Spawns a new terminal window to execute the `pip install -U fluxmedia` upgrade and shuts down the current process automatically if files are locked by the running application.
 
 ---
 

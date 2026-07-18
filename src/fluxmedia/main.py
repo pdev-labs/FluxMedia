@@ -4586,8 +4586,12 @@ def operation_update_fluxmedia():
             if platform.system() == "Windows" and any(err in result.stderr for err in ["WinError 32", "PermissionError", "WinError 5", "Access is denied"]):
                 console.print("\n[bold yellow]💡 Tip for Windows Users:[/bold yellow]")
                 console.print("The application files are currently locked because FluxMedia is running.")
-                console.print("Please exit the application and update it from your terminal by running:")
-                console.print("  [bold cyan]pip install -U fluxmedia[/bold cyan]\n")
+                console.print("Automatically launching the update in a new terminal window and closing this instance to release files...")
+                import time
+                time.sleep(2.0)
+                cmd = f'start cmd /c "title FluxMedia Auto-Updater && echo Upgrading FluxMedia... && \"{sys.executable}\" -m pip install -U fluxmedia"'
+                subprocess.Popen(cmd, shell=True)
+                sys.exit(0)
             Prompt.ask("\nPress Enter to return to menu...")
     except Exception as e:
         console.print(f"[bold red]An error occurred during update: {e}[/bold red]")
