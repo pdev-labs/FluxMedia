@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.6.33] - 2026-07-18
+### Added
+- Implemented the complete Media Management suite in FluxMedia Web.
+- Formulated pages for Download Queue manager (`/queue`), Download History logs (`/history`), Media File Explorer (`/files`), FFmpeg Media Converter (`/converter`), and System Statistics analytics (`/stats`).
+- Synced sidebar options and cleaned up typescript compilation warnings.
+
 ## [v1.6.32] - 2026-07-18
 ### Added
 - Implemented the complete Downloader Engine in FluxMedia Web.

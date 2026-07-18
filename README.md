@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.32
+## 📢 Latest Release: v1.6.33
 
-* **FluxMedia Web Downloader Engine**: Formulated all subpages for the downloader engine (Video, Audio, YouTube Search, Playlist, Channel, Subtitles, Trimming, and Instagram Profile extractors) with advanced quality filters, timelines, parallel settings, and complete keyboard shortcuts.
+* **FluxMedia Web Media Manager & Converter**: Implemented the complete media management suite including active download queues (`/queue`), search-friendly download history logs (`/history`), media folder explorer (`/files`), FFmpeg transcoding tools (`/converter`), and CSS SVG analytics dashboards (`/stats`).
 
 ---
 

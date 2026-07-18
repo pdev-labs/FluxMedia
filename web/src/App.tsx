@@ -17,6 +17,13 @@ import { SubtitleDownloader } from "./pages/SubtitleDownloader";
 import { TrimDownloader } from "./pages/TrimDownloader";
 import { InstagramDownloader } from "./pages/InstagramDownloader";
 
+// Media management & converter imports
+import { DownloadQueue } from "./pages/DownloadQueue";
+import { DownloadHistory } from "./pages/DownloadHistory";
+import { FileManager } from "./pages/FileManager";
+import { MediaConverter } from "./pages/MediaConverter";
+import { SystemStats } from "./pages/SystemStats";
+
 // General placeholder component for modules implemented in future phases
 const PagePlaceholder: React.FC<{ title: string; desc: string }> = ({ title, desc }) => (
   <div className="flex flex-col gap-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -59,11 +66,34 @@ export const App: React.FC = () => {
             <Route path="/download/trimmer" element={<TrimDownloader />} />
             <Route path="/download/instagram" element={<InstagramDownloader />} />
 
+            {/* Download Queue & Manager */}
+            <Route path="/queue" element={<DownloadQueue />} />
+
+            {/* History logs & sub-routes */}
+            <Route path="/history" element={<DownloadHistory />} />
+            <Route path="/history/downloads" element={<DownloadHistory />} />
+            <Route path="/history/search" element={<DownloadHistory />} />
+            <Route path="/history/errors" element={<DownloadHistory />} />
+
+            {/* File manager & categories */}
+            <Route path="/files" element={<FileManager />} />
+            <Route path="/files/videos" element={<FileManager />} />
+            <Route path="/files/audio" element={<FileManager />} />
+            <Route path="/files/playlists" element={<FileManager />} />
+            <Route path="/files/images" element={<FileManager />} />
+            <Route path="/files/documents" element={<FileManager />} />
+            <Route path="/files/trash" element={<FileManager />} />
+
+            {/* Converter Options */}
+            <Route path="/converter" element={<MediaConverter />} />
+            <Route path="/converter/video" element={<MediaConverter />} />
+            <Route path="/converter/audio" element={<MediaConverter />} />
+            <Route path="/converter/batch" element={<MediaConverter />} />
+
+            {/* Statistics */}
+            <Route path="/stats" element={<SystemStats />} />
+
             {/* Other System Areas (Placeholders) */}
-            <Route path="/history" element={<PagePlaceholder title="Download History" desc="Logs of all processed audio, video, and playlist downloads." />} />
-            <Route path="/queue" element={<PagePlaceholder title="Active Queue" desc="Batch media downloader job management dashboard." />} />
-            <Route path="/files" element={<PagePlaceholder title="Local File Manager" desc="Browse and open your download directory files directly." />} />
-            <Route path="/converter" element={<PagePlaceholder title="FFmpeg Converter" desc="Transcode or extract audio from videos manually." />} />
             <Route path="/sharing" element={<PagePlaceholder title="LAN Sharing Gateway" desc="Broadcast files to your local network via QR codes." />} />
             <Route path="/settings" element={<PagePlaceholder title="System Settings" desc="Configure themes, paths, cookie syncer, and API keys." />} />
             <Route path="/updates" element={<PagePlaceholder title="Updates Manager" desc="Keep yt-dlp and FluxMedia up to date." />} />

@@ -10,13 +10,13 @@ import {
   Share2,
   Settings,
   ShieldAlert,
-  Activity,
   Terminal,
   MessageSquare,
   HelpCircle,
   Info,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BarChart4
 } from "lucide-react";
 import { cn } from "../utils/cn";
 
@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { name: "Sharing", path: "/sharing", icon: Share2 },
     { name: "Settings", path: "/settings", icon: Settings },
     { name: "Updates", path: "/updates", icon: ShieldAlert },
-    { name: "Diagnostics", path: "/diagnostics", icon: Activity },
+    { name: "Analytics", path: "/stats", icon: BarChart4 },
     { name: "Logs", path: "/logs", icon: Terminal },
     { name: "Feedback", path: "/feedback", icon: MessageSquare },
     { name: "Help", path: "/help", icon: HelpCircle },
