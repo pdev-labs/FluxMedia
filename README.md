@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.30
+## 📢 Latest Release: v1.6.31
 
-* **Updated Visual Preview**: Replaced the visual preview image with an active terminal screenshot of the LAN QR Share gateway, containing a censored/blurred local IP address for security.
+* **FluxMedia Web Core Foundation**: Scaffolded the official FluxMedia Web dashboard interface under `web/` using React, TypeScript, Vite, Tailwind CSS v4, and Framer Motion. Configured collapsible sidebars, a status bar footer, a theme context provider (Dark, Light, Contrast), a keyboard-interactive search and command palette (Ctrl+K), and a full premium design system component library.
 
 ---
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.31] - 2026-07-18
+### Added
+- Scaffolded the official FluxMedia Web dashboard interface under `web/` using React, TypeScript, Vite, Tailwind CSS v4, and Framer Motion.
+- Created premium theme system supporting Light, Dark, and High Contrast settings.
+- Implemented keyboard-accessible global search and command palette (Ctrl+K).
+- Built core layouts including Header, Collapsible Sidebar, status-bar Footer, and GlobalLayout.
+- Formulated the design system component library (Button, Card, Input, Badge, ProgressBar, and Skeleton).
+
 ## [v1.6.30] - 2026-07-18
 ### Changed
 - Replaced the README visual preview image with an active terminal screenshot of the LAN QR Share gateway, with the IP address blurred for privacy.
