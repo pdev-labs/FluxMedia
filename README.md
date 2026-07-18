@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.28
+## 📢 Latest Release: v1.6.29
 
-* **Automatic Windows Updates**: Spawns a new terminal window to execute the `pip install -U fluxmedia` upgrade and shuts down the current process automatically if files are locked by the running application.
+* **VS Code Interpreter Resolution Fix**: Resolved Python interpreter path warnings in VS Code by migrating configuration from `${workspaceFolder}` to relative paths in `.vscode/settings.json`.
 
 ---
 

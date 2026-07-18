@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.29] - 2026-07-18
+### Fixed
+- Fixed VS Code "Default interpreter path could not be resolved" warning by changing `${workspaceFolder}` to relative `./` paths in `.vscode/settings.json`.
+
 ## [v1.6.28] - 2026-07-18
 ### Added
 - Automated self-updating on Windows when files are locked: Spawns a new terminal running `pip install -U fluxmedia` and closes the running application instance.
