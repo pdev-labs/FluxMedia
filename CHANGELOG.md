@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.30] - 2026-07-18
+### Changed
+- Replaced the README visual preview image with an active terminal screenshot of the LAN QR Share gateway, with the IP address blurred for privacy.
+
 ## [v1.6.29] - 2026-07-18
 ### Fixed
 - Fixed VS Code "Default interpreter path could not be resolved" warning by changing `${workspaceFolder}` to relative `./` paths in `.vscode/settings.json`.

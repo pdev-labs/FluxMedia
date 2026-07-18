@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.29
+## 📢 Latest Release: v1.6.30
 
-* **VS Code Interpreter Resolution Fix**: Resolved Python interpreter path warnings in VS Code by migrating configuration from `${workspaceFolder}` to relative paths in `.vscode/settings.json`.
+* **Updated Visual Preview**: Replaced the visual preview image with an active terminal screenshot of the LAN QR Share gateway, containing a censored/blurred local IP address for security.
 
 ---
 
