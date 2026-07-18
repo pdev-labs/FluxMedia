@@ -16,10 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.26
+## 📢 Latest Release: v1.6.27
 
-* **Repository Cleanup**: Removed legacy and unused helper files (`func.py`, `main_source.py`, `main_source.txt`, `test_mock.py`) from the root directory to establish a clean and professional workspace structure.
-* **Gitignore Safety**: Corrected configuration to prevent the local `.agents` folder from being tracked and uploaded to GitHub.
+* **Fixed Visual Preview**: Added a high-quality preview image `fluxmedia_preview.png` inside the website directory, resolving the broken visual preview link in README.md.
 
 ---
 

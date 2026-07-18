@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.27] - 2026-07-18
+### Fixed
+- Added a high-quality preview image `fluxmedia_preview.png` inside the website directory, resolving a broken visual preview link in README.md.
+
 ## [v1.6.26] - 2026-07-18
 ### Changed
 - Cleaned up root repository structure by removing legacy and unused files (`func.py`, `main_source.py`, `main_source.txt`, `test_mock.py`).
