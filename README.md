@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.31
+## 📢 Latest Release: v1.6.32
 
-* **FluxMedia Web Core Foundation**: Scaffolded the official FluxMedia Web dashboard interface under `web/` using React, TypeScript, Vite, Tailwind CSS v4, and Framer Motion. Configured collapsible sidebars, a status bar footer, a theme context provider (Dark, Light, Contrast), a keyboard-interactive search and command palette (Ctrl+K), and a full premium design system component library.
+* **FluxMedia Web Downloader Engine**: Formulated all subpages for the downloader engine (Video, Audio, YouTube Search, Playlist, Channel, Subtitles, Trimming, and Instagram Profile extractors) with advanced quality filters, timelines, parallel settings, and complete keyboard shortcuts.
 
 ---
 

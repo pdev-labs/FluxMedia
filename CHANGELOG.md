@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.6.32] - 2026-07-18
+### Added
+- Implemented the complete Downloader Engine in FluxMedia Web.
+- Created dedicated modules for all downloader features: Video Downloader, Audio Extractor, YouTube Search Engine, Playlist Selector, Channel Sync, Subtitle Downloader, Trim & Crop Downloader, and Instagram Profile Extractor.
+- Configured keyboard navigation overrides (e.g. Ctrl+L focus hooks).
+- Verified production build bundle and cleaned up module dependency imports.
+
 ## [v1.6.31] - 2026-07-18
 ### Added
 - Scaffolded the official FluxMedia Web dashboard interface under `web/` using React, TypeScript, Vite, Tailwind CSS v4, and Framer Motion.
