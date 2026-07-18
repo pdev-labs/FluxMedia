@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.37] - 2026-07-18
+### Added
+- **Phase 2: Backend Integration — Media Management & History** — Connected the FluxMedia Web frontend to a real local FastAPI backend.
+- Expanded `api.py` with `/api/history` (GET, DELETE by index, clear all), `/api/logs` (GET with line count), and `/api/files` (GET with category filter, DELETE by path) endpoints.
+- Rewrote `DownloadHistory.tsx` to load real entries from `history.json` with live search, grid/table views, per-item deletion, and clear-all.
+- Rewrote `LogCenter.tsx` to read from the live `fluxmedia.log` file with auto-refresh (5 s polling), severity stats summary, and component tab filtering.
+- Rewrote `FileManager.tsx` to scan the real download directory with file-type categorisation, storage summary bar, file deletion, and a file-properties side panel.
+
 ## [v1.6.36] - 2026-07-18
 ### Added
 - Integrated Progressive Web App (PWA) configuration manifest and asset caching service workers.

@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.36
+## 📢 Latest Release: v1.6.37
 
-* **FluxMedia Web PWA & Automation**: Setup Progressive Web App configurations, local caching service workers, GitHub Actions test workflows, and comprehensive architectural documentation.
+* **Phase 2 Backend Integration — Media Management & History**: Connected the Download History, Log Center, and File Manager pages to the real local FastAPI backend. History reads from `history.json`, logs stream from `fluxmedia.log` with live auto-refresh, and the file browser scans the configured download directory with file-type categorisation and deletion support.
 
 ---
 
