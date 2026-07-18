@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.6.34] - 2026-07-18
+### Added
+- Implemented the complete System Configuration, Updates Center, Sharing Gateway, and Diagnostics suite.
+- Formulated Settings tabs (General, Downloads, Network, Appearance, Privacy, Storage), Updates Manager checking releases, secure LAN QR sharing gateways, and diagnostics checklists.
+- Synced sidebar links and verified compilation bundling.
+
 ## [v1.6.33] - 2026-07-18
 ### Added
 - Implemented the complete Media Management suite in FluxMedia Web.

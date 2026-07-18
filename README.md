@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.33
+## 📢 Latest Release: v1.6.34
 
-* **FluxMedia Web Media Manager & Converter**: Implemented the complete media management suite including active download queues (`/queue`), search-friendly download history logs (`/history`), media folder explorer (`/files`), FFmpeg transcoding tools (`/converter`), and CSS SVG analytics dashboards (`/stats`).
+* **FluxMedia Web Settings & Diagnostics**: Completed Settings configuration panels (`/settings`), update timelines (`/updates`), diagnostics scan outputs (`/diagnostics`), and secure LAN QR sharing gateways (`/share`).
 
 ---
 

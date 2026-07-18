@@ -24,6 +24,12 @@ import { FileManager } from "./pages/FileManager";
 import { MediaConverter } from "./pages/MediaConverter";
 import { SystemStats } from "./pages/SystemStats";
 
+// Settings, updates, sharing, and diagnostics imports
+import { SettingsPage } from "./pages/Settings";
+import { UpdatesManager } from "./pages/UpdatesManager";
+import { SharingGateway } from "./pages/SharingGateway";
+import { SystemDiagnostics } from "./pages/SystemDiagnostics";
+
 // General placeholder component for modules implemented in future phases
 const PagePlaceholder: React.FC<{ title: string; desc: string }> = ({ title, desc }) => (
   <div className="flex flex-col gap-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -93,11 +99,47 @@ export const App: React.FC = () => {
             {/* Statistics */}
             <Route path="/stats" element={<SystemStats />} />
 
+            {/* LAN Sharing Gateway */}
+            <Route path="/sharing" element={<SharingGateway />} />
+            <Route path="/share" element={<SharingGateway />} />
+            <Route path="/share/send" element={<SharingGateway />} />
+            <Route path="/share/receive" element={<SharingGateway />} />
+            <Route path="/share/history" element={<SharingGateway />} />
+            <Route path="/share/devices" element={<SharingGateway />} />
+
+            {/* System Settings */}
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/general" element={<SettingsPage />} />
+            <Route path="/settings/downloads" element={<SettingsPage />} />
+            <Route path="/settings/network" element={<SettingsPage />} />
+            <Route path="/settings/appearance" element={<SettingsPage />} />
+            <Route path="/settings/advanced" element={<SettingsPage />} />
+            <Route path="/settings/privacy" element={<SettingsPage />} />
+            <Route path="/settings/storage" element={<SettingsPage />} />
+            <Route path="/settings/integrations" element={<SettingsPage />} />
+            <Route path="/settings/keyboard" element={<SettingsPage />} />
+            <Route path="/settings/accessibility" element={<SettingsPage />} />
+            <Route path="/settings/import-export" element={<SettingsPage />} />
+            <Route path="/settings/experimental" element={<SettingsPage />} />
+            <Route path="/settings/about" element={<SettingsPage />} />
+            <Route path="/settings/licenses" element={<SettingsPage />} />
+            <Route path="/settings/system" element={<SettingsPage />} />
+            <Route path="/settings/logs" element={<SettingsPage />} />
+
+            {/* Updates Center */}
+            <Route path="/updates" element={<UpdatesManager />} />
+            <Route path="/updates/releases" element={<UpdatesManager />} />
+            <Route path="/updates/changelog" element={<UpdatesManager />} />
+
+            {/* Diagnostics Scans */}
+            <Route path="/diagnostics" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics/system" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics/network" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics/download" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics/storage" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics/report" element={<SystemDiagnostics />} />
+
             {/* Other System Areas (Placeholders) */}
-            <Route path="/sharing" element={<PagePlaceholder title="LAN Sharing Gateway" desc="Broadcast files to your local network via QR codes." />} />
-            <Route path="/settings" element={<PagePlaceholder title="System Settings" desc="Configure themes, paths, cookie syncer, and API keys." />} />
-            <Route path="/updates" element={<PagePlaceholder title="Updates Manager" desc="Keep yt-dlp and FluxMedia up to date." />} />
-            <Route path="/diagnostics" element={<PagePlaceholder title="Diagnostics" desc="Analyze cpu load, memory stats, and environment variables." />} />
             <Route path="/logs" element={<PagePlaceholder title="System Logs" desc="Real-time terminal traceback and application records." />} />
             <Route path="/feedback" element={<PagePlaceholder title="Send Feedback" desc="Report bugs or request new features directly to developers." />} />
             <Route path="/help" element={<PagePlaceholder title="Help Center" desc="Check FAQs and learn CLI console shortcuts." />} />
