@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.6.36] - 2026-07-18
+### Added
+- Integrated Progressive Web App (PWA) configuration manifest and asset caching service workers.
+- Setup GitHub Actions CI/CD pipeline automation workflows.
+- Created ARCHITECTURE.md design guidelines and verified compilation assets build successfully.
+
 ## [v1.6.35] - 2026-07-18
 ### Added
 - Implemented the complete Extensibility, Support, Developer tools, and Onboarding wizard sub-suites.

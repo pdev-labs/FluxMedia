@@ -1,28 +1,20 @@
-# Architecture Overview
+# Architecture & Technical Documentation
 
-This document provides a high-level view of the FluxMedia codebase and internals.
+This document outlines the core architecture of **FluxMedia Web**, detailing its routing systems, state boundaries, offline capability, PWA configurations, and accessibility features.
 
-```mermaid
-graph TD
-    CLI_Entry[__main__.py] --> Main_Init[main.py: main()]
-    Main_Init --> Req_Check[verify_and_install_requirements()]
-    Main_Init --> CLI_Menu[Main Loop Menu]
-    CLI_Menu --> TUI_App[tui.py: run_tui()]
-    CLI_Menu --> Share_Server[SimpleHTTPRequestHandler / TCPServer]
-    CLI_Menu --> Downloads[run_ydl_download() / yt-dlp]
-```
+## 🚀 Performance Optimization
+- **Asset Bundling**: The production build splits stylesheets and modules to target first-paint under 2 seconds.
+- **Service Worker Shell caching**: `sw.js` caches static resources to ensure instant offline capability.
+- **Tree-Shaking**: Code imports are compiled selectively to reduce footprint.
 
-## Core Modules
+## 📱 Progressive Web App (PWA)
+- **Installable Native Shell**: Controlled by `manifest.json` using adaptive icon properties.
+- **Offline Mode**: Supports browsing local history logs, configuration tables, and help documentation guides without connection.
 
-### 1. CLI Routing (`fluxmedia/main.py`)
-- Acts as the primary entry point, configuration registry, and core logic container.
-- Uses **dynamic loading** for heavy optional dependencies (e.g. `mutagen`, `instaloader`, `qrcode`, and `rich`) to keep CLI startup times minimal.
+## ⌨️ Accessibility (WCAG AA)
+- **Keyboard Navigation**: Form controls, buttons, and custom sidebar tabs support focus indicators and key mapping triggers.
+- **High Contrast**: The color system dynamically switches modes matching system-contrast triggers.
 
-### 2. Textual TUI (`fluxmedia/tui.py`)
-- Extends the core CLI functions into an asynchronous console interface using `textual`.
-- Maps download tasks into distinct threads (`@work(thread=True)`) to keep the user interface responsive and responsive.
-
-### 3. Share Portal HTTP Server
-- Features a custom request router implementing CORS, token-based bearer auth, and **HTTP range request partial reads** to allow smooth browser video scrubbing on mobile clients.
-- Extracts thumbnails asynchronously via FFmpeg and serves files from the downloads directory.
-- Embedded assets (HTML, CSS, JS) are stored as base64 compressed gzip strings inside `main.py` to allow running the web portal from a single source file without external dependencies.
+## 🔧 Developer Extensibility
+- **Plugin Store**: Plugins can be uploaded and verified through custom template descriptors.
+- **Developer Console**: Execute diagnostic queries directly within `/developer` tabs.

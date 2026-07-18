@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.35
+## 📢 Latest Release: v1.6.36
 
-* **FluxMedia Web Support & Extensibility**: Configured Help documentation center (`/help`), bug report ticket submitters (`/feedback`), active log visualizers (`/logs`), plugin stores (`/plugins`), and system onboarding wizard setups (`/onboarding`).
+* **FluxMedia Web PWA & Automation**: Setup Progressive Web App configurations, local caching service workers, GitHub Actions test workflows, and comprehensive architectural documentation.
 
 ---
 
