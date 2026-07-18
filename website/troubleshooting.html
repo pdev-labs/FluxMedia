@@ -79,7 +79,9 @@
                         <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">Step 2: Add Firewall Rule (Recommended)</h4>
                         <p>Open PowerShell as Administrator and run the following command to whitelist port 8000 for FluxMedia:</p>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">New-NetFirewallRule -DisplayName "FluxMedia LAN Share" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8000-8020</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">New-NetFirewallRule -DisplayName "FluxMedia LAN Share" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8000-8020</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
@@ -93,21 +95,27 @@
                         <p class="mt-4">Merging video/audio streams, converting to MP3/M4A, and trimming downloads require <strong>FFmpeg</strong>. Make sure you have FFmpeg installed on your machine and added to your system's PATH.</p>
                         <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">Install FFmpeg on Windows:</h4>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">winget install Gyan.FFmpeg</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">winget install Gyan.FFmpeg</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
                         </div>
                         <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">Install FFmpeg on macOS:</h4>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">brew install ffmpeg</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">brew install ffmpeg</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
                         </div>
                         <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">Install FFmpeg on Linux (Debian/Ubuntu):</h4>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">sudo apt install ffmpeg</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">sudo apt install ffmpeg</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
@@ -121,7 +129,9 @@
                         <p class="mt-4">If downloads fail with <code>PermissionError</code> when writing to <code>/sdcard/Download/FluxMediaDownloads/</code>, you need to grant storage permissions to Termux.</p>
                         <p class="mt-2">Run the following command and accept the prompt on your phone:</p>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">termux-setup-storage</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">termux-setup-storage</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
@@ -134,7 +144,9 @@
                     <div class="accordion-content">
                         <p class="mt-4">If upgrading FluxMedia inside the app fails because the files are locked in memory (common on Windows), close the application and run the update command directly from a standard terminal window:</p>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">pip install -U fluxmedia</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">pip install -U fluxmedia</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>
@@ -150,7 +162,9 @@
                         <p>Go to your Applications/Python folder and double-click <code>Install Certificates.command</code></p>
                         <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">For All Other Platforms:</h4>
                         <div class="code-block mt-4 mb-4">
-                            <span class="code-cmd">pip install --upgrade certifi</span>
+                            <div class="code-inner">
+                                <span class="code-cmd">pip install --upgrade certifi</span>
+                            </div>
                             <button class="copy-btn" aria-label="Copy code">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                             </button>

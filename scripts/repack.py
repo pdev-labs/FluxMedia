@@ -14,11 +14,12 @@ def encode_resource(filepath: str) -> str:
     return base64.b64encode(out.getvalue()).decode('utf-8')
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-html_enc = encode_resource(os.path.join(base_dir, 'index.html'))
-css_enc = encode_resource(os.path.join(base_dir, 'style.css'))
-js_enc = encode_resource(os.path.join(base_dir, 'app.js'))
+project_root = os.path.dirname(base_dir)
+html_enc = encode_resource(os.path.join(project_root, 'index.html'))
+css_enc = encode_resource(os.path.join(project_root, 'style.css'))
+js_enc = encode_resource(os.path.join(project_root, 'app.js'))
 
-main_py_path = os.path.join(base_dir, 'fluxmedia', 'main.py')
+main_py_path = os.path.join(project_root, 'src', 'fluxmedia', 'main.py')
 with open(main_py_path, 'r', encoding='utf-8') as f:
     content = f.read()
 

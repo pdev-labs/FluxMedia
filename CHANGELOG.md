@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.6.26] - 2026-07-18
+### Changed
+- Cleaned up root repository structure by removing legacy and unused files (`func.py`, `main_source.py`, `main_source.txt`, `test_mock.py`).
+- Corrected `.gitignore` to properly exclude the `.agents/` folder from version control.
+
 ## [v1.6.25] - 2026-07-17
 ### Fixed
 - Fixed broken repository naming references (`FluxMedia-py` renamed to `FluxMedia`) across all markdown documents, scripts, HTML portals, and configuration tags.

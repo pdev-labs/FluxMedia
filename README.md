@@ -16,6 +16,13 @@
 
 ---
 
+## 📢 Latest Release: v1.6.26
+
+* **Repository Cleanup**: Removed legacy and unused helper files (`func.py`, `main_source.py`, `main_source.txt`, `test_mock.py`) from the root directory to establish a clean and professional workspace structure.
+* **Gitignore Safety**: Corrected configuration to prevent the local `.agents` folder from being tracked and uploaded to GitHub.
+
+---
+
 ## 🌟 Key Features
 
 * **Universal Extraction Core**: Seamlessly download high-quality videos, playlists, audio streams, channel collections, and subtitles powered by a robust wrapper around `yt-dlp`.
