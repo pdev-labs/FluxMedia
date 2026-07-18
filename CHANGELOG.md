@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.38] - 2026-07-18
+### Added
+- **Phase 3: Advanced Features Backend Integration** — Connected the Media Converter, System Diagnostics, and System Stats pages to real backend endpoints.
+- Expanded `api.py` with `/api/convert` (POST, real FFmpeg via subprocess), `/api/convert/check` (GET, FFmpeg availability probe), `/api/diagnostics` (GET, live subsystem health: internet, Python, yt-dlp, FFmpeg, write permissions, disk space), and `/api/stats` (GET, aggregated download counts, storage breakdown, 7-day activity from `history.json`).
+- Rewrote `MediaConverter.tsx`: live FFmpeg availability banner, real file path inputs, all encoding options wired to `/api/convert`, conversion log console.
+- Rewrote `SystemDiagnostics.tsx`: auto-runs on mount, displays real health score (0–100), per-check pass/warn/fail status with icons, clipboard report export.
+- Rewrote `SystemStats.tsx`: real download totals, storage usage by type, and a dynamic SVG line chart of 7-day download activity — all derived from live API data.
+
 ## [v1.6.37] - 2026-07-18
 ### Added
 - **Phase 2: Backend Integration — Media Management & History** — Connected the FluxMedia Web frontend to a real local FastAPI backend.

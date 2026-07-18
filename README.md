@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.37
+## 📢 Latest Release: v1.6.38
 
-* **Phase 2 Backend Integration — Media Management & History**: Connected the Download History, Log Center, and File Manager pages to the real local FastAPI backend. History reads from `history.json`, logs stream from `fluxmedia.log` with live auto-refresh, and the file browser scans the configured download directory with file-type categorisation and deletion support.
+* **Phase 3 Backend Integration — Advanced Features**: Connected the Media Converter (real FFmpeg transcoding), System Diagnostics (live subsystem health checks), and System Stats (real download analytics) pages to the local FastAPI backend.
 
 ---
 

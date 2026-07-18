@@ -1,140 +1,265 @@
-import React from "react";
-import { 
-  ArrowUpRight, ArrowDownRight, History, Database, Cpu, 
-  Wifi, FileVideo, Music, Image, FileText
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  ArrowUpRight, ArrowDownRight, History, Database,
+  FileVideo, Music, Image, FileText, RotateCcw, AlertTriangle
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 import { ProgressBar } from "../components/ui/ProgressBar";
 
+interface TypeBreakdown {
+  count: number;
+  size: string;
+  bytes: number;
+}
+
+interface WeeklyPoint {
+  date: string;
+  count: number;
+}
+
+interface StatsData {
+  total_downloads: number;
+  completed: number;
+  failed: number;
+  total_size: string;
+  total_size_bytes: number;
+  type_breakdown: Record<string, TypeBreakdown>;
+  weekly_activity: WeeklyPoint[];
+  download_dir: string;
+}
+
+const typeConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
+  videos:    { icon: FileVideo,  color: "text-blue-500",    label: "Video Files" },
+  audio:     { icon: Music,      color: "text-emerald-500", label: "Audio Tracks" },
+  images:    { icon: Image,      color: "text-pink-500",    label: "Images" },
+  documents: { icon: FileText,   color: "text-neutral-400", label: "Docs & Subs" },
+  other:     { icon: FileText,   color: "text-muted-foreground", label: "Other" },
+};
+
 export const SystemStats: React.FC = () => {
-  const statMetrics = [
-    { title: "Total Downloads", value: "148 files", change: "+12.4% vs last month", isUp: true, icon: History, color: "text-indigo-500", bg: "bg-indigo-500/10" },
-    { title: "Storage Space Used", value: "32.4 GB", change: "42.8 GB total limit", isUp: false, icon: Database, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { title: "Bandwidth Saved", value: "12.6 GB", change: "Via local caches", isUp: true, icon: Wifi, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Average Speed", value: "4.8 MB/s", change: "Broadband network link", isUp: true, icon: Cpu, color: "text-blue-500", bg: "bg-blue-500/10" }
-  ];
+  const [stats, setStats] = useState<StatsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/stats");
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      setStats(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  // Build chart points from weekly data
+  const buildChartPath = (weekly: WeeklyPoint[]) => {
+    const maxCount = Math.max(...weekly.map((w) => w.count), 1);
+    const points = weekly.map((w, i) => {
+      const x = 10 + (i / (weekly.length - 1)) * 480;
+      const y = 190 - (w.count / maxCount) * 160;
+      return { x, y, ...w };
+    });
+    const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+    return { points, path };
+  };
+
+  const topMetrics = stats
+    ? [
+        {
+          title: "Total Downloads",
+          value: `${stats.total_downloads} files`,
+          change: `${stats.completed} completed · ${stats.failed} failed`,
+          isUp: stats.completed > stats.failed,
+          icon: History,
+          color: "text-indigo-500",
+          bg: "bg-indigo-500/10"
+        },
+        {
+          title: "Storage Used",
+          value: stats.total_size,
+          change: "Across all file types",
+          isUp: null,
+          icon: Database,
+          color: "text-amber-500",
+          bg: "bg-amber-500/10"
+        },
+      ]
+    : [];
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">System Statistics & Analytics</h1>
-        <p className="text-muted-foreground mt-1">Review download historical volumes, bandwidth limits, storage usage logs, and formats allocations.</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">System Statistics & Analytics</h1>
+          <p className="text-muted-foreground mt-1">Review download volumes, storage usage, and format breakdowns from your real data.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading}>
+          <RotateCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
       </div>
 
-      {/* Grid numbers */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statMetrics.map((stat) => (
-          <Card key={stat.title}>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-start">
-                <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
-                  <stat.icon className="h-5 w-5" />
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
+
+      {/* Top metrics */}
+      {stats && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {topMetrics.map((stat) => (
+            <Card key={stat.title}>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
+                    <stat.icon className="h-5 w-5" />
+                  </div>
+                  {stat.isUp !== null && (
+                    stat.isUp
+                      ? <Badge variant="success" className="gap-0.5"><ArrowUpRight className="h-3 w-3" /> Up</Badge>
+                      : <Badge variant="secondary" className="gap-0.5"><ArrowDownRight className="h-3 w-3" /> Low</Badge>
+                  )}
                 </div>
-                {stat.isUp ? (
-                  <Badge variant="success" className="gap-0.5"><ArrowUpRight className="h-3 w-3" /> Up</Badge>
-                ) : (
-                  <Badge variant="secondary" className="gap-0.5"><ArrowDownRight className="h-3 w-3" /> Safe</Badge>
-                )}
-              </div>
-              <h3 className="text-2xl font-bold mt-4">{stat.value}</h3>
-              <p className="text-xs font-semibold text-foreground mt-1">{stat.title}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{stat.change}</p>
+                <h3 className="text-2xl font-bold mt-4">{stat.value}</h3>
+                <p className="text-xs font-semibold text-foreground mt-1">{stat.title}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{stat.change}</p>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Type counts */}
+          {(["videos", "audio"] as const).map((type) => {
+            const cfg = typeConfig[type];
+            const data = stats.type_breakdown[type];
+            return (
+              <Card key={type}>
+                <CardContent className="pt-6">
+                  <div className={`p-2 rounded-lg bg-secondary/40 ${cfg.color} w-fit`}>
+                    <cfg.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-2xl font-bold mt-4">{data.count}</h3>
+                  <p className="text-xs font-semibold text-foreground mt-1">{cfg.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{data.size}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {stats && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Weekly activity chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Download Activity (Last 7 Days)</CardTitle>
+              <CardDescription>Number of downloads recorded per day from your history.</CardDescription>
+            </CardHeader>
+            <CardContent className="h-64 flex flex-col justify-between pt-4">
+              {(() => {
+                const { points, path } = buildChartPath(stats.weekly_activity);
+                const maxCount = Math.max(...stats.weekly_activity.map((w) => w.count), 1);
+                return (
+                  <>
+                    <div className="flex-1 w-full relative">
+                      <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                        {/* Grid lines */}
+                        {[50, 100, 150].map((y) => (
+                          <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                        ))}
+                        {/* Gradient fill */}
+                        <defs>
+                          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={`${path} L ${points[points.length - 1].x} 200 L ${points[0].x} 200 Z`}
+                          fill="url(#areaGrad)"
+                        />
+                        <path d={path} fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        {points.map((p, i) => (
+                          <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="4" fill="hsl(var(--primary))" />
+                            {p.count > 0 && (
+                              <text x={p.x} y={p.y - 10} textAnchor="middle" fill="hsl(var(--primary))" fontSize="10" fontWeight="bold">{p.count}</text>
+                            )}
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground pt-4 border-t border-border/40 font-mono">
+                      {stats.weekly_activity.map((w) => (
+                        <span key={w.date}>{new Date(w.date).toLocaleDateString("en", { weekday: "short" })}</span>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Weekly download speed interactive SVG Graph */}
+          {/* Storage by type */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Storage Ratio by Media Type</CardTitle>
+              <CardDescription>Distribution of files scanned from your download directory.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4">
+              {(["videos", "audio", "images", "documents"] as const).map((type) => {
+                const cfg = typeConfig[type];
+                const data = stats.type_breakdown[type];
+                const pct = stats.total_size_bytes > 0
+                  ? Math.round((data.bytes / stats.total_size_bytes) * 100)
+                  : 0;
+                return (
+                  <div key={type} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className={`flex items-center gap-1.5 ${cfg.color}`}>
+                        <cfg.icon className="h-4 w-4" /> {cfg.label}
+                      </span>
+                      <span className="font-mono text-muted-foreground">{pct}% ({data.size})</span>
+                    </div>
+                    <ProgressBar value={pct} size="sm" />
+                  </div>
+                );
+              })}
+              {stats.total_size_bytes === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">No files found in download directory.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {!stats && !loading && (
         <Card>
-          <CardHeader>
-            <CardTitle>Speed Trends (Last 7 Days)</CardTitle>
-            <CardDescription>Average network download speeds over the past week.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-64 flex flex-col justify-between pt-4">
-            {/* Custom SVG line chart */}
-            <div className="flex-1 w-full relative">
-              <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
-                {/* Grid lines */}
-                <line x1="0" y1="50" x2="500" y2="50" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                <line x1="0" y1="100" x2="500" y2="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                <line x1="0" y1="150" x2="500" y2="150" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-
-                {/* Line path */}
-                <path
-                  d="M 10 150 L 80 120 L 160 170 L 240 80 L 320 130 L 400 60 L 480 40"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-
-                {/* Data points */}
-                <circle cx="10" cy="150" r="4" fill="hsl(var(--primary))" />
-                <circle cx="80" cy="120" r="4" fill="hsl(var(--primary))" />
-                <circle cx="160" cy="170" r="4" fill="hsl(var(--primary))" />
-                <circle cx="240" cy="80" r="4" fill="hsl(var(--primary))" />
-                <circle cx="320" cy="130" r="4" fill="hsl(var(--primary))" />
-                <circle cx="400" cy="60" r="4" fill="hsl(var(--primary))" />
-                <circle cx="480" cy="40" r="4" fill="hsl(var(--primary))" />
-              </svg>
-            </div>
-            
-            {/* Days label */}
-            <div className="flex justify-between text-[10px] text-muted-foreground pt-4 border-t border-border/40 font-mono">
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-              <span>Sun</span>
-            </div>
+          <CardContent className="h-48 flex items-center justify-center text-muted-foreground text-sm">
+            No data available. Make sure the API server is running.
           </CardContent>
         </Card>
-
-        {/* Media Formats Allocation */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Storage Ratio by Media Type</CardTitle>
-            <CardDescription>Percentage distribution of files in the download directories.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="flex items-center gap-1.5"><FileVideo className="h-4 w-4 text-blue-500" /> MP4 Video Streams</span>
-                <span className="font-mono">75% (24.3 GB)</span>
-              </div>
-              <ProgressBar value={75} size="sm" />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="flex items-center gap-1.5"><Music className="h-4 w-4 text-emerald-500" /> FLAC/MP3 Audio Tracks</span>
-                <span className="font-mono">15% (4.8 GB)</span>
-              </div>
-              <ProgressBar value={15} size="sm" />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="flex items-center gap-1.5"><Image className="h-4 w-4 text-pink-500" /> Album Cover Images</span>
-                <span className="font-mono">5% (1.6 GB)</span>
-              </div>
-              <ProgressBar value={5} size="sm" />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-semibold">
-                <span className="flex items-center gap-1.5"><FileText className="h-4 w-4 text-neutral-400" /> SRT/VTT Subtitle Logs</span>
-                <span className="font-mono">5% (1.6 GB)</span>
-              </div>
-              <ProgressBar value={5} size="sm" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 };
+
+export default SystemStats;

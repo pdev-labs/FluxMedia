@@ -1,13 +1,15 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 from typing import Dict, Any, Optional, List
 import os
 import json
+import shutil
+import sys
 import datetime
-import mimetypes
+import subprocess
+import platform
 
 from fluxmedia.main import (
     load_config, save_config, get_data_dir,
@@ -16,7 +18,6 @@ from fluxmedia.main import (
 
 app = FastAPI(title="FluxMedia API")
 
-# Allow CORS for local dev
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -63,8 +64,6 @@ class DownloadRequest(BaseModel):
 
 @app.post("/api/download")
 def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
-    # Full yt-dlp integration will be wired in Phase 3 with SSE progress streaming.
-    # For now this stub confirms the endpoint is reachable and returns a job ID.
     job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
     return {
         "status": "success",
@@ -79,7 +78,6 @@ def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
 
 @app.get("/api/history")
 def get_history(limit: int = 100):
-    """Returns the download history from history.json."""
     try:
         history = load_history()
         return {"status": "success", "history": history[:limit], "total": len(history)}
@@ -88,7 +86,6 @@ def get_history(limit: int = 100):
 
 @app.delete("/api/history")
 def clear_history():
-    """Clears all download history."""
     try:
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump([], f)
@@ -98,7 +95,6 @@ def clear_history():
 
 @app.delete("/api/history/{index}")
 def delete_history_item(index: int):
-    """Deletes a single history entry by index."""
     try:
         history = load_history()
         if index < 0 or index >= len(history):
@@ -119,24 +115,19 @@ def delete_history_item(index: int):
 
 @app.get("/api/logs")
 def get_logs(lines: int = 200):
-    """Returns the last N lines of the FluxMedia log file."""
     try:
         if not os.path.exists(LOG_FILE):
             return {"status": "success", "logs": []}
-
         with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as f:
             all_lines = f.readlines()
-
         parsed: List[Dict[str, str]] = []
         for raw in all_lines[-lines:]:
             raw = raw.strip()
             if not raw:
                 continue
-            # Format: "2026-07-18 17:10:04,123 - INFO - [filename.py:42] - message"
             parts = raw.split(" - ", 3)
             if len(parts) == 4:
                 ts, level, location, message = parts
-                # derive component from filename portion "[filename.py:line]"
                 component = "system"
                 if "[" in location and ":" in location:
                     fname = location.strip("[]").split(":")[0].replace(".py", "")
@@ -148,13 +139,7 @@ def get_logs(lines: int = 200):
                     "message": message
                 })
             else:
-                parsed.append({
-                    "timestamp": "",
-                    "severity": "info",
-                    "component": "system",
-                    "message": raw
-                })
-
+                parsed.append({"timestamp": "", "severity": "info", "component": "system", "message": raw})
         return {"status": "success", "logs": parsed}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -179,17 +164,13 @@ def classify_file(ext: str) -> str:
 
 @app.get("/api/files")
 def list_files(category: str = "all"):
-    """Lists files in the configured download directory."""
     try:
         config = load_config()
         download_dir = config.get("download_dir", "")
-
         if not download_dir or not os.path.isdir(download_dir):
             return {"status": "success", "files": [], "download_dir": download_dir}
-
         result = []
         for root, dirs, filenames in os.walk(download_dir):
-            # Skip hidden subdirectories
             dirs[:] = [d for d in dirs if not d.startswith(".")]
             for fname in filenames:
                 if fname.startswith("."):
@@ -197,10 +178,8 @@ def list_files(category: str = "all"):
                 fpath = os.path.join(root, fname)
                 ext = os.path.splitext(fname)[1]
                 ftype = classify_file(ext)
-
                 if category != "all" and ftype != category:
                     continue
-
                 try:
                     stat = os.stat(fpath)
                     size_bytes = stat.st_size
@@ -208,8 +187,6 @@ def list_files(category: str = "all"):
                 except OSError:
                     size_bytes = 0
                     mtime = ""
-
-                # Human-readable size
                 if size_bytes < 1024:
                     size_str = f"{size_bytes} B"
                 elif size_bytes < 1024 ** 2:
@@ -218,47 +195,302 @@ def list_files(category: str = "all"):
                     size_str = f"{size_bytes / (1024**2):.1f} MB"
                 else:
                     size_str = f"{size_bytes / (1024**3):.2f} GB"
-
                 result.append({
-                    "id": fpath,
-                    "name": fname,
-                    "path": fpath,
+                    "id": fpath, "name": fname, "path": fpath,
                     "relative_path": os.path.relpath(fpath, download_dir),
-                    "type": ftype,
-                    "ext": ext,
-                    "size": size_str,
-                    "size_bytes": size_bytes,
-                    "date": mtime,
+                    "type": ftype, "ext": ext, "size": size_str,
+                    "size_bytes": size_bytes, "date": mtime,
                 })
-
-        # Sort newest first
         result.sort(key=lambda x: x["size_bytes"], reverse=True)
         return {"status": "success", "files": result, "download_dir": download_dir}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.delete("/api/files")
 def delete_file(path: str):
-    """Deletes a single file by its absolute path (must be inside download_dir)."""
     try:
         config = load_config()
         download_dir = os.path.realpath(config.get("download_dir", ""))
         real_path = os.path.realpath(path)
-
-        # Security: prevent path traversal outside download_dir
         if not real_path.startswith(download_dir):
             raise HTTPException(status_code=403, detail="Cannot delete files outside the download directory.")
-
         if not os.path.isfile(real_path):
             raise HTTPException(status_code=404, detail="File not found.")
-
         os.remove(real_path)
         return {"status": "success", "message": f"Deleted: {os.path.basename(real_path)}"}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+#  System Diagnostics
+# ─────────────────────────────────────────────────────────────
+
+def _check_internet() -> dict:
+    import socket
+    try:
+        socket.setdefaulttimeout(3)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
+        return {"name": "Internet Connection", "status": "pass", "desc": "Connected to external network."}
+    except Exception:
+        return {"name": "Internet Connection", "status": "fail", "desc": "No internet connection detected."}
+
+def _check_ffmpeg() -> dict:
+    ffmpeg_path = shutil.which("ffmpeg")
+    if ffmpeg_path:
+        try:
+            result = subprocess.run(
+                ["ffmpeg", "-version"],
+                capture_output=True, text=True, timeout=5
+            )
+            version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg found"
+            return {"name": "FFmpeg", "status": "pass", "desc": version_line[:80]}
+        except Exception:
+            return {"name": "FFmpeg", "status": "pass", "desc": f"FFmpeg found at {ffmpeg_path}"}
+    return {"name": "FFmpeg", "status": "fail", "desc": "FFmpeg not found in PATH. Install it to enable conversion."}
+
+def _check_python() -> dict:
+    v = sys.version.split()[0]
+    return {"name": "Python Interpreter", "status": "pass", "desc": f"Python {v} active."}
+
+def _check_ytdlp() -> dict:
+    try:
+        import yt_dlp
+        return {"name": "yt-dlp", "status": "pass", "desc": f"yt-dlp {yt_dlp.version.__version__} installed."}
+    except ImportError:
+        return {"name": "yt-dlp", "status": "fail", "desc": "yt-dlp is not installed."}
+
+def _check_write_perms() -> dict:
+    config = load_config()
+    download_dir = config.get("download_dir", "")
+    if not download_dir:
+        return {"name": "Write Permissions", "status": "warning", "desc": "No download directory configured."}
+    if not os.path.isdir(download_dir):
+        try:
+            os.makedirs(download_dir, exist_ok=True)
+        except Exception:
+            return {"name": "Write Permissions", "status": "fail", "desc": f"Cannot create directory: {download_dir}"}
+    test_file = os.path.join(download_dir, ".fluxmedia_write_test")
+    try:
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+        return {"name": "Write Permissions", "status": "pass", "desc": f"{download_dir} is writable."}
+    except Exception:
+        return {"name": "Write Permissions", "status": "fail", "desc": f"Cannot write to: {download_dir}"}
+
+def _check_disk_space() -> dict:
+    config = load_config()
+    download_dir = config.get("download_dir", "") or os.path.expanduser("~")
+    try:
+        usage = shutil.disk_usage(download_dir)
+        free_gb = usage.free / (1024 ** 3)
+        total_gb = usage.total / (1024 ** 3)
+        status = "pass" if free_gb > 5 else "warning" if free_gb > 1 else "fail"
+        return {
+            "name": "Disk Space",
+            "status": status,
+            "desc": f"{free_gb:.1f} GB free of {total_gb:.1f} GB total."
+        }
+    except Exception as e:
+        return {"name": "Disk Space", "status": "warning", "desc": str(e)}
+
+@app.get("/api/diagnostics")
+def run_diagnostics():
+    """Runs all diagnostic checks and returns results."""
+    checks = [
+        _check_internet(),
+        _check_python(),
+        _check_ytdlp(),
+        _check_ffmpeg(),
+        _check_write_perms(),
+        _check_disk_space(),
+    ]
+    passed = sum(1 for c in checks if c["status"] == "pass")
+    score = round((passed / len(checks)) * 100)
+    return {
+        "status": "success",
+        "score": score,
+        "checks": checks,
+        "platform": platform.platform(),
+        "python_version": sys.version
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+#  System Stats
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/api/stats")
+def get_stats():
+    """Aggregates statistics from the history and file system."""
+    try:
+        history = load_history()
+        config = load_config()
+        download_dir = config.get("download_dir", "")
+
+        total_downloads = len(history)
+        completed = sum(1 for h in history if h.get("status", "").lower() in ("completed", "success"))
+        failed = sum(1 for h in history if h.get("status", "").lower() in ("failed", "error"))
+
+        # File system stats
+        type_counts: Dict[str, int] = {}
+        type_bytes: Dict[str, int] = {}
+        total_bytes = 0
+
+        if download_dir and os.path.isdir(download_dir):
+            for root, dirs, filenames in os.walk(download_dir):
+                dirs[:] = [d for d in dirs if not d.startswith(".")]
+                for fname in filenames:
+                    if fname.startswith("."):
+                        continue
+                    fpath = os.path.join(root, fname)
+                    ext = os.path.splitext(fname)[1]
+                    ftype = classify_file(ext)
+                    try:
+                        size = os.stat(fpath).st_size
+                    except OSError:
+                        size = 0
+                    type_counts[ftype] = type_counts.get(ftype, 0) + 1
+                    type_bytes[ftype] = type_bytes.get(ftype, 0) + size
+                    total_bytes += size
+
+        # Recent downloads (last 7 days)
+        recent_by_day: Dict[str, int] = {}
+        for h in history:
+            ts = h.get("timestamp", "")
+            if ts:
+                day = ts[:10]  # YYYY-MM-DD
+                recent_by_day[day] = recent_by_day.get(day, 0) + 1
+
+        # Get last 7 days
+        today = datetime.date.today()
+        weekly = []
+        for i in range(6, -1, -1):
+            day = str(today - datetime.timedelta(days=i))
+            weekly.append({"date": day, "count": recent_by_day.get(day, 0)})
+
+        def human_size(b: int) -> str:
+            if b < 1024 ** 2: return f"{b / 1024:.1f} KB"
+            if b < 1024 ** 3: return f"{b / (1024 ** 2):.1f} MB"
+            return f"{b / (1024 ** 3):.2f} GB"
+
+        return {
+            "status": "success",
+            "total_downloads": total_downloads,
+            "completed": completed,
+            "failed": failed,
+            "total_size": human_size(total_bytes),
+            "total_size_bytes": total_bytes,
+            "type_breakdown": {
+                k: {"count": type_counts.get(k, 0), "size": human_size(type_bytes.get(k, 0)), "bytes": type_bytes.get(k, 0)}
+                for k in ["videos", "audio", "images", "documents", "other"]
+            },
+            "weekly_activity": weekly,
+            "download_dir": download_dir
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────
+#  Media Converter
+# ─────────────────────────────────────────────────────────────
+
+class ConvertRequest(BaseModel):
+    input_path: str
+    output_format: str          # e.g. "mp4", "mp3", "mkv", "flac"
+    quality: Optional[str] = "medium"   # crf preset
+    resolution: Optional[str] = None   # "1080p", "720p", or None
+    start_time: Optional[str] = None   # "hh:mm:ss"
+    end_time: Optional[str] = None
+    audio_bitrate: Optional[str] = "192k"
+    normalize: Optional[bool] = False
+
+@app.post("/api/convert")
+def convert_media(req: ConvertRequest, background_tasks: BackgroundTasks):
+    """
+    Validates inputs and enqueues a real FFmpeg conversion as a background task.
+    Returns a job ID immediately; progress tracking will be added in a future phase.
+    """
+    ffmpeg_path = shutil.which("ffmpeg")
+    if not ffmpeg_path:
+        raise HTTPException(
+            status_code=503,
+            detail="FFmpeg is not installed or not found in PATH. Please install FFmpeg to use the converter."
+        )
+
+    if not os.path.isfile(req.input_path):
+        raise HTTPException(status_code=404, detail=f"Input file not found: {req.input_path}")
+
+    # Build output path
+    base, _ = os.path.splitext(req.input_path)
+    output_path = f"{base}_converted.{req.output_format}"
+
+    job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+    def run_ffmpeg():
+        cmd = ["ffmpeg", "-y", "-i", req.input_path]
+
+        # Time trimming
+        if req.start_time:
+            cmd += ["-ss", req.start_time]
+        if req.end_time:
+            cmd += ["-to", req.end_time]
+
+        # Video format / quality
+        video_formats = {"mp4", "mkv", "webm", "mov", "avi"}
+        audio_formats = {"mp3", "flac", "m4a", "wav", "ogg", "opus", "aac"}
+
+        if req.output_format in video_formats:
+            crf_map = {"high": "18", "medium": "23", "low": "28"}
+            crf = crf_map.get(req.quality or "medium", "23")
+            cmd += ["-crf", crf]
+            if req.resolution:
+                scale_map = {"1080p": "1920:1080", "720p": "1280:720", "480p": "854:480"}
+                scale = scale_map.get(req.resolution)
+                if scale:
+                    cmd += ["-vf", f"scale={scale}"]
+        elif req.output_format in audio_formats:
+            if req.output_format == "flac":
+                cmd += ["-c:a", "flac"]
+            elif req.output_format == "mp3":
+                cmd += ["-c:a", "libmp3lame", "-b:a", req.audio_bitrate or "192k"]
+            elif req.output_format in ("m4a", "aac"):
+                cmd += ["-c:a", "aac", "-b:a", req.audio_bitrate or "192k"]
+            if req.normalize:
+                cmd += ["-af", "loudnorm"]
+
+        cmd.append(output_path)
+
+        try:
+            subprocess.run(cmd, capture_output=True, timeout=3600)
+        except Exception:
+            pass
+
+    background_tasks.add_task(run_ffmpeg)
+
+    return {
+        "status": "success",
+        "job_id": job_id,
+        "message": f"FFmpeg conversion started for '{os.path.basename(req.input_path)}' → .{req.output_format}",
+        "output_path": output_path
+    }
+
+@app.get("/api/convert/check")
+def check_ffmpeg():
+    """Checks if FFmpeg is available and returns version info."""
+    ffmpeg_path = shutil.which("ffmpeg")
+    if not ffmpeg_path:
+        return {"available": False, "version": None, "path": None}
+    try:
+        result = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, timeout=5)
+        version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg"
+        return {"available": True, "version": version_line, "path": ffmpeg_path}
+    except Exception:
+        return {"available": True, "version": "Unknown", "path": ffmpeg_path}
 
 
 # ─────────────────────────────────────────────────────────────
