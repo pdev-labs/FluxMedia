@@ -30,6 +30,14 @@ import { UpdatesManager } from "./pages/UpdatesManager";
 import { SharingGateway } from "./pages/SharingGateway";
 import { SystemDiagnostics } from "./pages/SystemDiagnostics";
 
+// Extensibility, support, logs, developer, and onboarding imports
+import { HelpCenter } from "./pages/HelpCenter";
+import { FeedbackCenter } from "./pages/FeedbackCenter";
+import { LogCenter } from "./pages/LogCenter";
+import { PluginManager } from "./pages/PluginManager";
+import { DeveloperCenter } from "./pages/DeveloperCenter";
+import { OnboardingWizard } from "./pages/OnboardingWizard";
+
 // General placeholder component for modules implemented in future phases
 const PagePlaceholder: React.FC<{ title: string; desc: string }> = ({ title, desc }) => (
   <div className="flex flex-col gap-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -139,10 +147,45 @@ export const App: React.FC = () => {
             <Route path="/diagnostics/storage" element={<SystemDiagnostics />} />
             <Route path="/diagnostics/report" element={<SystemDiagnostics />} />
 
+            {/* Extensibility & Support modules */}
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/help/getting-started" element={<HelpCenter />} />
+            <Route path="/help/tutorials" element={<HelpCenter />} />
+            <Route path="/help/faq" element={<HelpCenter />} />
+            <Route path="/help/commands" element={<HelpCenter />} />
+            <Route path="/help/troubleshooting" element={<HelpCenter />} />
+            <Route path="/help/releases" element={<HelpCenter />} />
+            <Route path="/help/keyboard-shortcuts" element={<HelpCenter />} />
+            <Route path="/help/search" element={<HelpCenter />} />
+            <Route path="/help/contact" element={<HelpCenter />} />
+
+            <Route path="/feedback" element={<FeedbackCenter />} />
+            <Route path="/feedback/bug" element={<FeedbackCenter />} />
+            <Route path="/feedback/feature" element={<FeedbackCenter />} />
+            <Route path="/feedback/general" element={<FeedbackCenter />} />
+
+            <Route path="/logs" element={<LogCenter />} />
+            <Route path="/logs/application" element={<LogCenter />} />
+            <Route path="/logs/downloads" element={<LogCenter />} />
+            <Route path="/logs/network" element={<LogCenter />} />
+            <Route path="/logs/system" element={<LogCenter />} />
+            <Route path="/logs/debug" element={<LogCenter />} />
+
+            <Route path="/plugins" element={<PluginManager />} />
+            <Route path="/plugins/installed" element={<PluginManager />} />
+            <Route path="/plugins/store" element={<PluginManager />} />
+            <Route path="/plugins/developer" element={<PluginManager />} />
+            <Route path="/plugins/settings" element={<PluginManager />} />
+
+            <Route path="/developer" element={<DeveloperCenter />} />
+            <Route path="/developer/console" element={<DeveloperCenter />} />
+            <Route path="/developer/api" element={<DeveloperCenter />} />
+            <Route path="/developer/system" element={<DeveloperCenter />} />
+            <Route path="/developer/debug" element={<DeveloperCenter />} />
+
+            <Route path="/onboarding" element={<OnboardingWizard />} />
+
             {/* Other System Areas (Placeholders) */}
-            <Route path="/logs" element={<PagePlaceholder title="System Logs" desc="Real-time terminal traceback and application records." />} />
-            <Route path="/feedback" element={<PagePlaceholder title="Send Feedback" desc="Report bugs or request new features directly to developers." />} />
-            <Route path="/help" element={<PagePlaceholder title="Help Center" desc="Check FAQs and learn CLI console shortcuts." />} />
             <Route path="/about" element={<PagePlaceholder title="About Project" desc="Learn about the authors and technology credits." />} />
             
             {/* Fallback */}

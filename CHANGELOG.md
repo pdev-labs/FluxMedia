@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.6.35] - 2026-07-18
+### Added
+- Implemented the complete Extensibility, Support, Developer tools, and Onboarding wizard sub-suites.
+- Formulated Help Center documentation guides (`/help`), Feedback report ticket builders (`/feedback`), live Log Explorer consoles (`/logs`), Plugin Store repositories (`/plugins`), developer console commands (`/developer`), and Welcome wizards (`/onboarding`).
+- Swapped active path routes and verified clean build compilation.
+
 ## [v1.6.34] - 2026-07-18
 ### Added
 - Implemented the complete System Configuration, Updates Center, Sharing Gateway, and Diagnostics suite.

@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.34
+## 📢 Latest Release: v1.6.35
 
-* **FluxMedia Web Settings & Diagnostics**: Completed Settings configuration panels (`/settings`), update timelines (`/updates`), diagnostics scan outputs (`/diagnostics`), and secure LAN QR sharing gateways (`/share`).
+* **FluxMedia Web Support & Extensibility**: Configured Help documentation center (`/help`), bug report ticket submitters (`/feedback`), active log visualizers (`/logs`), plugin stores (`/plugins`), and system onboarding wizard setups (`/onboarding`).
 
 ---
 
