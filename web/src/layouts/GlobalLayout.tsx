@@ -3,6 +3,7 @@ import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import { Footer } from "../components/Footer";
 import { CommandPalette } from "../components/CommandPalette";
+import { SyncPlayer } from "../components/SyncPlayer";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -66,6 +67,7 @@ export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
       />
+      <SyncPlayer />
     </div>
   );
 };

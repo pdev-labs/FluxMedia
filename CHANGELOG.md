@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.6.42] - 2026-07-20
+### Added
+- **Sync Play (Watch Party) (Beta)**: Added a new feature that synchronizes media playback across all connected Web UI devices, fully controlled via the CLI.
+- Added `websockets` dependency to power real-time broadcasting of play, pause, and seek actions.
+- Introduced `SyncRoomManager` to the FastAPI backend to track connected WebSocket clients and expose internal REST endpoints for the CLI.
+- Created `SyncPlayer.tsx` in the React frontend, an overarching modal that automatically listens for WebSocket commands and plays media using HTML5 video tags.
+- Added a new CLI menu option `16. Sync Play (Watch Party) (Beta)` which discovers connected devices and allows the admin to securely select devices and broadcast downloaded media interactively.
 ## [v1.6.41] - 2026-07-20
 ### Added
 - Added option to launch FluxMedia Web (Beta) from the CLI main menu (`W`).

@@ -2946,6 +2946,115 @@ def operation_transcode_media(config: Dict[str, Any]):
     Prompt.ask("\nPress Enter to return...")
 
 
+def operation_sync_play(config: Dict[str, Any]):
+    """Sync Play (Watch Party) Controller"""
+    console.print("\n[bold cyan]=== SYNC PLAY (WATCH PARTY) ===" "[/bold cyan]\n")
+    import requests
+    
+    # 1. Check if server is running
+    server_url = "http://127.0.0.1:8000"
+    try:
+        r = requests.get(f"{server_url}/api/sync/clients", timeout=2)
+        if r.status_code != 200:
+            console.print("[bold red]Failed to fetch clients from Web Server.[/bold red]")
+            Prompt.ask("\nPress Enter to return...")
+            return
+        clients = r.json().get("clients", [])
+    except requests.exceptions.RequestException:
+        console.print("[bold red]Web Server is not running![/bold red]")
+        console.print("Please launch 'FluxMedia Web (Beta)' from the main menu or run `fluxmedia --web` first.")
+        Prompt.ask("\nPress Enter to return...")
+        return
+
+    if not clients:
+        console.print("[yellow]No connected devices found. Please open the Web UI on your devices first.[/yellow]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    # 2. Select file
+    download_dir = os.path.abspath(config.get("download_dir", os.path.join(DATA_DIR, "downloads")))
+    files = []
+    if os.path.exists(download_dir):
+        for f in os.listdir(download_dir):
+            if os.path.isfile(os.path.join(download_dir, f)):
+                files.append(f)
+    if not files:
+        console.print("[yellow]No downloaded files found in the download directory.[/yellow]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    table = Table(title="Available Media", box=box.SIMPLE)
+    table.add_column("No.", style="cyan", width=4)
+    table.add_column("File Name", style="magenta")
+    for idx, f in enumerate(files):
+        table.add_row(str(idx + 1), f)
+    console.print(table)
+    
+    file_choice = Prompt.ask("Select media file to play", choices=[str(i+1) for i in range(len(files))] + ["q"])
+    if file_choice.lower() == 'q':
+        return
+    media_file = files[int(file_choice) - 1]
+    
+    # 3. Select Clients
+    c_table = Table(title="Connected Devices", box=box.SIMPLE)
+    c_table.add_column("ID", style="cyan", width=4)
+    c_table.add_column("Device Name", style="green")
+    for idx, c in enumerate(clients):
+        c_table.add_row(str(idx + 1), c["name"])
+    console.print(c_table)
+    
+    client_choice = Prompt.ask("Select devices to sync (comma separated, or 'all')", default="all")
+    selected_clients = []
+    if client_choice.lower() == 'all':
+        selected_clients = [c["id"] for c in clients]
+    else:
+        indices = [int(i.strip()) for i in client_choice.split(",") if i.strip().isdigit()]
+        for idx in indices:
+            if 1 <= idx <= len(clients):
+                selected_clients.append(clients[idx - 1]["id"])
+                
+    if not selected_clients:
+        console.print("[red]No devices selected.[/red]")
+        Prompt.ask("\nPress Enter to return...")
+        return
+        
+    # 4. Load Media
+    console.print(f"\n[bold green]Loading '{media_file}' on {len(selected_clients)} device(s)...[/bold green]")
+    requests.post(f"{server_url}/api/sync/command", json={
+        "client_ids": selected_clients,
+        "command": "LOAD",
+        "media_url": f"/api/media/{media_file}"
+    })
+    
+    # 5. Control Loop
+    console.print("\n[bold cyan]Sync Controls:[/bold cyan]")
+    console.print("[white][P][/white] Play/Pause")
+    console.print("[white][S][/white] Seek (Set Time)")
+    console.print("[white][Q][/white] Quit Session")
+    
+    while True:
+        cmd = Prompt.ask("\nCommand [P/S/Q]").lower()
+        if cmd == 'q':
+            console.print("[yellow]Closing session...[/yellow]")
+            break
+        elif cmd == 'p':
+            requests.post(f"{server_url}/api/sync/command", json={
+                "client_ids": selected_clients,
+                "command": "TOGGLE_PLAY"
+            })
+            console.print("[green]Toggled Play/Pause.[/green]")
+        elif cmd == 's':
+            try:
+                t = float(Prompt.ask("Enter time in seconds"))
+                requests.post(f"{server_url}/api/sync/command", json={
+                    "client_ids": selected_clients,
+                    "command": "SEEK",
+                    "time": t
+                })
+                console.print(f"[green]Seeked to {t}s.[/green]")
+            except ValueError:
+                console.print("[red]Invalid time.[/red]")
+
 def operation_troubleshooting_guide():
     """Renders an interactive troubleshooting guide directly inside the CLI application."""
     while True:
@@ -4796,12 +4905,13 @@ def main():
             mgmt_table.add_row("[bold green]13.[/bold green] Open Save Folder")
             mgmt_table.add_row("[bold green]14.[/bold green] Transcode Media [dim](Converter)[/dim]")
             mgmt_table.add_row("[bold green]15.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
+            mgmt_table.add_row("[bold green]16.[/bold green] Sync Play (Watch Party) [dim](Beta)[/dim]")
             
             info_table = Table(show_header=False, box=None, padding=(0, 1))
-            info_table.add_row("[bold magenta]16.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
-            info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
-            info_table.add_row("[bold magenta]18.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-            info_table.add_row("[bold red]19.[/bold red] Exit Application [dim](Quit)[/dim]")
+            info_table.add_row("[bold magenta]17.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
+            info_table.add_row("[bold magenta]18.[/bold magenta] About Creator [dim](Credit)[/dim]")
+            info_table.add_row("[bold magenta]19.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold red]20.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
             if console.width >= 100:
@@ -4827,7 +4937,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)] + ["W", "w"], default="19")
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 21)] + ["W", "w"], default="20")
             clear_screen()
             
             if choice.upper() == "W":

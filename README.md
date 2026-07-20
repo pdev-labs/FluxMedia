@@ -16,10 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.41
+## 📢 Latest Release: v1.6.42
 
-* **Menu Additions**: Added option to launch FluxMedia Web (Beta) from the CLI main menu. Marked the Instagram Profile downloader as Beta.
-* **Bug Fixes**: Fixed IDE static analysis issues in the source code, and improved the dependency auto-installer to gracefully handle environments without `pip` or PEP 668 restrictions.
+* **Sync Play (Watch Party) (Beta)**: Added a new feature that synchronizes media playback across all connected Web UI devices, fully controlled via the CLI. It leverages WebSockets to broadcast play, pause, and seek commands instantly to web clients.
 
 ---
 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -14,6 +14,8 @@ import subprocess
 import platform
 import threading
 import yt_dlp
+import uuid
+import asyncio
 
 from fluxmedia.main import (
     load_config, save_config, get_data_dir,
@@ -29,6 +31,86 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ─────────────────────────────────────────────────────────────
+#  Sync Play (Watch Party) WebSocket Manager
+# ─────────────────────────────────────────────────────────────
+
+class SyncRoomManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.device_names: Dict[str, str] = {}
+
+    async def connect(self, websocket: WebSocket, client_id: str, device_name: str):
+        await websocket.accept()
+        self.active_connections[client_id] = websocket
+        self.device_names[client_id] = device_name
+
+    def disconnect(self, client_id: str):
+        if client_id in self.active_connections:
+            del self.active_connections[client_id]
+        if client_id in self.device_names:
+            del self.device_names[client_id]
+
+    async def send_command(self, client_id: str, command: Dict[str, Any]):
+        if client_id in self.active_connections:
+            try:
+                await self.active_connections[client_id].send_json(command)
+            except Exception:
+                self.disconnect(client_id)
+
+sync_manager = SyncRoomManager()
+
+@app.websocket("/api/sync/ws")
+async def websocket_endpoint(websocket: WebSocket, client_id: str = None, device_name: str = "Unknown Device"):
+    if not client_id:
+        client_id = str(uuid.uuid4())
+    await sync_manager.connect(websocket, client_id, device_name)
+    try:
+        while True:
+            # We don't really expect much from the client, maybe pings.
+            data = await websocket.receive_text()
+    except WebSocketDisconnect:
+        sync_manager.disconnect(client_id)
+
+@app.get("/api/sync/clients")
+def get_sync_clients():
+    clients = []
+    for cid, name in sync_manager.device_names.items():
+        clients.append({"id": cid, "name": name})
+    return {"status": "success", "clients": clients}
+
+class SyncCommandRequest(BaseModel):
+    client_ids: List[str]
+    command: str  # "LOAD", "PLAY", "PAUSE", "SEEK"
+    media_url: Optional[str] = None
+    time: Optional[float] = None
+
+@app.post("/api/sync/command")
+async def send_sync_command(req: SyncCommandRequest):
+    payload = {"type": req.command}
+    if req.media_url:
+        payload["url"] = req.media_url
+    if req.time is not None:
+        payload["time"] = req.time
+        
+    for cid in req.client_ids:
+        await sync_manager.send_command(cid, payload)
+    return {"status": "success"}
+
+@app.get("/api/media/{file_path:path}")
+async def serve_media(file_path: str):
+    # Ensure it's inside the downloads directory to prevent path traversal
+    config = load_config()
+    download_dir = os.path.abspath(config.get("download_dir", os.path.join(DATA_DIR, "downloads")))
+    target_path = os.path.abspath(os.path.join(download_dir, file_path))
+    if not target_path.startswith(download_dir):
+        raise HTTPException(status_code=403, detail="Access denied")
+    if not os.path.isfile(target_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(target_path)
+
 
 # ─────────────────────────────────────────────────────────────
 #  Settings
