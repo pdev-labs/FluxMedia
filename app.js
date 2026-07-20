@@ -313,10 +313,46 @@ function applySyncToMedia(media, syncState) {
     media.currentTime = expectedTime;
   }
   if (syncState.state === 'PLAYING' && media.paused) {
-    media.play().catch(() => {});
+    const p = media.play();
+    if (p !== undefined) {
+      p.catch((err) => {
+        if (err.name === 'NotAllowedError') {
+          showAutoplayOverlay(media);
+        }
+      });
+    }
   } else if (syncState.state === 'PAUSED' && !media.paused) {
     media.pause();
   }
+}
+
+function showAutoplayOverlay(media) {
+  if (document.getElementById('autoplay-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'autoplay-overlay';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100vw';
+  overlay.style.height = '100vh';
+  overlay.style.background = 'rgba(0,0,0,0.85)';
+  overlay.style.zIndex = '9999';
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.color = '#fff';
+  overlay.style.cursor = 'pointer';
+  overlay.innerHTML = `
+    <div style="font-size: 64px; margin-bottom: 16px;">▶️</div>
+    <h2 style="font-family: sans-serif; margin: 0 0 8px;">Tap to Start Watch Party</h2>
+    <p style="opacity: 0.7; font-family: sans-serif; margin: 0;">Browser requires interaction to play media.</p>
+  `;
+  overlay.onclick = () => {
+    media.play().catch(()=>{});
+    overlay.remove();
+  };
+  document.body.appendChild(overlay);
 }
 
 function applyLockMode(playerEl, mode) {

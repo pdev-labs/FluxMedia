@@ -16,8 +16,10 @@
 
 ---
 
-## 📢 Latest Release: v1.6.53
+## 📢 Latest Release: v1.6.54
 
+* **Watch Party Auto-Play Fixed**: Watch Party host now forces playback immediately when starting a session, fixing an issue where streams would remain paused. If a browser blocks automatic playback, it now displays a prominent "Tap to Start" overlay.
+* **Watch Party Host Waiting Flow**: The CLI now properly waits and displays a live-updating table of connected devices for the host to review before proceeding to the device selection stage.
 * **Full Watch Party in Share Portal**: Connected devices now appear in a live panel (FAB or tab mode) with green pulsing dots for SYNCED vs grey for WATCHING. The CLI host picks which devices to sync, and the browser clients automatically seek and play/pause in real time.
 * **Audio + Video Sync**: Both audio and video files are now properly synchronized across devices — the portal auto-detects `media_type` and applies sync to the correct player.
 * **Sync Lock Modes**: Strict (full lock) or Loose (volume/fullscreen allowed) — user-configurable in Settings.

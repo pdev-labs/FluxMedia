@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.6.54] - 2026-07-20
+### Fixed
+- **Watch Party Host Waiting Flow**: Fixed an issue where the host CLI (`operation_sync_play`) would skip the waiting screen immediately upon the first device joining. It now continuously shows a live-updating table of connected devices and waits for the host to press 'c' to continue.
+- **Watch Party Autoplay**: Fixed an issue where media would start in a `PAUSED` state. The host now automatically starts media in a `PLAYING` state when a file is selected.
+- **Browser Autoplay Blocks**: Added an overlay in the web portal to catch `NotAllowedError`. If a browser blocks automatic playback, it now shows a prominent "Tap to Start Watch Party" overlay to allow playback to begin seamlessly.
+
 ## [v1.6.53] - 2026-07-20
 ### Added
 - **Watch Party device management in portal**: The Share Portal web UI now shows a live "Watch Party" panel with all connected devices (auto-named from User-Agent — iPhone, Android, Windows PC, Mac, Linux). Each device shows whether it is SYNCED (green pulsing dot) or WATCHING (grey).
