@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.50] - 2026-07-20
+### Enhancements
+- **Sync Play**: `operation_sync_play` now seamlessly starts the Web UI server in the background if it isn't running and generates a QR code to let mobile devices easily join the Watch Party. It also waits intelligently for clients to connect before proceeding.
+
 ## [v1.6.49] - 2026-07-20
 ### Fixed
 - Fixed `open_folder` bug on Windows Subsystem for Linux (WSL) by gracefully falling back to `wslview` and `explorer.exe`.

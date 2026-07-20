@@ -16,7 +16,7 @@
 
 ---
 
-## 📢 Latest Release: v1.6.49
+## 📢 Latest Release: v1.6.50
 
 * **Cross-Platform Fixes**: Fixed native file explorer launching specifically on Windows Subsystem for Linux (WSL) and Termux (Android). Hardened file paths throughout the system to use universally safe path joins.
 

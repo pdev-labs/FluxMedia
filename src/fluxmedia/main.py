@@ -612,7 +612,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.6.25"
+    CURRENT_VERSION = "1.6.50"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
@@ -2118,11 +2118,8 @@ PORTAL_CSS = _decode_resource(PORTAL_CSS_COMPRESSED)
 PORTAL_JS = _decode_resource(PORTAL_JS_COMPRESSED)
 
 
-def start_share_server(config: Dict[str, Any]):
-    """Starts a local HTTP server in the downloads directory and prints a QR code for mobile connection."""
-    print_header()
-    console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
-    
+def print_qr_code(share_url: str, message: str = "Scan this QR code:") -> bool:
+    """Helper to print a QR code to the console."""
     try:
         import qrcode # type: ignore
     except ImportError:
@@ -2132,28 +2129,15 @@ def start_share_server(config: Dict[str, Any]):
                 import qrcode # type: ignore
             else:
                 console.print("[bold red]Failed to install 'qrcode'. Cannot print QR code.[/bold red]")
-                Prompt.ask("\nPress Enter to return...")
-                return
+                return False
         else:
-            Prompt.ask("\nPress Enter to return...")
-            return
+            return False
             
-    dest_dir = config.get("download_dir", get_default_download_dir())
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir, exist_ok=True)
-        
-    local_ip = get_local_ip()
-    port = config.get("web_port", 8000)
-    share_url = f"http://{local_ip}:{port}"
-    
-    console.print(f"📁 Sharing Folder: [bold white]{dest_dir}[/bold white]")
-    console.print(f"🔗 LAN Link: [bold green]{share_url}[/bold green]\n")
-    
     qr = qrcode.QRCode(version=1, border=1)
     qr.add_data(share_url)
     qr.make(fit=True)
     
-    console.print("[bold white]Scan this QR code to access download folder on your phone/tablet:[/bold white]")
+    console.print(f"[bold white]{message}[/bold white]")
     
     try:
         matrix = qr.get_matrix()
@@ -2168,6 +2152,27 @@ def start_share_server(config: Dict[str, Any]):
     except Exception as e:
         console.print(f"[yellow]Failed to render custom QR. Falling back to default printer: {e}[/yellow]")
         qr.print_ascii(invert=True)
+    return True
+
+def start_share_server(config: Dict[str, Any]):
+    """Starts a local HTTP server in the downloads directory and prints a QR code for mobile connection."""
+    print_header()
+    console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
+    
+    dest_dir = config.get("download_dir", get_default_download_dir())
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir, exist_ok=True)
+        
+    local_ip = get_local_ip()
+    port = config.get("web_port", 8000)
+    share_url = f"http://{local_ip}:{port}"
+    
+    console.print(f"📁 Sharing Folder: [bold white]{dest_dir}[/bold white]")
+    console.print(f"🔗 LAN Link: [bold green]{share_url}[/bold green]\n")
+    
+    if not print_qr_code(share_url, "Scan this QR code to access download folder on your phone/tablet:"):
+        Prompt.ask("\nPress Enter to return...")
+        return
         
     console.print("\n[bold yellow]HTTP File Server running. Press Ctrl+C to stop sharing...[/bold yellow]")
     
@@ -2647,39 +2652,26 @@ def start_share_server(config: Dict[str, Any]):
         httpd = None
         max_attempts = 20
         socketserver.TCPServer.allow_reuse_address = True
+        new_port = port
         for attempt in range(max_attempts):
             try:
-                httpd = socketserver.TCPServer(("", port), SilentHandler)
+                httpd = socketserver.TCPServer(("", new_port), SilentHandler)
                 break
             except OSError:
-                port += 1
+                new_port += 1
                 
         if not httpd:
             console.print("[bold red]Error: Could not allocate an open port for the share server.[/bold red]")
             Prompt.ask("\nPress Enter to return...")
             return
             
-        share_url = f"http://{local_ip}:{port}"
+        share_url = f"http://{local_ip}:{new_port}"
         # Regenerate QR if port changed
-        if port != 8000:
+        if new_port != port:
+            port = new_port
             console.print(f"[yellow]Port 8000 was busy. Switched to port {port}.[/yellow]")
-            console.print(f"🔗 LAN Link: [bold green]{share_url}[/bold green]\n")
-            qr = qrcode.QRCode(version=1, border=1)
-            qr.add_data(share_url)
-            qr.make(fit=True)
-            console.print("[bold white]Scan this updated QR code:[/bold white]")
-            try:
-                matrix = qr.get_matrix()
-                for r in range(len(matrix)):
-                    row_str = ""
-                    for c in range(len(matrix[r])):
-                        if matrix[r][c]:
-                            row_str += "██"
-                        else:
-                            row_str += "  "
-                    console.print(row_str, style="white on black" if sys.platform.startswith("win") else "black on white")
-            except Exception:
-                qr.print_ascii(invert=True)
+            share_url = f"http://{local_ip}:{port}"
+            print_qr_code(share_url, "Scan this updated QR code:")
                 
         with httpd:
             try:
@@ -2952,25 +2944,67 @@ def operation_sync_play(config: Dict[str, Any]):
     import requests
     
     # 1. Check if server is running
-    server_url = "http://127.0.0.1:8000"
+    server_port = config.get("web_port", 8000)
+    server_url = f"http://127.0.0.1:{server_port}"
+    server_running = False
     try:
         r = requests.get(f"{server_url}/api/sync/clients", timeout=2)
-        if r.status_code != 200:
-            console.print("[bold red]Failed to fetch clients from Web Server.[/bold red]")
+        if r.status_code == 200:
+            server_running = True
+    except requests.exceptions.RequestException:
+        pass
+        
+    if not server_running:
+        console.print("[yellow]Web Server is not running. Starting it automatically in the background...[/yellow]")
+        import threading
+        import time
+        from fluxmedia.api import run_server
+        
+        server_thread = threading.Thread(target=run_server, args=(server_port, "0.0.0.0"), daemon=True)
+        server_thread.start()
+        
+        # Wait a bit for the server to spin up
+        for _ in range(5):
+            time.sleep(1)
+            try:
+                r = requests.get(f"{server_url}/api/sync/clients", timeout=1)
+                if r.status_code == 200:
+                    server_running = True
+                    break
+            except requests.exceptions.RequestException:
+                pass
+                
+        if not server_running:
+            console.print("[bold red]Failed to start Web Server.[/bold red]")
             Prompt.ask("\nPress Enter to return...")
             return
-        clients = r.json().get("clients", [])
-    except requests.exceptions.RequestException:
-        console.print("[bold red]Web Server is not running![/bold red]")
-        console.print("Please launch 'FluxMedia Web (Beta)' from the main menu or run `fluxmedia --web` first.")
-        Prompt.ask("\nPress Enter to return...")
-        return
 
-    if not clients:
-        console.print("[yellow]No connected devices found. Please open the Web UI on your devices first.[/yellow]")
+    # Show QR Code for users to join the Watch Party easily
+    local_ip = get_local_ip()
+    share_url = f"http://{local_ip}:{server_port}"
+    console.print(f"🔗 Watch Party LAN Link: [bold green]{share_url}[/bold green]\n")
+    print_qr_code(share_url, "Scan this QR code to join the Watch Party on your phone/tablet:")
+    
+    # 2. Wait for clients
+    console.print("\n[yellow]Waiting for devices to connect... (Press Ctrl+C twice to cancel)[/yellow]")
+    clients = []
+    import time
+    try:
+        while True:
+            r = requests.get(f"{server_url}/api/sync/clients", timeout=2)
+            if r.status_code == 200:
+                clients = r.json().get("clients", [])
+                if clients:
+                    break
+            time.sleep(2)
+    except KeyboardInterrupt:
+        return
+    except Exception as e:
+        console.print(f"[bold red]Error fetching clients: {e}[/bold red]")
         Prompt.ask("\nPress Enter to return...")
         return
         
+    console.print(f"[green]Found {len(clients)} connected device(s)![/green]")
     # 2. Select file
     download_dir = os.path.abspath(config.get("download_dir", os.path.join(DATA_DIR, "downloads")))
     files = []
