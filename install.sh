@@ -155,6 +155,14 @@ install_dependencies() {
             cmd="sudo pacman -S python-pip pipx ffmpeg --noconfirm"
         elif command -v dnf &> /dev/null; then
             cmd="sudo dnf install python3-pip pipx ffmpeg -y"
+        elif command -v zypper &> /dev/null; then
+            cmd="sudo zypper install -y python3-pip pipx ffmpeg"
+        elif command -v apk &> /dev/null; then
+            cmd="sudo apk add python3 py3-pip pipx ffmpeg"
+        elif command -v xbps-install &> /dev/null; then
+            cmd="sudo xbps-install -Sy python3-pip pipx ffmpeg"
+        else
+            echo -e "\n${YELLOW}Unsupported package manager. Please install Python and FFmpeg manually.${NC}"
         fi
     fi
     
@@ -198,6 +206,12 @@ uninstall_ffmpeg() {
             cmd="sudo pacman -R ffmpeg --noconfirm || true"
         elif command -v dnf &> /dev/null; then
             cmd="sudo dnf remove ffmpeg -y || true"
+        elif command -v zypper &> /dev/null; then
+            cmd="sudo zypper remove -y ffmpeg || true"
+        elif command -v apk &> /dev/null; then
+            cmd="sudo apk del ffmpeg || true"
+        elif command -v xbps-remove &> /dev/null; then
+            cmd="sudo xbps-remove -y ffmpeg || true"
         fi
     fi
     

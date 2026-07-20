@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.45
+## 📢 Latest Release: v1.6.46
 
-* **Bug Fixes**: Fixed a bug in `install.sh` where using the arrow keys to navigate the interactive menu caused the script to exit immediately due to Bash `set -e` interpreting index arithmetic as a failure code.
+* **Expanded OS Support**: Expanded Linux platform compatibility in `install.sh` by adding native dependency resolution for `apk` (Alpine), `zypper` (openSUSE), and `xbps` (Void Linux) package managers. The setup script now fully supports virtually all Linux distros, macOS, and Termux natively.
 
 ---
 

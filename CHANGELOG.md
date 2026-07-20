@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.6.46] - 2026-07-20
+### Added
+- Expanded Linux platform compatibility in `install.sh` by adding native dependency resolution for `apk` (Alpine), `zypper` (openSUSE), and `xbps` (Void Linux) package managers. The setup script now fully supports virtually all Linux distros, macOS, and Termux natively.
 ## [v1.6.45] - 2026-07-20
 ### Fixed
 - Fixed a bug in `install.sh` where using the arrow keys to navigate the interactive menu caused the script to exit immediately due to Bash `set -e` interpreting `((selected++))` as a failure code.
