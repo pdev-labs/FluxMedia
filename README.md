@@ -16,19 +16,21 @@
 
 ---
 
-## 📢 Latest Release: v1.6.47
+## 📢 Latest Release: v1.6.48
 
-* **Repository Maintenance**: Cleaned up the repository by permanently deleting unused files and unorganized folders from the root directory to keep the codebase clean.
+* **Documentation Updated**: Updated the README to reflect all the new features we've added, including the FluxMedia Web UI, Sync Play Watch Parties, the Instagram Downloader, and universal setup support!
 
 ---
 
 ## 🌟 Key Features
 
 * **Universal Extraction Core**: Seamlessly download high-quality videos, playlists, audio streams, channel collections, and subtitles powered by a robust wrapper around `yt-dlp`.
+* **Sync Play (Watch Party) [Beta]**: Synchronize media playback across all connected devices on your local network, perfect for hosting local watch parties.
+* **FluxMedia Web UI**: A beautiful, responsive React-based web dashboard to remotely control your downloads, manage files, and host Watch Parties directly from your browser.
 * **Built-in LAN Sharing Gateway**: Share downloaded files instantly to any device on your local network using a built-in password-protected HTTP server with QR code access.
-* **Responsive Interfaces**: Choose between a clean, direct command-line menu, an interactive Textual-powered TUI dashboard, or a lightweight web interface.
+* **Instagram Profile Downloader [Beta]**: Batch download media directly from Instagram profiles with our new custom extraction module.
 * **Advanced Post-Processing**: Automatically extract audio (MP3/M4A/FLAC), merge separate audio/video formats, inject descriptions and tags, and embed album artwork via FFmpeg.
-* **Network & Account Resilience**: Support for HTTP Range Requests (smooth video scrubbing on mobile browsers), customizable speed throttling, and browser cookie synchronization to bypass security checks.
+* **Universal OS Support**: The one-liner `install.sh` script automatically resolves dependencies across macOS (brew), Android Termux (pkg), and virtually all Linux package managers (`apt`, `pacman`, `dnf`, `apk`, `zypper`, `xbps`).
 
 ---
 
@@ -66,6 +68,11 @@ pip install fluxmedia
 Launch the interactive console portal:
 ```bash
 fluxmedia
+```
+
+Launch the newly added Web UI dashboard (also accessible by pressing `W` in the main menu):
+```bash
+fluxmedia --web
 ```
 
 Or open the Textual TUI dashboard directly:

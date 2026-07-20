@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.6.48] - 2026-07-20
+### Documentation
+- Updated `README.md` to formally feature the newly implemented FluxMedia Web UI, Sync Play (Watch Party) [Beta], Instagram Profile Downloader [Beta], and Universal OS Setup enhancements.
 ## [v1.6.47] - 2026-07-20
 ### Removed
 - Cleaned up the repository by permanently deleting unused files and unorganized folders (`index.html`, `style.css`, `app.js`, `assets/`, `test_pyright.py`, etc.) from the root directory to keep the codebase clean.
