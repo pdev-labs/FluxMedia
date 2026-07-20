@@ -45,11 +45,21 @@
 
 ### 1. Installation
 
-Install FluxMedia directly via `pip`:
+**Linux / macOS (Bash):**
+```bash
+curl -sL https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iex (irm https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.ps1)
+```
+
+Alternatively, you can install directly via `pip`:
 ```bash
 pip install fluxmedia
 ```
-*For detailed, OS-specific installation instructions (including setting up FFmpeg), please check the **[Installation Guide](docs/installation.md)**.*
+*For detailed, OS-specific manual installation instructions, please check the **[Installation Guide](docs/installation.md)**.*
 
 ### 2. Usage
 

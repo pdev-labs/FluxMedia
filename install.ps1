@@ -1,6 +1,17 @@
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Elevate privileges if not running as Administrator
+if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "Elevating privileges to Administrator..." -ForegroundColor Yellow
+    if ($PSCommandPath) {
+        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    } else {
+        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"iex (irm https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.ps1)`""
+    }
+    Exit
+}
+
 # Unicode definitions (immune to file encoding corruption)
 $e_sparkle = [char]::ConvertFromUtf32(0x2728)
 $e_hour = [char]::ConvertFromUtf32(0x23F3)

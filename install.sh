@@ -2,6 +2,12 @@
 
 set -e
 
+# --- Request sudo upfront if available ---
+if [ "$EUID" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+    echo "This script may require administrative privileges to install dependencies."
+    sudo -v || { echo "Failed to get sudo privileges. Exiting."; exit 1; }
+fi
+
 # --- UI Colors and Styles ---
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
@@ -31,7 +37,7 @@ print_logo() {
 pause_and_return() {
     echo ""
     echo -e "${GREEN}Operation completed successfully!${NC}"
-    read -p "Press Enter to return to main menu..."
+    read -p "Press Enter to return to main menu..." < /dev/tty
 }
 
 # --- Real-Time Progress Spinner ---
@@ -94,9 +100,9 @@ show_menu() {
         done
         
         # Read 1 char. If it's escape, read two more for arrow sequences.
-        read -rsn1 key
+        read -rsn1 key < /dev/tty
         if [[ $key == $'\e' ]]; then
-            read -rsn2 key
+            read -rsn2 key < /dev/tty
             if [[ $key == "[A" ]]; then # Up arrow
                 ((selected--))
                 if [ $selected -lt 0 ]; then selected=$((${#options[@]} - 1)); fi
@@ -264,7 +270,7 @@ show_uninstall_menu() {
                 print_logo
                 echo -e "\n⚠️  ${RED}CRITICAL WARNING${NC} ⚠️"
                 echo -e "${YELLOW}Removing Python completely may break other scripts or tools.${NC}"
-                read -p "Are you absolutely sure you want to remove Python? (y/N) " confirm
+                read -p "Are you absolutely sure you want to remove Python? (y/N) " confirm < /dev/tty
                 if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
                     uninstall_fluxmedia
                     uninstall_ffmpeg
