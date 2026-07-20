@@ -206,7 +206,8 @@ function initSyncPlay() {
     method: 'POST',
     body: JSON.stringify({
       client_id: state.syncPlay.clientId,
-      device_name: state.syncPlay.deviceName
+      device_name: state.syncPlay.deviceName,
+      player_state: getPlayerState()
     })
   }).catch(() => {});
 
@@ -222,10 +223,31 @@ function initSyncPlay() {
       method: 'POST',
       body: JSON.stringify({
         client_id: state.syncPlay.clientId,
-        device_name: state.syncPlay.deviceName
+        device_name: state.syncPlay.deviceName,
+        player_state: getPlayerState()
       })
     }).catch(() => {});
   }, 1000);
+}
+
+function getPlayerState() {
+  if (!state.syncPlay.active) return 'IDLE';
+  
+  let media = null;
+  if (state.syncPlay.media_type === 'video') {
+    media = document.getElementById('native-video-el');
+  } else if (state.syncPlay.media_type === 'audio') {
+    media = globalAudio;
+  }
+  
+  if (!media || !media.src) return 'IDLE';
+
+  const overlay = document.getElementById('autoplay-overlay');
+  if (overlay && !overlay.classList.contains('hidden')) return 'BLOCKED';
+  
+  if (media.readyState < 3) return 'BUFFERING';
+  
+  return media.paused ? 'PAUSED' : 'PLAYING';
 }
 
 function handleSyncState(newState) {
@@ -321,7 +343,7 @@ function applySyncToMedia(media, syncState) {
         }
       });
     }
-  } else if (syncState.state === 'PAUSED' && !media.paused) {
+  } else if ((syncState.state === 'PAUSED' || syncState.state === 'WAITING') && !media.paused) {
     media.pause();
   }
 }

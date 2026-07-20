@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.56] - 2026-07-20
+### Added
+- **Synchronous Playback Barrier**: Added a distributed state barrier for Watch Parties. If any synced device stops playback (due to internet buffering or a browser autoplay block), the host CLI will automatically detect it and transition the entire Watch Party into a "Waiting" state. Playback will only resume once every synced device reports it is ready to play.
+
 ## [v1.6.55] - 2026-07-20
 ### Fixed
 - **Mobile Browser Caching**: Added `Cache-Control` headers and cache-busting query strings to the portal's UI assets. This fixes an issue where Android and iOS devices would load a stale, cached version of the portal from an earlier version and fail to connect to the Watch Party.
