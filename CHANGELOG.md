@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.51] - 2026-07-20
+### Enhancements
+- **Menu Simplification**: Consolidated the "Sync Play (Watch Party)" feature into the "Share via QR-Code (LAN)" menu to reduce top-level menu clutter and unify networking features.
+
 ## [v1.6.50] - 2026-07-20
 ### Enhancements
 - **Sync Play**: `operation_sync_play` now seamlessly starts the Web UI server in the background if it isn't running and generates a QR code to let mobile devices easily join the Watch Party. It also waits intelligently for clients to connect before proceeding.

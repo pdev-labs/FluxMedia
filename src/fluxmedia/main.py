@@ -612,7 +612,7 @@ try:
     from importlib.metadata import version
     CURRENT_VERSION = version("fluxmedia")
 except Exception:
-    CURRENT_VERSION = "1.6.50"
+    CURRENT_VERSION = "1.6.51"
 
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
@@ -2827,7 +2827,8 @@ def operation_share_via_qr(config: Dict[str, Any]):
         menu_table = Table(show_header=False, box=None, padding=(0, 2))
         menu_table.add_row("[bold green]1.[/bold green] Start Share Server")
         menu_table.add_row("[bold green]2.[/bold green] Share Portal Settings")
-        menu_table.add_row("[bold red]3.[/bold red] Back to Main Menu")
+        menu_table.add_row("[bold green]3.[/bold green] Sync Play (Watch Party) [dim](Beta)[/dim]")
+        menu_table.add_row("[bold red]4.[/bold red] Back to Main Menu")
         
         console.print(Panel(
             menu_table,
@@ -2836,7 +2837,7 @@ def operation_share_via_qr(config: Dict[str, Any]):
             padding=(1, 2)
         ))
         
-        choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="3")
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
         clear_screen()
         
         if choice == "1":
@@ -2844,6 +2845,8 @@ def operation_share_via_qr(config: Dict[str, Any]):
         elif choice == "2":
             configure_share_settings(config)
         elif choice == "3":
+            operation_sync_play(config)
+        elif choice == "4":
             break
 
 
@@ -4951,13 +4954,12 @@ def main():
             mgmt_table.add_row("[bold green]13.[/bold green] Open Save Folder")
             mgmt_table.add_row("[bold green]14.[/bold green] Transcode Media [dim](Converter)[/dim]")
             mgmt_table.add_row("[bold green]15.[/bold green] Share via QR-Code [dim](LAN)[/dim]")
-            mgmt_table.add_row("[bold green]16.[/bold green] Sync Play (Watch Party) [dim](Beta)[/dim]")
             
             info_table = Table(show_header=False, box=None, padding=(0, 1))
-            info_table.add_row("[bold magenta]17.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
-            info_table.add_row("[bold magenta]18.[/bold magenta] About Creator [dim](Credit)[/dim]")
-            info_table.add_row("[bold magenta]19.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
-            info_table.add_row("[bold red]20.[/bold red] Exit Application [dim](Quit)[/dim]")
+            info_table.add_row("[bold magenta]16.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
+            info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
+            info_table.add_row("[bold magenta]18.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold red]19.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
             if console.width >= 100:
@@ -4983,7 +4985,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 21)] + ["W", "w"], default="20")
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)] + ["W", "w"], default="19")
             clear_screen()
             
             if choice.upper() == "W":
@@ -5031,14 +5033,12 @@ def main():
             elif choice == "15":
                 operation_share_via_qr(config)
             elif choice == "16":
-                operation_sync_play(config)
-            elif choice == "17":
                 operation_troubleshooting_guide()
-            elif choice == "18":
+            elif choice == "17":
                 operation_about_creator()
-            elif choice == "19":
+            elif choice == "18":
                 operation_report_bug_feedback()
-            elif choice == "20":
+            elif choice == "19":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
         except KeyboardInterrupt:
