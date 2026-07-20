@@ -1,5 +1,21 @@
 # Changelog
 
+## [v1.6.53] - 2026-07-20
+### Added
+- **Watch Party device management in portal**: The Share Portal web UI now shows a live "Watch Party" panel with all connected devices (auto-named from User-Agent — iPhone, Android, Windows PC, Mac, Linux). Each device shows whether it is SYNCED (green pulsing dot) or WATCHING (grey).
+- **Selective device sync from CLI**: `operation_sync_play` now presents a table of connected devices and lets the host choose exactly which devices to push media to (by number, comma-separated, or 'all'). A `D` command in the control loop lets the host change the sync list mid-session without stopping.
+- **Audio + Video sync support**: Both audio and video files are now fully supported — the portal detects `media_type` from the API response and applies sync to the correct player (`<video>` or global `<audio>`).
+- **Sync banner in players**: A branded "Watch Party Mode" banner appears at the top of the video/audio player whenever the device is being synced by the host.
+- **Two panel modes (Floating / Tab)**: Users can switch between a FAB button (floating bottom-right) and a tab icon in the header via Settings > Watch Party > Panel Style.
+- **Two sync lock modes (Strict / Loose)**: Strict disables all player controls when synced; Loose only locks seek and play/pause but allows volume/fullscreen. Configurable per-device in Settings.
+- **Custom device naming**: Users can override the auto-detected device name in Settings > Watch Party > Device Name.
+- **LIVE badge + Now Playing**: The Watch Party panel shows a pulsing LIVE badge and the currently playing file name/type when a session is active.
+
+### Improved
+- **`/api/sync/ping`** now returns `{"synced": bool}` so the browser client immediately knows its sync status after each heartbeat.
+- **`/api/sync/state`** returns full client list with per-device sync status (`id`, `name`, `synced`), auto-pruning stale clients not seen in 10+ seconds.
+- `SYNC_STATE` expanded to include `media_type`, `file_name`, `synced_clients` (set), and `all_clients` (dict with `name`, `last_seen`).
+
 ## [v1.6.52] - 2026-07-20
 ### Enhancements
 - **Sync Play via Share Portal**: Fully migrated the Watch Party feature into the built-in Share Portal web server. The CLI `operation_sync_play` now spins up `start_share_server` in headless background mode, updates a global `SYNC_STATE` dict in-memory, and exposes two new REST endpoints (`GET /api/sync/state`, `POST /api/sync/ping`) to coordinate playback across devices.

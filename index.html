@@ -152,6 +152,18 @@
       <g id="icon-playlist-add">
         <path d="M14 10H3v2h11v-2zm0-4H3v2h11V6zM3 16h7v-2H3v2zm11-1v-3h2v3h3v2h-3v3h-2v-3h-3v-2h3z"/>
       </g>
+      <!-- Watch Party / People Icon -->
+      <g id="icon-party">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </g>
+      <!-- Sync / Refresh Icon -->
+      <g id="icon-sync">
+        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+      </g>
+      <!-- Lock Outline Icon -->
+      <g id="icon-lock-outline">
+        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM12 17c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+      </g>
     </defs>
   </svg>
 
@@ -207,7 +219,12 @@
           <span id="status-pill" class="status-pill m3-label-medium">Loading files...</span>
         </div>
       </div>
-      <div class="header-actions">
+      <!-- Watch Party Tab Button (visible if tab mode enabled) -->
+        <button id="watch-party-tab-btn" class="m3-icon-btn watch-party-tab-btn hidden" aria-label="Watch Party" title="Watch Party">
+          <svg><use href="#icon-party"></use></svg>
+          <span id="watch-party-tab-badge" class="watch-party-tab-badge hidden">0</span>
+        </button>
+
         <!-- Playlist Toggle -->
         <button id="playlist-toggle-btn" class="m3-icon-btn" aria-label="Toggle Playlist">
           <svg><use href="#icon-playlist"></use></svg>
@@ -442,6 +459,32 @@
 
   </div>
 
+  <!-- WATCH PARTY FLOATING PANEL (FAB mode) -->
+  <div id="watch-party-fab-container" class="watch-party-fab-container hidden">
+    <button id="watch-party-fab-btn" class="watch-party-fab-btn" aria-label="Watch Party">
+      <svg class="fab-icon"><use href="#icon-party"></use></svg>
+      <span id="watch-party-fab-badge" class="watch-party-fab-badge hidden">0</span>
+      <span class="watch-party-live-dot" id="watch-party-live-dot"></span>
+    </button>
+    <div id="watch-party-fab-panel" class="watch-party-fab-panel hidden">
+      <div class="wp-panel-header">
+        <span class="wp-panel-title">Watch Party</span>
+        <span id="wp-live-badge" class="wp-live-badge hidden">LIVE</span>
+      </div>
+      <div id="wp-now-playing" class="wp-now-playing hidden">
+        <div class="wp-np-icon" id="wp-np-icon">🎬</div>
+        <div class="wp-np-info">
+          <span class="wp-np-label">Now Playing</span>
+          <span id="wp-np-title" class="wp-np-title">—</span>
+        </div>
+      </div>
+      <div class="wp-section-label">Connected Devices</div>
+      <div id="wp-device-list" class="wp-device-list">
+        <div class="wp-no-devices">No devices connected</div>
+      </div>
+    </div>
+  </div>
+
   <!-- MEDIA VIEWER MODAL (POPUP LAYOUT) -->
   <div id="viewer-modal" class="viewer-modal hidden" role="dialog" aria-modal="true" aria-label="File Preview">
     <div class="modal-backdrop" id="modal-backdrop"></div>
@@ -471,6 +514,14 @@
         
         <!-- VIDEO VIEWER CONTAINER -->
         <div id="viewer-video-container" class="viewer-container hidden">
+          <!-- Watch Party Sync Banner (shown when this device is synced) -->
+          <div id="video-sync-banner" class="sync-banner hidden">
+            <div class="sync-banner-inner">
+              <svg class="sync-banner-icon"><use href="#icon-party"></use></svg>
+              <span class="sync-banner-text">🎬 Watch Party Mode</span>
+              <span id="video-sync-lock-icon" class="sync-lock-icon" title="Controls locked by host">🔒</span>
+            </div>
+          </div>
           <div class="custom-video-player" id="custom-video-player">
             <video id="native-video-el" playsinline preload="auto"></video>
             
@@ -558,6 +609,14 @@
 
         <!-- AUDIO VIEWER CONTAINER -->
         <div id="viewer-audio-container" class="viewer-container hidden">
+          <!-- Watch Party Sync Banner for Audio -->
+          <div id="audio-sync-banner" class="sync-banner hidden">
+            <div class="sync-banner-inner">
+              <svg class="sync-banner-icon"><use href="#icon-party"></use></svg>
+              <span class="sync-banner-text">🎵 Watch Party Mode</span>
+              <span id="audio-sync-lock-icon" class="sync-lock-icon" title="Controls locked by host">🔒</span>
+            </div>
+          </div>
           <div class="custom-audio-player-modal">
             <div class="audio-cover-art-container">
               <img id="audio-large-cover" class="audio-large-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236750A4'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E" alt="Album Cover">
@@ -666,7 +725,7 @@
 
   <!-- SETTINGS MODAL -->
   <div id="settings-modal" class="hidden" style="z-index: 1500; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
-    <div class="m3-card" style="width: 320px; padding: 24px; display: flex; flex-direction: column; gap: 16px; background-color: var(--md-sys-color-surface-container); border-radius: 12px; position: relative;">
+    <div class="m3-card" style="width: 360px; max-height: 80vh; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; background-color: var(--md-sys-color-surface-container); border-radius: 12px; position: relative;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h3 class="m3-title-large" style="color: var(--md-sys-color-on-surface);">Settings</h3>
         <button id="settings-close-btn" class="m3-icon-btn"><svg><use href="#icon-close"></use></svg></button>
@@ -675,6 +734,41 @@
         <span class="m3-body-large" style="color: var(--md-sys-color-on-surface);">Color Tone</span>
         <input type="color" id="theme-color-picker" title="Select color tone" value="#6750A4" style="width: 28px; height: 28px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 4px;">
       </div>
+
+      <!-- Watch Party Settings -->
+      <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin-top: 8px; padding-top: 16px;">
+        <h4 class="m3-title-medium" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">⚡ Watch Party</h4>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span class="m3-body-large" style="color: var(--md-sys-color-on-surface);">Device Name</span>
+              <p class="m3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;">Shown to the host in CLI</p>
+            </div>
+            <input type="text" id="wp-device-name-input" class="wp-settings-input" maxlength="24" placeholder="My Phone" style="width: 120px;">
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span class="m3-body-large" style="color: var(--md-sys-color-on-surface);">Panel Style</span>
+              <p class="m3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;">Floating button or Tab in header</p>
+            </div>
+            <select id="wp-panel-mode-select" class="wp-settings-select">
+              <option value="fab">Floating</option>
+              <option value="tab">Tab</option>
+            </select>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span class="m3-body-large" style="color: var(--md-sys-color-on-surface);">Sync Lock Mode</span>
+              <p class="m3-body-small" style="color: var(--md-sys-color-on-surface-variant); margin: 0;">Strict: full lock. Loose: volume/fullscreen ok</p>
+            </div>
+            <select id="wp-lock-mode-select" class="wp-settings-select">
+              <option value="loose">Loose</option>
+              <option value="strict">Strict</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin-top: 8px; padding-top: 16px;">
         <h4 class="m3-title-medium" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">Keyboard Shortcuts</h4>
         <div style="display: flex; flex-direction: column; gap: 8px;">

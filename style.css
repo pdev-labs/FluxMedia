@@ -2176,3 +2176,345 @@ body.select-mode .audio-mini-player {
   }
 }
 
+/* ==========================================================================
+   WATCH PARTY / SYNC PLAY STYLES
+   ========================================================================== */
+
+/* --- Animations --- */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(76, 175, 80, 0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- Watch Party FAB Container --- */
+.watch-party-fab-container {
+  position: fixed;
+  bottom: 100px; /* above mini player */
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* --- Watch Party FAB Button --- */
+.watch-party-fab-btn {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--md-sys-color-primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--elevation-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  color: var(--md-sys-color-on-primary);
+}
+.watch-party-fab-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--elevation-4);
+}
+.watch-party-fab-btn .fab-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+/* FAB badge (device count) */
+.watch-party-fab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--md-sys-color-surface);
+}
+
+/* LIVE pulsing green dot */
+.watch-party-live-dot {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4CAF50;
+  border: 2px solid var(--md-sys-color-surface);
+  display: none;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.watch-party-fab-btn.is-live .watch-party-live-dot {
+  display: block;
+}
+
+/* --- Watch Party Floating Panel --- */
+.watch-party-fab-panel {
+  width: 300px;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  box-shadow: var(--elevation-4);
+  overflow: hidden;
+  animation: fadeInUp 0.25s ease;
+}
+.dark .watch-party-fab-panel {
+  background: rgba(30, 25, 40, 0.92);
+  backdrop-filter: blur(16px);
+}
+
+.wp-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.wp-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: 0.02em;
+}
+.wp-live-badge {
+  background: linear-gradient(135deg, #e53935, #c62828);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  animation: pulse-live 2s ease-in-out infinite;
+}
+
+/* Now Playing strip */
+.wp-now-playing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--md-sys-color-primary-container);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.wp-np-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.wp-np-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.wp-np-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--md-sys-color-on-primary-container);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.wp-np-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-primary-container);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+/* Device list */
+.wp-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 10px 16px 4px;
+}
+.wp-device-list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wp-device-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: 10px;
+  transition: background var(--transition-fast);
+  animation: slideInRight 0.2s ease;
+}
+.wp-device-row:hover {
+  background: var(--md-sys-color-surface-variant);
+}
+.wp-device-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.wp-device-dot.synced {
+  background: #4CAF50;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+.wp-device-dot.connected {
+  background: var(--md-sys-color-outline);
+}
+.wp-device-name {
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface);
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wp-device-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+}
+.wp-device-tag.synced {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4CAF50;
+}
+.wp-device-tag.watching {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.wp-no-devices {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-style: italic;
+}
+
+/* --- Watch Party Tab Button (header) --- */
+.watch-party-tab-btn {
+  position: relative;
+}
+.watch-party-tab-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+/* --- Sync Banner (shown in player when device is synced) --- */
+.sync-banner {
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(135deg, rgba(103, 80, 164, 0.95), rgba(49, 19, 102, 0.95));
+  backdrop-filter: blur(8px);
+  border-radius: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.dark .sync-banner {
+  background: linear-gradient(135deg, rgba(80, 60, 130, 0.97), rgba(30, 15, 70, 0.97));
+}
+.sync-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+.sync-banner-icon {
+  width: 18px;
+  height: 18px;
+  fill: rgba(255,255,255,0.9);
+  flex-shrink: 0;
+}
+.sync-banner-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+.sync-lock-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* --- Settings inputs for Watch Party --- */
+.wp-settings-input {
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.wp-settings-input:focus {
+  border-color: var(--md-sys-color-primary);
+}
+.wp-settings-select {
+  background: var(--md-sys-color-surface-variant);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+.wp-settings-select:focus {
+  border-color: var(--md-sys-color-primary);
+}
+
+/* Player lock overlay: strict mode covers controls */
+.controls-locked .controls-bar-container {
+  pointer-events: none;
+  opacity: 0.6;
+  filter: blur(1px);
+}
+.controls-locked-loose .timeline-container,
+.controls-locked-loose .controls-left button:first-child {
+  pointer-events: none;
+  opacity: 0.55;
+}

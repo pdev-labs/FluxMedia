@@ -16,13 +16,16 @@
 
 ---
 
-## 📢 Latest Release: v1.6.52
+## 📢 Latest Release: v1.6.53
 
-* **Sync Play via Share Portal**: Watch Party is now fully integrated into the built-in Share Portal web server. No separate backend required — devices connect, poll `/api/sync/state`, and automatically follow the master CLI's play/pause/seek commands in real time.
-* **Polling-based Browser Sync**: The portal's `app.js` registers each visiting browser client and polls the server every second to stay synchronized — videos seek and play/pause automatically on all connected devices.
-* **Headless Server Mode**: `start_share_server` now supports a `headless=True` mode so Sync Play can silently spin up the server in the background without blocking the CLI.
+* **Full Watch Party in Share Portal**: Connected devices now appear in a live panel (FAB or tab mode) with green pulsing dots for SYNCED vs grey for WATCHING. The CLI host picks which devices to sync, and the browser clients automatically seek and play/pause in real time.
+* **Audio + Video Sync**: Both audio and video files are now properly synchronized across devices — the portal auto-detects `media_type` and applies sync to the correct player.
+* **Sync Lock Modes**: Strict (full lock) or Loose (volume/fullscreen allowed) — user-configurable in Settings.
+* **Custom Device Names**: Each device auto-detects its name (iPhone, Android, Mac...) and lets users override it in Settings > Watch Party.
+* **Mid-session Device Management**: Use the `D` command in the Watch Party CLI control loop to add or remove devices from sync without stopping the session.
 
 ---
+
 
 ## 🌟 Key Features
 

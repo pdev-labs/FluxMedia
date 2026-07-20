@@ -53,10 +53,17 @@ const state = {
   syncPlay: {
     active: false,
     file_idx: null,
+    media_type: null,
+    file_name: null,
     state: "PAUSED",
     time: 0.0,
     clientId: window.crypto && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
-    last_update: 0.0
+    last_update: 0.0,
+    isSynced: false,
+    clients: [],
+    panelMode: safeStorage.getItem('wpPanelMode') || 'fab',
+    lockMode: safeStorage.getItem('wpLockMode') || 'loose',
+    deviceName: safeStorage.getItem('wpDeviceName') || detectDeviceName()
   }
 };
 
@@ -163,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   loadPortalData();
   initSyncPlay();
+  initWatchPartySettings();
 });
 
 // Create invisible global audio elements
@@ -173,67 +181,288 @@ function initGlobalAudio() {
   document.body.appendChild(globalAudio);
 }
 
-// Sync Play Polling
+/* ===========================================================================
+   WATCH PARTY — SYNC PLAY
+   ===========================================================================*/
+
+/** Auto-detect a friendly device name from User-Agent */
+function detectDeviceName() {
+  const ua = navigator.userAgent || '';
+  if (/iPhone/i.test(ua)) return '📱 iPhone';
+  if (/iPad/i.test(ua)) return '📱 iPad';
+  if (/Android.*Mobile/i.test(ua)) return '📱 Android Phone';
+  if (/Android/i.test(ua)) return '📱 Android Tablet';
+  if (/Macintosh/i.test(ua)) return '🖥 Mac';
+  if (/Windows/i.test(ua)) return '💻 Windows PC';
+  if (/Linux/i.test(ua)) return '🖥 Linux';
+  return '🌐 Browser';
+}
+
 function initSyncPlay() {
-  // Ping the server to register this client
+  applyWatchPartyPanelMode(state.syncPlay.panelMode);
+
+  // Register client on page load
   apiFetch('/api/sync/ping', {
     method: 'POST',
-    body: JSON.stringify({ client_id: state.syncPlay.clientId })
+    body: JSON.stringify({
+      client_id: state.syncPlay.clientId,
+      device_name: state.syncPlay.deviceName
+    })
   }).catch(() => {});
 
-  // Poll for sync state every 1s
+  // Poll every 1 second
   setInterval(async () => {
     try {
       const res = await apiFetch('/api/sync/state');
-      if (res && res.active !== undefined) {
-        handleSyncState(res);
-      }
-    } catch (e) {
-      // Ignore network errors during polling
-    }
+      if (res && res.active !== undefined) handleSyncState(res);
+    } catch (e) { /* ignore polling errors */ }
+
+    // Heartbeat ping
+    apiFetch('/api/sync/ping', {
+      method: 'POST',
+      body: JSON.stringify({
+        client_id: state.syncPlay.clientId,
+        device_name: state.syncPlay.deviceName
+      })
+    }).catch(() => {});
   }, 1000);
 }
 
 function handleSyncState(newState) {
   const wasActive = state.syncPlay.active;
   const oldFileIdx = state.syncPlay.file_idx;
-  
-  state.syncPlay.active = newState.active;
-  state.syncPlay.file_idx = newState.file_idx;
-  state.syncPlay.state = newState.state;
-  state.syncPlay.time = newState.time;
+
+  state.syncPlay.active    = newState.active;
+  state.syncPlay.file_idx  = newState.file_idx;
+  state.syncPlay.media_type= newState.media_type;
+  state.syncPlay.file_name = newState.file_name;
+  state.syncPlay.state     = newState.state;
+  state.syncPlay.time      = newState.time;
   state.syncPlay.last_update = newState.last_update;
+  state.syncPlay.clients   = newState.clients || [];
+
+  const isSynced = state.syncPlay.clients.some(
+    c => c.id === state.syncPlay.clientId && c.synced
+  );
+  const wasSync = state.syncPlay.isSynced;
+  state.syncPlay.isSynced = isSynced;
+
+  // Update device panel
+  renderWatchPartyPanel(newState);
 
   if (newState.active) {
-    // If a new file is loaded
-    if (newState.file_idx !== null && newState.file_idx !== oldFileIdx) {
+    // Auto-open file if newly synced and file changed
+    if (isSynced && newState.file_idx !== null && newState.file_idx !== oldFileIdx) {
       if (state.files && state.files.length > newState.file_idx) {
         const fileToPlay = state.files[newState.file_idx];
         openPreviewModal(fileToPlay, state.files);
       }
     }
-    
-    // Apply sync state to video player if it is currently open
-    const video = document.getElementById('native-video-el');
-    if (video && video.src && !document.getElementById('viewer-video-container').classList.contains('hidden')) {
-      const expectedTime = newState.state === "PLAYING" 
-          ? newState.time + (Date.now() / 1000 - newState.last_update)
-          : newState.time;
-          
-      // If time difference is significant, seek
-      if (Math.abs(video.currentTime - expectedTime) > 1.5) {
-        video.currentTime = expectedTime;
-      }
-      
-      if (newState.state === "PLAYING" && video.paused) {
-        video.play().catch(()=>{});
-      } else if (newState.state === "PAUSED" && !video.paused) {
-        video.pause();
+
+    // Apply playback sync
+    if (isSynced) {
+      const mediaType = newState.media_type;
+      if (mediaType === 'video') {
+        const video = document.getElementById('native-video-el');
+        const container = document.getElementById('viewer-video-container');
+        if (video && video.src && container && !container.classList.contains('hidden')) {
+          applySyncToMedia(video, newState);
+          applyLockMode(document.getElementById('custom-video-player'), state.syncPlay.lockMode);
+        }
+      } else if (mediaType === 'audio') {
+        if (globalAudio && globalAudio.src) {
+          applySyncToMedia(globalAudio, newState);
+        }
       }
     }
-  } else if (wasActive && !newState.active) {
-    // Sync was active but now stopped, maybe show a toast
-    showToast("Watch Party has ended.");
+  }
+
+  // Sync banner
+  const videoBanner = document.getElementById('video-sync-banner');
+  const audioBanner = document.getElementById('audio-sync-banner');
+  const lockIcon = document.getElementById('video-sync-lock-icon');
+  const audioLockIcon = document.getElementById('audio-sync-lock-icon');
+
+  if (videoBanner) videoBanner.classList.toggle('hidden', !(isSynced && newState.active && newState.media_type === 'video'));
+  if (audioBanner) audioBanner.classList.toggle('hidden', !(isSynced && newState.active && newState.media_type === 'audio'));
+
+  const lockText = state.syncPlay.lockMode === 'strict' ? '🔒' : '🔓';
+  if (lockIcon) lockIcon.textContent = lockText;
+  if (audioLockIcon) audioLockIcon.textContent = lockText;
+
+  if (!isSynced || !newState.active) {
+    // Unlock player if no longer synced
+    const vp = document.getElementById('custom-video-player');
+    if (vp) { vp.classList.remove('controls-locked', 'controls-locked-loose'); }
+  }
+
+  if (wasActive && !newState.active) {
+    showToast('Watch Party has ended.');
+  }
+  if (!wasSync && isSynced && newState.active) {
+    showToast('🎬 Watch Party sync active!');
+  }
+}
+
+function applySyncToMedia(media, syncState) {
+  const expectedTime = syncState.state === 'PLAYING'
+    ? syncState.time + (Date.now() / 1000 - syncState.last_update)
+    : syncState.time;
+
+  if (Math.abs(media.currentTime - expectedTime) > 1.5) {
+    media.currentTime = expectedTime;
+  }
+  if (syncState.state === 'PLAYING' && media.paused) {
+    media.play().catch(() => {});
+  } else if (syncState.state === 'PAUSED' && !media.paused) {
+    media.pause();
+  }
+}
+
+function applyLockMode(playerEl, mode) {
+  if (!playerEl) return;
+  playerEl.classList.remove('controls-locked', 'controls-locked-loose');
+  if (mode === 'strict') playerEl.classList.add('controls-locked');
+  else if (mode === 'loose') playerEl.classList.add('controls-locked-loose');
+}
+
+function renderWatchPartyPanel(syncData) {
+  const clients = syncData.clients || [];
+  const totalClients = clients.length;
+  const isLive = syncData.active;
+
+  // Update FAB badge
+  const fabBadge = document.getElementById('watch-party-fab-badge');
+  const tabBadge = document.getElementById('watch-party-tab-badge');
+  const fabBtn = document.getElementById('watch-party-fab-btn');
+  const fabContainer = document.getElementById('watch-party-fab-container');
+  const tabBtn = document.getElementById('watch-party-tab-btn');
+
+  if (totalClients > 0 || isLive) {
+    if (fabContainer && state.syncPlay.panelMode === 'fab') fabContainer.classList.remove('hidden');
+    if (tabBtn && state.syncPlay.panelMode === 'tab') tabBtn.classList.remove('hidden');
+
+    if (fabBadge) {
+      fabBadge.textContent = totalClients;
+      fabBadge.classList.toggle('hidden', totalClients === 0);
+    }
+    if (tabBadge) {
+      tabBadge.textContent = totalClients;
+      tabBadge.classList.toggle('hidden', totalClients === 0);
+    }
+  }
+
+  // Live dot on FAB
+  if (fabBtn) fabBtn.classList.toggle('is-live', isLive);
+
+  // LIVE badge
+  const liveBadge = document.getElementById('wp-live-badge');
+  if (liveBadge) liveBadge.classList.toggle('hidden', !isLive);
+
+  // Now Playing
+  const npEl = document.getElementById('wp-now-playing');
+  const npTitle = document.getElementById('wp-np-title');
+  const npIcon = document.getElementById('wp-np-icon');
+  if (npEl) {
+    if (isLive && syncData.file_name) {
+      npEl.classList.remove('hidden');
+      if (npTitle) npTitle.textContent = syncData.file_name;
+      if (npIcon) npIcon.textContent = syncData.media_type === 'audio' ? '🎵' : '🎬';
+    } else {
+      npEl.classList.add('hidden');
+    }
+  }
+
+  // Device list
+  const listEl = document.getElementById('wp-device-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  if (clients.length === 0) {
+    listEl.innerHTML = '<div class="wp-no-devices">No devices connected</div>';
+    return;
+  }
+
+  clients.forEach(client => {
+    const row = document.createElement('div');
+    row.className = 'wp-device-row';
+    const isMe = client.id === state.syncPlay.clientId;
+    const dotClass = client.synced ? 'synced' : 'connected';
+    const tag = client.synced ? '<span class="wp-device-tag synced">SYNCED</span>' : '<span class="wp-device-tag watching">WATCHING</span>';
+    row.innerHTML = `
+      <span class="wp-device-dot ${dotClass}"></span>
+      <span class="wp-device-name">${escapeHtml(client.name)}${isMe ? ' <span style="opacity:0.5;font-size:10px">(you)</span>' : ''}</span>
+      ${tag}
+    `;
+    listEl.appendChild(row);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function applyWatchPartyPanelMode(mode) {
+  const fab = document.getElementById('watch-party-fab-container');
+  const tab = document.getElementById('watch-party-tab-btn');
+  if (fab) fab.classList.toggle('hidden', mode !== 'fab');
+  if (tab) tab.classList.toggle('hidden', mode !== 'tab');
+}
+
+function initWatchPartySettings() {
+  const nameInput = document.getElementById('wp-device-name-input');
+  const panelSelect = document.getElementById('wp-panel-mode-select');
+  const lockSelect = document.getElementById('wp-lock-mode-select');
+
+  if (nameInput) {
+    nameInput.value = state.syncPlay.deviceName;
+    nameInput.addEventListener('change', () => {
+      const val = nameInput.value.trim() || detectDeviceName();
+      state.syncPlay.deviceName = val;
+      safeStorage.setItem('wpDeviceName', val);
+    });
+  }
+  if (panelSelect) {
+    panelSelect.value = state.syncPlay.panelMode;
+    panelSelect.addEventListener('change', () => {
+      state.syncPlay.panelMode = panelSelect.value;
+      safeStorage.setItem('wpPanelMode', panelSelect.value);
+      applyWatchPartyPanelMode(panelSelect.value);
+    });
+  }
+  if (lockSelect) {
+    lockSelect.value = state.syncPlay.lockMode;
+    lockSelect.addEventListener('change', () => {
+      state.syncPlay.lockMode = lockSelect.value;
+      safeStorage.setItem('wpLockMode', lockSelect.value);
+    });
+  }
+
+  // Watch Party FAB toggle panel
+  const fabBtn = document.getElementById('watch-party-fab-btn');
+  const fabPanel = document.getElementById('watch-party-fab-panel');
+  if (fabBtn && fabPanel) {
+    fabBtn.addEventListener('click', () => {
+      fabPanel.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (!fabBtn.contains(e.target) && !fabPanel.contains(e.target)) {
+        fabPanel.classList.add('hidden');
+      }
+    });
+  }
+
+  // Watch Party tab button → toggle FAB panel or scroll to it
+  const tabBtn = document.getElementById('watch-party-tab-btn');
+  if (tabBtn && fabPanel) {
+    tabBtn.addEventListener('click', () => {
+      fabPanel.classList.toggle('hidden');
+      if (!fabPanel.classList.contains('hidden')) {
+        // Temporarily show fab container without positioning constraint
+        const fab = document.getElementById('watch-party-fab-container');
+        if (fab) fab.classList.remove('hidden');
+      }
+    });
   }
 }
 
