@@ -100,14 +100,14 @@ show_menu() {
         done
         
         # Read 1 char. If it's escape, read two more for arrow sequences.
-        read -rsn1 key < /dev/tty
+        read -rsn1 key < /dev/tty || true
         if [[ $key == $'\e' ]]; then
-            read -rsn2 key < /dev/tty
+            read -rsn2 key < /dev/tty || true
             if [[ $key == "[A" ]]; then # Up arrow
-                ((selected--))
+                selected=$((selected - 1))
                 if [ $selected -lt 0 ]; then selected=$((${#options[@]} - 1)); fi
             elif [[ $key == "[B" ]]; then # Down arrow
-                ((selected++))
+                selected=$((selected + 1))
                 if [ $selected -ge ${#options[@]} ]; then selected=0; fi
             fi
         elif [[ $key == "" ]]; then # Enter key

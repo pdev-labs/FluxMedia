@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.44
+## 📢 Latest Release: v1.6.45
 
-* **Bug Fixes**: Fixed an issue where selecting option `16` (Sync Play) in the CLI main menu incorrectly opened the Troubleshooting Guide due to outdated index mappings.
+* **Bug Fixes**: Fixed a bug in `install.sh` where using the arrow keys to navigate the interactive menu caused the script to exit immediately due to Bash `set -e` interpreting index arithmetic as a failure code.
 
 ---
 

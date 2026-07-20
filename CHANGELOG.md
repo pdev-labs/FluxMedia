@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.6.45] - 2026-07-20
+### Fixed
+- Fixed a bug in `install.sh` where using the arrow keys to navigate the interactive menu caused the script to exit immediately due to Bash `set -e` interpreting `((selected++))` as a failure code.
 ## [v1.6.44] - 2026-07-20
 ### Fixed
 - Fixed an issue where selecting option `16` (Sync Play) in the CLI main menu incorrectly opened the Troubleshooting Guide due to outdated index mappings.
