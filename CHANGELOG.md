@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.6.49] - 2026-07-20
+### Fixed
+- Fixed `open_folder` bug on Windows Subsystem for Linux (WSL) by gracefully falling back to `wslview` and `explorer.exe`.
+- Fixed `open_folder` bug on Termux (Android) by implementing the `termux-open` API to correctly launch the native Android file manager.
+- Hardened cross-platform stability by rigorously verifying that all path concatenations correctly use `os.path.join()`.
 ## [v1.6.48] - 2026-07-20
 ### Documentation
 - Updated `README.md` to formally feature the newly implemented FluxMedia Web UI, Sync Play (Watch Party) [Beta], Instagram Profile Downloader [Beta], and Universal OS Setup enhancements.

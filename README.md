@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.48
+## 📢 Latest Release: v1.6.49
 
-* **Documentation Updated**: Updated the README to reflect all the new features we've added, including the FluxMedia Web UI, Sync Play Watch Parties, the Instagram Downloader, and universal setup support!
+* **Cross-Platform Fixes**: Fixed native file explorer launching specifically on Windows Subsystem for Linux (WSL) and Termux (Android). Hardened file paths throughout the system to use universally safe path joins.
 
 ---
 

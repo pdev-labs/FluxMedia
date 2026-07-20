@@ -3606,13 +3606,19 @@ def operation_update_ytdlp():
     Prompt.ask("\nPress Enter to return to menu...")
 
 def open_folder_android(dest_dir: str) -> bool:
-    """Prints the download folder path on Android/Termux, removing the open files app option."""
+    """Opens the download folder path on Android/Termux."""
     abs_path = os.path.abspath(dest_dir)
-    if console:
-        console.print(f"\n[bold green]Downloads Folder Path:[/bold green]\n{abs_path}")
-    else:
-        print(f"\nDownloads Folder Path:\n{abs_path}")
-    return True
+    try:
+        subprocess.run(["termux-open", abs_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if console:
+            console.print("[bold green]Folder opened successfully![/bold green]")
+        return True
+    except Exception:
+        if console:
+            console.print(f"\n[bold green]Downloads Folder Path:[/bold green]\n{abs_path}")
+        else:
+            print(f"\nDownloads Folder Path:\n{abs_path}")
+        return True
 
 def open_folder(config: Dict[str, Any], dest_dir: str) -> bool:
     """Opens the downloads directory in the corresponding platform file explorer."""
@@ -3637,7 +3643,13 @@ def open_folder(config: Dict[str, Any], dest_dir: str) -> bool:
             console.print("[bold green]Folder opened successfully![/bold green]")
             return True
         else:
-            subprocess.run(["xdg-open", dest_dir], check=True)
+            if hasattr(platform, "uname") and "microsoft" in platform.uname().release.lower():
+                try:
+                    subprocess.run(["wslview", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception:
+                    subprocess.run(["explorer.exe", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                subprocess.run(["xdg-open", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             console.print("[bold green]Folder opened successfully![/bold green]")
             return True
     except Exception as e:
