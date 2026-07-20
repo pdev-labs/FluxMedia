@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.39
+## 📢 Latest Release: v1.6.40
 
-* **Bug Fixes**: Fixed an issue where the Instagram downloader failed if the username input contained a leading `@`.
+* **Material Design 3 Migration**: Completed a full UI migration of FluxMedia Web to Material Design 3. Refactored UI components to use native MUI v6 layout structures and implemented a dynamic theme context provider.
 
 ---
 

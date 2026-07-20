@@ -1,7 +1,7 @@
 import React from "react";
 import { Search, Bell, Download, Sun, Moon, Sparkles, User, Laptop } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
-import { Button } from "./ui/Button";
+import { AppBar, Toolbar, IconButton, Box, Typography } from "@mui/material";
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -12,73 +12,94 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, onCommandPaletteTo
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuToggle}
-          className="rounded-md p-1.5 hover:bg-secondary lg:hidden"
-          aria-label="Toggle Navigation Menu"
-        >
-          <span className="block h-5 w-5 border-y-2 border-current" />
-        </button>
-        
-        <div className="flex items-center gap-2 font-bold tracking-tight">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <span className="hidden sm:inline-block">FluxMedia</span>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Web</span>
-        </div>
-      </div>
+    <AppBar 
+      position="sticky" 
+      color="inherit" 
+      elevation={0} 
+      sx={{ 
+        borderBottom: 1, 
+        borderColor: 'divider', 
+        bgcolor: 'background.paper',
+        backgroundImage: 'none',
+      }}
+    >
+      <Toolbar variant="dense" sx={{ minHeight: 56, gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="Toggle Navigation Menu"
+            onClick={onMenuToggle}
+            sx={{ display: { lg: 'none' } }}
+          >
+            <span className="block h-5 w-5 border-y-2 border-current" />
+          </IconButton>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', height: 28, width: 28, alignItems: 'center', justifyContent: 'center', borderRadius: 2, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+              <Sparkles className="h-4 w-4" />
+            </Box>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ display: { xs: 'none', sm: 'block' }, lineHeight: 1 }}>
+              FluxMedia
+            </Typography>
+            <Box sx={{ borderRadius: 4, bgcolor: 'primary.light', color: 'primary.dark', px: 1, py: 0.25, fontSize: '0.625rem', fontWeight: 'bold', display: { xs: 'none', sm: 'block' } }}>
+              Web
+            </Box>
+          </Box>
+        </Box>
 
-      {/* Global Search and Shortcuts */}
-      <div className="flex flex-1 items-center justify-center px-4 max-w-lg">
-        <button
-          onClick={onCommandPaletteToggle}
-          className="flex h-9 w-full items-center justify-between rounded-md border border-border bg-secondary/50 px-3 text-xs text-muted-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-        >
-          <span className="flex items-center gap-2">
-            <Search className="h-3.5 w-3.5" />
-            Search pages, commands...
-          </span>
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-0.5 rounded border border-border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
-            <span>Ctrl</span>+<span>K</span>
-          </kbd>
-        </button>
-      </div>
+        {/* Global Search and Shortcuts */}
+        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', px: 2 }}>
+          <Box
+            component="button"
+            onClick={onCommandPaletteToggle}
+            sx={{
+              display: 'flex', height: 36, width: '100%', maxWidth: 400, alignItems: 'center', justifyContent: 'space-between',
+              borderRadius: 1.5, border: 1, borderColor: 'divider', bgcolor: 'action.hover', px: 1.5,
+              typography: 'caption', color: 'text.secondary', cursor: 'pointer',
+              '&:hover': { bgcolor: 'action.selected' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Search className="h-4 w-4" />
+              Search pages, commands...
+            </Box>
+            <Box sx={{ display: { xs: 'none', sm: 'flex' }, height: 20, alignItems: 'center', gap: 0.5, borderRadius: 1, border: 1, borderColor: 'divider', bgcolor: 'background.default', px: 0.5, fontFamily: 'monospace', fontSize: '0.625rem', fontWeight: 'medium' }}>
+              <span>Ctrl</span>+<span>K</span>
+            </Box>
+          </Box>
+        </Box>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Quick Download">
-          <Download className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Notifications">
-          <Bell className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-        </Button>
-        
-        {/* Theme Switcher Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => {
-            if (theme === "dark") setTheme("light");
-            else if (theme === "light") setTheme("contrast");
-            else setTheme("dark");
-          }}
-          aria-label="Toggle Theme"
-        >
-          {theme === "dark" && <Moon className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
-          {theme === "light" && <Sun className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
-          {theme === "contrast" && <Laptop className="h-4 w-4 text-muted-foreground hover:text-foreground" />}
-        </Button>
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton size="small" aria-label="Quick Download">
+            <Download className="h-4 w-4" />
+          </IconButton>
+          <IconButton size="small" aria-label="Notifications">
+            <Bell className="h-4 w-4" />
+          </IconButton>
+          
+          <IconButton
+            size="small"
+            onClick={() => {
+              if (theme === "dark") setTheme("light");
+              else if (theme === "light") setTheme("contrast");
+              else setTheme("dark");
+            }}
+            aria-label="Toggle Theme"
+          >
+            {theme === "dark" && <Moon className="h-4 w-4" />}
+            {theme === "light" && <Sun className="h-4 w-4" />}
+            {theme === "contrast" && <Laptop className="h-4 w-4" />}
+          </IconButton>
 
-        <span className="mx-1 h-4 w-[1px] bg-border" />
+          <Box sx={{ mx: 0.5, height: 16, width: 1, bgcolor: 'divider' }} />
 
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-secondary">
-          <User className="h-4 w-4 text-muted-foreground" />
-        </Button>
-      </div>
-    </header>
+          <IconButton size="small" sx={{ bgcolor: 'action.selected' }}>
+            <User className="h-4 w-4" />
+          </IconButton>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };

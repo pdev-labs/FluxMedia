@@ -1,4 +1,5 @@
 import React, { forwardRef } from "react";
+import { Button as MuiButton, IconButton, CircularProgress } from "@mui/material";
 import { cn } from "../../utils/cn";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,36 +10,71 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
+    // Map custom variants to MUI variants and colors
+    let muiVariant: "text" | "outlined" | "contained" = "contained";
+    let muiColor: "primary" | "secondary" | "error" | "inherit" | "info" = "primary";
+    
+    switch (variant) {
+      case "primary":
+        muiVariant = "contained";
+        muiColor = "primary";
+        break;
+      case "secondary":
+        muiVariant = "contained";
+        muiColor = "secondary";
+        break;
+      case "destructive":
+        muiVariant = "contained";
+        muiColor = "error";
+        break;
+      case "outline":
+        muiVariant = "outlined";
+        muiColor = "inherit";
+        break;
+      case "ghost":
+        muiVariant = "text";
+        muiColor = "inherit";
+        break;
+      case "link":
+        muiVariant = "text";
+        muiColor = "primary";
+        break;
+    }
+
+    // Map custom sizes to MUI sizes
+    let muiSize: "small" | "medium" | "large" = "medium";
+    if (size === "sm") muiSize = "small";
+    if (size === "lg") muiSize = "large";
+
+    // Handle Icon Button
+    if (size === "icon") {
+      return (
+        <IconButton
+          ref={ref as any}
+          disabled={disabled || isLoading}
+          color={muiColor as any}
+          className={className}
+          size="small"
+          {...(props as any)}
+        >
+          {isLoading ? <CircularProgress size={20} color="inherit" /> : children}
+        </IconButton>
+      );
+    }
+
     return (
-      <button
-        ref={ref}
+      <MuiButton
+        ref={ref as any}
         disabled={disabled || isLoading}
-        className={cn(
-          "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
-          // Variants
-          variant === "primary" && "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-          variant === "secondary" && "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-          variant === "destructive" && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-          variant === "outline" && "border border-border bg-transparent hover:bg-secondary hover:text-secondary-foreground",
-          variant === "ghost" && "hover:bg-secondary hover:text-secondary-foreground bg-transparent",
-          variant === "link" && "text-primary underline-offset-4 hover:underline bg-transparent p-0",
-          // Sizes
-          size === "sm" && "h-8 px-3 text-xs gap-1.5",
-          size === "md" && "h-10 px-4 text-sm gap-2",
-          size === "lg" && "h-12 px-6 text-base gap-3",
-          size === "icon" && "h-10 w-10 p-0",
-          className
-        )}
-        {...props}
+        variant={muiVariant}
+        color={muiColor}
+        size={muiSize}
+        className={cn(variant === "link" && "underline-offset-4 hover:underline", className)}
+        startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : undefined}
+        {...(props as any)}
       >
-        {isLoading && (
-          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-        )}
         {children}
-      </button>
+      </MuiButton>
     );
   }
 );

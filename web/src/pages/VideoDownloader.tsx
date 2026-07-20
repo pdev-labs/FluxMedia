@@ -42,34 +42,46 @@ export const VideoDownloader: React.FC = () => {
     }, 1500);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setDownloading(true);
     setProgress(0);
-    setLogs((prev) => [...prev, "[info] Starting download thread 1...", "[info] Downloading video segments..."]);
+    setLogs((prev) => [...prev, "[info] Triggering download via API..."]);
     
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setDownloading(false);
-          setLogs((prevLogs) => [
-            ...prevLogs,
-            "[info] Video segments downloaded (100%)",
-            "[info] Merging audio and video tracks via FFmpeg...",
-            "[success] Download completed successfully!"
-          ]);
-          return 100;
-        }
-        const next = prev + 5;
-        if (next % 20 === 0) {
-          setLogs((prevLogs) => [
-            ...prevLogs,
-            `[info] Download speed: 4.8 MB/s - Segment ${next / 10}/10`
-          ]);
-        }
-        return next;
+    try {
+      const response = await fetch('/api/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: url,
+          type: 'video',
+        }),
       });
-    }, 500);
+      
+      const data = await response.json();
+      setLogs((prev) => [...prev, `[info] API response: ${data.message}`]);
+      
+      // Simulate progress for now until Phase 2 websockets
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setDownloading(false);
+            setLogs((prevLogs) => [
+              ...prevLogs,
+              "[success] Download completed successfully!"
+            ]);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
+    } catch (err: any) {
+      setLogs((prev) => [...prev, `[error] Download failed: ${err.message}`]);
+      setDownloading(false);
+    }
   };
 
   return (

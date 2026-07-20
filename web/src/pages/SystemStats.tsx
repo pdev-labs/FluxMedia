@@ -176,7 +176,6 @@ export const SystemStats: React.FC = () => {
             <CardContent className="h-64 flex flex-col justify-between pt-4">
               {(() => {
                 const { points, path } = buildChartPath(stats.weekly_activity);
-                const maxCount = Math.max(...stats.weekly_activity.map((w) => w.count), 1);
                 return (
                   <>
                     <div className="flex-1 w-full relative">

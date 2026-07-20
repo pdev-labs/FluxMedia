@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Settings, Globe, Palette, Shield, HardDrive, 
-  FolderOpen, Save, Search, Sparkles
+  FolderOpen, Save, Search, Sparkles, AlertTriangle
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { ProgressBar } from "../components/ui/ProgressBar";
 
 export const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [searchQuery, setSearchQuery] = useState("");
   const [unsaved, setUnsaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [settings, setSettings] = useState<any>({});
+  const [originalSettings, setOriginalSettings] = useState<any>({});
 
   const categories = [
     { id: "general", name: "General Settings", icon: Settings },
@@ -22,6 +26,63 @@ export const SettingsPage: React.FC = () => {
     { id: "storage", name: "Storage & Cache", icon: HardDrive }
   ];
 
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch("/api/settings");
+      if (!res.ok) throw new Error("Failed to fetch settings");
+      const data = await res.json();
+      setSettings(data.settings);
+      setOriginalSettings(data.settings);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ settings })
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      const data = await res.json();
+      setSettings(data.settings);
+      setOriginalSettings(data.settings);
+      setUnsaved(false);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDiscard = () => {
+    setSettings(originalSettings);
+    setUnsaved(false);
+  };
+
+  const updateSetting = (key: string, value: any) => {
+    setSettings((prev: any) => ({ ...prev, [key]: value }));
+    setUnsaved(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300 pb-16">
       <div className="flex justify-between items-start">
@@ -31,8 +92,15 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5" />
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-4 items-start">
-        {/* Left Settings Sidebar (1 column) */}
+        {/* Left Settings Sidebar */}
         <div className="lg:col-span-1 space-y-4">
           <Card>
             <CardHeader className="pb-3 border-b border-border/40">
@@ -63,7 +131,7 @@ export const SettingsPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Right Settings Configuration viewport (3 columns) */}
+        {/* Right Settings Configuration viewport */}
         <div className="lg:col-span-3 space-y-6">
           {activeTab === "general" && (
             <Card>
@@ -75,36 +143,31 @@ export const SettingsPage: React.FC = () => {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Interface Language</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
+                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
                       <option>English (United States)</option>
-                      <option>Español (España)</option>
-                      <option>Deutsch (Deutschland)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Time Format</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>24-Hour (HH:MM)</option>
-                      <option>12-Hour (AM/PM)</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-4 pt-4 border-t border-border/40">
                   <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" defaultChecked className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Auto Start on OS launch</span>
+                    <input 
+                      type="checkbox" 
+                      checked={settings.show_educational_notice ?? true} 
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4" 
+                      onChange={(e) => updateSetting("show_educational_notice", e.target.checked)} 
+                    />
+                    <span>Show Educational Notice</span>
                   </label>
-
+                  
                   <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" defaultChecked className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Close to system tray instead of exiting</span>
-                  </label>
-
-                  <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Anonymous telemetry transmission</span>
+                    <input 
+                      type="checkbox" 
+                      checked={settings.web_auth_enabled ?? true} 
+                      className="rounded border-border text-primary focus:ring-primary h-4 w-4" 
+                      onChange={(e) => updateSetting("web_auth_enabled", e.target.checked)} 
+                    />
+                    <span>Web Authentication Enabled</span>
                   </label>
                 </div>
               </CardContent>
@@ -119,26 +182,61 @@ export const SettingsPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <Input label="Default Download Directory" defaultValue="D:\Downloads\FluxMedia" onChange={() => setUnsaved(true)} />
-                  <Input label="Default Quality Preset" defaultValue="Best Available Quality (1080p+)" onChange={() => setUnsaved(true)} />
+                  <Input 
+                    label="Default Download Directory" 
+                    value={settings.download_dir || ""} 
+                    onChange={(e) => updateSetting("download_dir", e.target.value)} 
+                  />
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Default Quality Preset</label>
+                    <select 
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+                      value={settings.default_quality || "best"}
+                      onChange={(e) => updateSetting("default_quality", e.target.value)}
+                    >
+                      <option value="best">Best Available</option>
+                      <option value="1080p">1080p</option>
+                      <option value="720p">720p</option>
+                      <option value="worst">Lowest Quality</option>
+                    </select>
+                  </div>
+                  
+                  <Input 
+                    label="Filename Format" 
+                    value={settings.filename_format || ""} 
+                    onChange={(e) => updateSetting("filename_format", e.target.value)} 
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t border-border/40">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Retry Count on Failures</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>3 attempts</option>
-                      <option>5 attempts</option>
-                      <option>No Retries</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Auto-resume downloads</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>Enabled (Recommended)</option>
-                      <option>Disabled</option>
-                    </select>
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        checked={settings.embed_metadata ?? true} 
+                        className="rounded border-border text-primary focus:ring-primary h-4 w-4" 
+                        onChange={(e) => updateSetting("embed_metadata", e.target.checked)} 
+                      />
+                      <span>Embed Metadata</span>
+                    </label>
+                    <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        checked={settings.embed_thumbnail ?? true} 
+                        className="rounded border-border text-primary focus:ring-primary h-4 w-4" 
+                        onChange={(e) => updateSetting("embed_thumbnail", e.target.checked)} 
+                      />
+                      <span>Embed Thumbnail</span>
+                    </label>
+                    <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        checked={settings.embed_subtitles ?? false} 
+                        className="rounded border-border text-primary focus:ring-primary h-4 w-4" 
+                        onChange={(e) => updateSetting("embed_subtitles", e.target.checked)} 
+                      />
+                      <span>Embed Subtitles</span>
+                    </label>
                   </div>
                 </div>
               </CardContent>
@@ -148,28 +246,41 @@ export const SettingsPage: React.FC = () => {
           {activeTab === "network" && (
             <Card>
               <CardHeader>
-                <CardTitle>Proxy & DNS Tunnels</CardTitle>
-                <CardDescription>Redirect network requests through custom proxy servers.</CardDescription>
+                <CardTitle>Network Settings</CardTitle>
+                <CardDescription>Manage browser cookies and download limits.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Proxy Tunnel Protocol</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>None (Direct Link)</option>
-                      <option>SOCKS5 Proxy</option>
-                      <option>HTTP/HTTPS Proxy</option>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cookies from Browser</label>
+                    <select 
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+                      value={settings.cookies_browser || "none"}
+                      onChange={(e) => updateSetting("cookies_browser", e.target.value)}
+                    >
+                      <option value="none">None</option>
+                      <option value="chrome">Chrome</option>
+                      <option value="firefox">Firefox</option>
+                      <option value="edge">Edge</option>
+                      <option value="safari">Safari</option>
+                      <option value="brave">Brave</option>
+                      <option value="opera">Opera</option>
                     </select>
                   </div>
                   
-                  <Input label="Proxy Server Address" placeholder="127.0.0.1:1080" onChange={() => setUnsaved(true)} />
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-border/40">
-                  <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" defaultChecked className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Perform SSL/TLS peer certificate validation</span>
-                  </label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Download Speed Limit</label>
+                    <select 
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+                      value={settings.download_speed_limit || "disabled"}
+                      onChange={(e) => updateSetting("download_speed_limit", e.target.value)}
+                    >
+                      <option value="disabled">Disabled</option>
+                      <option value="1M">1 MB/s</option>
+                      <option value="5M">5 MB/s</option>
+                      <option value="10M">10 MB/s</option>
+                    </select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -179,96 +290,34 @@ export const SettingsPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Aesthetics & Layout</CardTitle>
-                <CardDescription>Alter layouts, accent coloring, animations, and typography variables.</CardDescription>
+                <CardDescription>Alter layouts and accent coloring.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Theme presets</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>Dark Mode (Midnight)</option>
-                      <option>Light Mode (Alabaster)</option>
-                      <option>High Contrast Mode</option>
+                    <select 
+                      className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" 
+                      value={settings.theme || "dark"}
+                      onChange={(e) => updateSetting("theme", e.target.value)}
+                    >
+                      <option value="dark">Dark Mode</option>
+                      <option value="light">Light Mode</option>
                     </select>
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Display Density</label>
-                    <select className="h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" onChange={() => setUnsaved(true)}>
-                      <option>Comfortable spacing</option>
-                      <option>Compact spacing</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-border/40">
-                  <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" defaultChecked className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Enable layout animations</span>
-                  </label>
-
-                  <label className="flex items-center gap-3 text-sm cursor-pointer select-none">
-                    <input type="checkbox" className="rounded border-border text-primary focus:ring-primary h-4 w-4" onChange={() => setUnsaved(true)} />
-                    <span>Reduce motion scale defaults</span>
-                  </label>
                 </div>
               </CardContent>
             </Card>
           )}
-
-          {activeTab === "privacy" && (
+          
+          {(activeTab === "privacy" || activeTab === "storage") && (
             <Card>
               <CardHeader>
-                <CardTitle>History & Temporary Caches</CardTitle>
-                <CardDescription>Censor active search buffers, logs, and cookie caches.</CardDescription>
+                <CardTitle>Not Applicable</CardTitle>
+                <CardDescription>These settings are not managed through this interface.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-border/40">
-                  <div>
-                    <h5 className="text-xs font-semibold">Clear Search History</h5>
-                    <p className="text-[10px] text-muted-foreground">Wipes all cached query lookups.</p>
-                  </div>
-                  <Button variant="destructive" size="sm">Clear</Button>
-                </div>
-
-                <div className="flex justify-between items-center pb-3 border-b border-border/40">
-                  <div>
-                    <h5 className="text-xs font-semibold">Delete Local Cookies Cache</h5>
-                    <p className="text-[10px] text-muted-foreground">Forces logout of authenticated modules.</p>
-                  </div>
-                  <Button variant="destructive" size="sm">Clear</Button>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h5 className="text-xs font-semibold">Wipe System Logs</h5>
-                    <p className="text-[10px] text-muted-foreground">Clears terminal output files from core directories.</p>
-                  </div>
-                  <Button variant="destructive" size="sm">Clear</Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === "storage" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Storage Allocation</CardTitle>
-                <CardDescription>Scan folder directory weights and release cached memory.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span>Cache Limit Capacity</span>
-                    <span>1.2 GB / 5.0 GB Max</span>
-                  </div>
-                  <ProgressBar value={24} size="sm" />
-                </div>
-
-                <div className="flex justify-between items-center pt-3 border-t border-border/40">
-                  <span className="text-xs text-muted-foreground">Cleanup Recommendations: <strong>Remove 248MB of temp logs</strong></span>
-                  <Button variant="outline" size="sm">Run Cleanup</Button>
-                </div>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Please use the general and downloads tabs to configure FluxMedia.</p>
               </CardContent>
             </Card>
           )}
@@ -283,8 +332,8 @@ export const SettingsPage: React.FC = () => {
             <span className="text-xs font-semibold">Unsaved configuration changes detected.</span>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setUnsaved(false)}>Discard</Button>
-            <Button variant="primary" size="sm" className="gap-1" onClick={() => setUnsaved(false)}><Save className="h-3.5 w-3.5" /> Save Changes</Button>
+            <Button variant="ghost" size="sm" onClick={handleDiscard}>Discard</Button>
+            <Button variant="primary" size="sm" className="gap-1" onClick={handleSave}><Save className="h-3.5 w-3.5" /> Save Changes</Button>
           </div>
         </div>
       )}

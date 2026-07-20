@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {
-  RefreshCw, FileVideo, Music, Layers, Sliders, Scissors, Trash2,
+  RefreshCw, FileVideo, Music, Layers, Sliders, Scissors,
   Terminal, AlertTriangle, CheckCircle2, XCircle
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { Badge } from "../components/ui/Badge";
 import { Input } from "../components/ui/Input";
 import { ProgressBar } from "../components/ui/ProgressBar";
 import { cn } from "../utils/cn";

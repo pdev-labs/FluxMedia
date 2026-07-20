@@ -1,24 +1,14 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Download,
-  History,
-  ListCollapse,
-  FolderOpen,
-  RefreshCw,
-  Share2,
-  Settings,
-  ShieldAlert,
-  Terminal,
-  MessageSquare,
-  HelpCircle,
-  Info,
-  ChevronLeft,
-  ChevronRight,
-  BarChart4
+  LayoutDashboard, Download, History, ListCollapse, FolderOpen, RefreshCw,
+  Share2, Settings, ShieldAlert, Terminal, MessageSquare, HelpCircle,
+  Info, ChevronLeft, ChevronRight, BarChart4
 } from "lucide-react";
-import { cn } from "../utils/cn";
+import { 
+  Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, 
+  IconButton, Box, useTheme, useMediaQuery
+} from "@mui/material";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -33,6 +23,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile,
   onCloseMobile
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+
   const menuItems = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Downloads", path: "/downloads", icon: Download },
@@ -51,75 +44,88 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const sidebarContent = (
-    <div className="flex h-full flex-col justify-between bg-background border-r border-border py-4">
-      <div className="space-y-4">
-        {/* Navigation Items */}
-        <nav className="space-y-1 px-3">
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.name}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', py: 2 }}>
+      <List sx={{ px: 1 }}>
+        {menuItems.map((item) => (
+          <ListItem key={item.name} disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton
+              component={NavLink}
               to={item.path}
-              onClick={onCloseMobile}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-                  isActive
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                  collapsed && "justify-center px-0"
-                )
-              }
-              title={collapsed ? item.name : undefined}
+              onClick={isMobile ? onCloseMobile : undefined}
+              sx={{
+                borderRadius: 2,
+                minHeight: 44,
+                justifyContent: collapsed && !isMobile ? 'center' : 'initial',
+                px: 2.5,
+                '&.active': {
+                  bgcolor: 'action.selected',
+                  color: 'primary.main',
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.main',
+                  }
+                }
+              }}
+              title={collapsed && !isMobile ? item.name : undefined}
             >
-              <item.icon className="h-4.5 w-4.5 shrink-0" />
-              {!collapsed && <span>{item.name}</span>}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: collapsed && !isMobile ? 0 : 2,
+                  justifyContent: 'center',
+                }}
+              >
+                <item.icon className="h-5 w-5" />
+              </ListItemIcon>
+              {(!collapsed || isMobile) && <ListItemText primary={item.name} primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }} />}
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
 
-      {/* Collapse Toggle Button for Desktop */}
-      <div className="hidden lg:flex justify-end px-3">
-        <button
-          onClick={onCollapseToggle}
-          className="rounded-md border border-border p-1.5 hover:bg-secondary text-muted-foreground hover:text-foreground"
-          aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
-      </div>
-    </div>
+      {!isMobile && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2 }}>
+          <IconButton onClick={onCollapseToggle} size="small" sx={{ border: 1, borderColor: 'divider' }}>
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </IconButton>
+        </Box>
+      )}
+    </Box>
   );
 
   return (
     <>
-      {/* Mobile Sidebar Overlay */}
-      {isOpenMobile && (
-        <div
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
-          onClick={onCloseMobile}
-        />
-      )}
-
       {/* Mobile Drawer */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden",
-          isOpenMobile ? "translate-x-0" : "-translate-x-full"
-        )}
+      <Drawer
+        variant="temporary"
+        open={isOpenMobile}
+        onClose={onCloseMobile}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 256 },
+        }}
       >
         {sidebarContent}
-      </aside>
+      </Drawer>
 
-      {/* Desktop Sidebar */}
-      <aside
-        className={cn(
-          "hidden h-[calc(100vh-3.5rem)] shrink-0 lg:block border-r border-border transition-all duration-300",
-          collapsed ? "w-16" : "w-64"
-        )}
+      {/* Desktop Sidebar Container (mimics the layout) */}
+      <Box
+        component="aside"
+        sx={{
+          display: { xs: 'none', lg: 'block' },
+          width: collapsed ? 72 : 256,
+          flexShrink: 0,
+          borderRight: 1,
+          borderColor: 'divider',
+          transition: theme.transitions.create('width', {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          bgcolor: 'background.paper'
+        }}
       >
         {sidebarContent}
-      </aside>
+      </Box>
     </>
   );
 };

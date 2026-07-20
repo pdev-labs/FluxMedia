@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
-  History, Search, LayoutGrid, List, FileVideo, Music, FolderOpen, RefreshCw, 
-  QrCode, SlidersHorizontal, Database, X, Trash2, AlertTriangle, RotateCcw
+  History, Search, LayoutGrid, List, FileVideo, Music, RefreshCw, 
+  SlidersHorizontal, Database, X, AlertTriangle, RotateCcw, Trash2
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -79,11 +79,13 @@ export const DownloadHistory: React.FC = () => {
     );
   });
 
-  const statusBadge = (status: string) => {
-    const s = status.toLowerCase();
-    if (s === "completed" || s === "success") return "default";
-    if (s === "failed" || s === "error") return "destructive";
-    return "secondary";
+  const statusBadge = (status: string): "default" | "warning" | "success" | "danger" => {
+    switch(status.toLowerCase()) {
+      case "completed": case "success": return "success";
+      case "failed": case "error": return "danger";
+      case "paused": return "warning";
+      default: return "default";
+    }
   };
 
   return (

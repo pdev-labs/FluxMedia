@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.40] - 2026-07-20
+### Added
+- **Material Design 3 Migration**: Completed a full UI migration of FluxMedia Web to Material Design 3.
+- Integrated `@mui/material`, `@emotion/react`, `@emotion/styled`, `@fontsource/roboto`, and `@mui/icons-material`.
+- Refactored core UI components (`Button`, `Card`, `Input`, `Badge`, `ProgressBar`, `Skeleton`) to use native MUI components while preserving their original prop signatures, seamlessly updating all 25+ layout pages.
+- Replaced custom Header and Sidebar with native MUI `<AppBar>` and `<Drawer>` components, significantly improving layout stability and mobile responsiveness.
+- Configured a dynamic MUI `ThemeProvider` to synchronize with existing Light/Dark theme contexts and apply official Roboto typography.
+
 ## [v1.6.39] - 2026-07-20
 ### Fixed
 - Fixed an issue where the Instagram downloader failed if the username input contained a leading `@`.

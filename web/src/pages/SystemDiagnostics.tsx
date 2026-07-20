@@ -196,7 +196,7 @@ export const SystemDiagnostics: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-4">
                         {checkIcon(check.status)}
-                        <Badge variant={check.status === "pass" ? "success" : check.status === "fail" ? "destructive" : "warning"} className="capitalize text-[10px]">
+                        <Badge variant={check.status === "pass" ? "success" : check.status === "fail" ? "danger" : "warning"} className="capitalize text-[10px]">
                           {check.status === "pass" ? "Pass" : check.status === "fail" ? "Fail" : "Warning"}
                         </Badge>
                       </div>
