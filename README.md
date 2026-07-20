@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.43
+## 📢 Latest Release: v1.6.44
 
-* **One-liner Install Scripts**: Refactored `install.sh` and `install.ps1` to fully support execution via piping (e.g., `curl | bash` or `iex`). The interactive CLI menus using arrow keys are now fully functional across platforms even when the script is piped directly from the web, seamlessly opening `/dev/tty` (Linux/macOS) and native console keys (Windows). Automatic and immediate privilege escalation prompts integrated into the one-liners to ensure all setup commands execute with required permissions.
+* **Bug Fixes**: Fixed an issue where selecting option `16` (Sync Play) in the CLI main menu incorrectly opened the Troubleshooting Guide due to outdated index mappings.
 
 ---
 

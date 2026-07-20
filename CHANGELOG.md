@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.6.44] - 2026-07-20
+### Fixed
+- Fixed an issue where selecting option `16` (Sync Play) in the CLI main menu incorrectly opened the Troubleshooting Guide due to outdated index mappings.
 ## [v1.6.43] - 2026-07-20
 ### Fixed
 - **One-liner Install Scripts**: Refactored `install.sh` and `install.ps1` to fully support execution via piping (e.g., `curl | bash` or `iex`).

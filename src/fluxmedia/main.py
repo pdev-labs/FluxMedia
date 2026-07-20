@@ -4985,12 +4985,14 @@ def main():
             elif choice == "15":
                 operation_share_via_qr(config)
             elif choice == "16":
-                operation_troubleshooting_guide()
+                operation_sync_play(config)
             elif choice == "17":
-                operation_about_creator()
+                operation_troubleshooting_guide()
             elif choice == "18":
-                operation_report_bug_feedback()
+                operation_about_creator()
             elif choice == "19":
+                operation_report_bug_feedback()
+            elif choice == "20":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
         except KeyboardInterrupt:
