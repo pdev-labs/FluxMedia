@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.38
+## 📢 Latest Release: v1.6.39
 
-* **Phase 3 Backend Integration — Advanced Features**: Connected the Media Converter (real FFmpeg transcoding), System Diagnostics (live subsystem health checks), and System Stats (real download analytics) pages to the local FastAPI backend.
+* **Bug Fixes**: Fixed an issue where the Instagram downloader failed if the username input contained a leading `@`.
 
 ---
 

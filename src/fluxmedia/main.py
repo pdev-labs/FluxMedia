@@ -4286,7 +4286,7 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
             Prompt.ask("\nPress Enter to return to main menu...")
             return
         
-        username = username.strip()
+        username = username.strip().lstrip('@')
         
         console.print("\n[bold cyan]What would you like to download?[/bold cyan]")
         console.print("1. Everything (Posts + Videos + Reels)")

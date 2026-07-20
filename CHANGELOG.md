@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.39] - 2026-07-20
+### Fixed
+- Fixed an issue where the Instagram downloader failed if the username input contained a leading `@`.
+
 ## [v1.6.38] - 2026-07-18
 ### Added
 - **Phase 3: Advanced Features Backend Integration** — Connected the Media Converter, System Diagnostics, and System Stats pages to real backend endpoints.
