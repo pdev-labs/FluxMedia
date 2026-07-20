@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.55] - 2026-07-20
+### Fixed
+- **Mobile Browser Caching**: Added `Cache-Control` headers and cache-busting query strings to the portal's UI assets. This fixes an issue where Android and iOS devices would load a stale, cached version of the portal from an earlier version and fail to connect to the Watch Party.
+
 ## [v1.6.54] - 2026-07-20
 ### Fixed
 - **Watch Party Host Waiting Flow**: Fixed an issue where the host CLI (`operation_sync_play`) would skip the waiting screen immediately upon the first device joining. It now continuously shows a live-updating table of connected devices and waits for the host to press 'c' to continue.

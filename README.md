@@ -16,15 +16,14 @@
 
 ---
 
-## 📢 Latest Release: v1.6.54
+## 📢 Latest Release: v1.6.55
 
+* **Mobile Browser Caching Fixed**: Added `Cache-Control` headers and cache-busting query strings to the portal's UI assets. This ensures Android and iOS devices always load the latest version of the Watch Party features instead of stale cached files.
 * **Watch Party Auto-Play Fixed**: Watch Party host now forces playback immediately when starting a session, fixing an issue where streams would remain paused. If a browser blocks automatic playback, it now displays a prominent "Tap to Start" overlay.
 * **Watch Party Host Waiting Flow**: The CLI now properly waits and displays a live-updating table of connected devices for the host to review before proceeding to the device selection stage.
 * **Full Watch Party in Share Portal**: Connected devices now appear in a live panel (FAB or tab mode) with green pulsing dots for SYNCED vs grey for WATCHING. The CLI host picks which devices to sync, and the browser clients automatically seek and play/pause in real time.
-* **Audio + Video Sync**: Both audio and video files are now properly synchronized across devices — the portal auto-detects `media_type` and applies sync to the correct player.
 * **Sync Lock Modes**: Strict (full lock) or Loose (volume/fullscreen allowed) — user-configurable in Settings.
 * **Custom Device Names**: Each device auto-detects its name (iPhone, Android, Mac...) and lets users override it in Settings > Watch Party.
-* **Mid-session Device Management**: Use the `D` command in the Watch Party CLI control loop to add or remove devices from sync without stopping the session.
 
 ---
 
