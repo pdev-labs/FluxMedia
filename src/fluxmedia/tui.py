@@ -202,7 +202,7 @@ class FluxMediaApp(App):
                 yield Tabs(
                     Tab("🎥 Video", id="tab-video"),
                     Tab("🎵 Audio", id="tab-audio"),
-                    Tab("📸 Instagram", id="tab-instagram"),
+                    Tab("📸 Instagram (Beta)", id="tab-instagram"),
                     Tab("⚙️ Settings", id="tab-settings"),
                     id="tabs"
                 )

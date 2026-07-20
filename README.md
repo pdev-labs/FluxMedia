@@ -16,9 +16,10 @@
 
 ---
 
-## 📢 Latest Release: v1.6.40
+## 📢 Latest Release: v1.6.41
 
-* **Material Design 3 Migration**: Completed a full UI migration of FluxMedia Web to Material Design 3. Refactored UI components to use native MUI v6 layout structures and implemented a dynamic theme context provider.
+* **Menu Additions**: Added option to launch FluxMedia Web (Beta) from the CLI main menu. Marked the Instagram Profile downloader as Beta.
+* **Bug Fixes**: Fixed IDE static analysis issues in the source code, and improved the dependency auto-installer to gracefully handle environments without `pip` or PEP 668 restrictions.
 
 ---
 

@@ -35,7 +35,7 @@ export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground font-sans">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background text-foreground font-sans bg-gradient-to-br from-background via-background to-primary/5">
       {/* Top Header */}
       <Header
         onMenuToggle={() => setMobileMenuOpen(true)}
@@ -53,7 +53,7 @@ export const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         />
 
         {/* Core Main Viewport */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-background/50">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 relative">
           {children}
         </main>
       </div>

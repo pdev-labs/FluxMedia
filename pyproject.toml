@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxmedia"
-version = "1.6.40"
+version = "1.6.41"
 description = "A powerful, cross-platform media portal and processing toolkit."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -37,3 +37,5 @@ package-dir = {"" = "src"}
 packages = ["fluxmedia"]
 include-package-data = true
 
+[tool.setuptools.package-data]
+"fluxmedia" = ["web_build/**/*"]

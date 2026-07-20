@@ -1,5 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import uvicorn
 from typing import Dict, Any, Optional, List
@@ -10,6 +12,8 @@ import sys
 import datetime
 import subprocess
 import platform
+import threading
+import yt_dlp
 
 from fluxmedia.main import (
     load_config, save_config, get_data_dir,
@@ -53,8 +57,42 @@ def update_settings(update: SettingsUpdate):
 
 
 # ─────────────────────────────────────────────────────────────
-#  Downloads
+#  Downloads & Background Jobs
 # ─────────────────────────────────────────────────────────────
+
+DOWNLOAD_JOBS: Dict[str, Dict[str, Any]] = {}
+JOBS_LOCK = threading.Lock()
+
+class AnalyzeRequest(BaseModel):
+    url: str
+
+@app.post("/api/analyze")
+def analyze_media(req: AnalyzeRequest):
+    try:
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': False
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(req.url, download=False)
+            
+            # Extract basic metadata
+            return {
+                "status": "success",
+                "metadata": {
+                    "title": info.get("title", "Unknown Title"),
+                    "uploader": info.get("uploader", "Unknown Uploader"),
+                    "views": info.get("view_count", 0),
+                    "likes": info.get("like_count", 0),
+                    "duration": info.get("duration_string", "Unknown"),
+                    "date": info.get("upload_date", "Unknown"),
+                    "thumbnail": info.get("thumbnail", "")
+                }
+            }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 class DownloadRequest(BaseModel):
     url: str
@@ -62,14 +100,103 @@ class DownloadRequest(BaseModel):
     quality: Optional[str] = None
     format: Optional[str] = None
 
+def run_download_job(job_id: str, req: DownloadRequest):
+    def progress_hook(d):
+        with JOBS_LOCK:
+            job = DOWNLOAD_JOBS.get(job_id)
+            if not job: return
+            
+            if d['status'] == 'downloading':
+                downloaded = d.get('downloaded_bytes', 0)
+                total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+                if total > 0:
+                    job["progress"] = int((downloaded / total) * 100)
+                job["speed"] = d.get('speed', 0)
+                job["eta"] = d.get('eta', 0)
+                
+            elif d['status'] == 'finished':
+                job["progress"] = 100
+                job["status"] = "processing"
+                job["logs"].append("[info] Download finished, running post-processors...")
+
+    class MyLogger:
+        def debug(self, msg):
+            with JOBS_LOCK:
+                if job_id in DOWNLOAD_JOBS:
+                    DOWNLOAD_JOBS[job_id]["logs"].append(f"[debug] {msg}")
+        def info(self, msg):
+            with JOBS_LOCK:
+                if job_id in DOWNLOAD_JOBS:
+                    DOWNLOAD_JOBS[job_id]["logs"].append(f"[info] {msg}")
+        def warning(self, msg):
+            with JOBS_LOCK:
+                if job_id in DOWNLOAD_JOBS:
+                    DOWNLOAD_JOBS[job_id]["logs"].append(f"[warning] {msg}")
+        def error(self, msg):
+            with JOBS_LOCK:
+                if job_id in DOWNLOAD_JOBS:
+                    DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] {msg}")
+
+    config = load_config()
+    dest_dir = config.get("download_dir", os.path.join(os.path.expanduser("~"), "Downloads"))
+    os.makedirs(dest_dir, exist_ok=True)
+    
+    ydl_opts = {
+        'logger': MyLogger(),
+        'progress_hooks': [progress_hook],
+        'outtmpl': os.path.join(dest_dir, config.get("filename_format", "%(title)s.%(ext)s")),
+    }
+    
+    if req.type == 'audio':
+        ydl_opts['format'] = 'bestaudio/best'
+        ydl_opts['postprocessors'] = [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+    else:
+        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        ydl_opts['merge_output_format'] = 'mp4'
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([req.url])
+        with JOBS_LOCK:
+            DOWNLOAD_JOBS[job_id]["status"] = "completed"
+            DOWNLOAD_JOBS[job_id]["logs"].append("[success] Job completed successfully.")
+    except Exception as e:
+        with JOBS_LOCK:
+            DOWNLOAD_JOBS[job_id]["status"] = "failed"
+            DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] Download failed: {str(e)}")
+
 @app.post("/api/download")
 def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
     job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
+    with JOBS_LOCK:
+        DOWNLOAD_JOBS[job_id] = {
+            "status": "starting",
+            "progress": 0,
+            "speed": 0,
+            "eta": 0,
+            "logs": [f"[info] Queued job for {req.url}"]
+        }
+    
+    background_tasks.add_task(run_download_job, job_id, req)
+    
     return {
         "status": "success",
         "job_id": job_id,
         "message": f"Download job {job_id} queued for: {req.url}"
     }
+
+@app.get("/api/job/{job_id}")
+def get_job_status(job_id: str):
+    with JOBS_LOCK:
+        job = DOWNLOAD_JOBS.get(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        # Return a copy to avoid race conditions during serialization
+        return {"status": "success", "job": job.copy()}
 
 
 # ─────────────────────────────────────────────────────────────
@@ -494,12 +621,32 @@ def check_ffmpeg():
 
 
 # ─────────────────────────────────────────────────────────────
+#  Frontend Serving (SPA Fallback)
+# ─────────────────────────────────────────────────────────────
+
+WEB_BUILD_DIR = os.path.join(os.path.dirname(__file__), "web_build")
+
+if os.path.isdir(WEB_BUILD_DIR):
+    # Mount static assets (JS, CSS, images) under /assets to avoid routing conflicts
+    if os.path.isdir(os.path.join(WEB_BUILD_DIR, "assets")):
+        app.mount("/assets", StaticFiles(directory=os.path.join(WEB_BUILD_DIR, "assets")), name="assets")
+        
+    @app.get("/{full_path:path}")
+    def serve_frontend(full_path: str):
+        # Allow passing through direct file requests at the root (like favicon.ico, manifest.json, etc.)
+        target_path = os.path.join(WEB_BUILD_DIR, full_path)
+        if full_path and os.path.isfile(target_path):
+            return FileResponse(target_path)
+        # Otherwise, serve index.html for SPA routing
+        return FileResponse(os.path.join(WEB_BUILD_DIR, "index.html"))
+
+# ─────────────────────────────────────────────────────────────
 #  Server entry-point
 # ─────────────────────────────────────────────────────────────
 
-def run_server(port: int = 8000):
-    print(f"Starting FluxMedia API server on port {port}...")
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="info")
+def run_server(port: int = 8000, host: str = "0.0.0.0"):
+    print(f"Starting FluxMedia Web server on {host}:{port}...")
+    uvicorn.run(app, host=host, port=port, log_level="info")
 
 if __name__ == "__main__":
     run_server()

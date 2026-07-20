@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.6.41] - 2026-07-20
+### Added
+- Added option to launch FluxMedia Web (Beta) from the CLI main menu (`W`).
+- Added "Beta" label to the Instagram Profile downloader in both CLI and TUI modes.
+### Fixed
+- Fixed IDE static analysis issues (Pyright/Pylance) by correctly typing the dynamically imported `rich`, `mutagen`, and `requests` objects as `Any`.
+- Fixed an issue where the dependency auto-installer crashed on environments without `pip` or on externally managed environments (PEP 668), now gracefully informing the user to use a virtual environment.
+- Supressed false positive Pyright error for Windows-specific `os.startfile`.
 ## [v1.6.40] - 2026-07-20
 ### Added
 - **Material Design 3 Migration**: Completed a full UI migration of FluxMedia Web to Material Design 3.

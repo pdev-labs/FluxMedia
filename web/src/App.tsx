@@ -1,42 +1,43 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { GlobalLayout } from "./layouts/GlobalLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "./components/ui/Card";
 
 // Import all subpages
-import { Dashboard } from "./pages/Dashboard";
-import { DownloadCenter } from "./pages/DownloadCenter";
-import { VideoDownloader } from "./pages/VideoDownloader";
-import { YoutubeSearch } from "./pages/YoutubeSearch";
-import { AudioDownloader } from "./pages/AudioDownloader";
-import { PlaylistDownloader } from "./pages/PlaylistDownloader";
-import { ChannelDownloader } from "./pages/ChannelDownloader";
-import { SubtitleDownloader } from "./pages/SubtitleDownloader";
-import { TrimDownloader } from "./pages/TrimDownloader";
-import { InstagramDownloader } from "./pages/InstagramDownloader";
+const Dashboard = React.lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
+const DownloadCenter = React.lazy(() => import("./pages/DownloadCenter").then(m => ({ default: m.DownloadCenter })));
+const VideoDownloader = React.lazy(() => import("./pages/VideoDownloader").then(m => ({ default: m.VideoDownloader })));
+const YoutubeSearch = React.lazy(() => import("./pages/YoutubeSearch").then(m => ({ default: m.YoutubeSearch })));
+const AudioDownloader = React.lazy(() => import("./pages/AudioDownloader").then(m => ({ default: m.AudioDownloader })));
+const PlaylistDownloader = React.lazy(() => import("./pages/PlaylistDownloader").then(m => ({ default: m.PlaylistDownloader })));
+const ChannelDownloader = React.lazy(() => import("./pages/ChannelDownloader").then(m => ({ default: m.ChannelDownloader })));
+const SubtitleDownloader = React.lazy(() => import("./pages/SubtitleDownloader").then(m => ({ default: m.SubtitleDownloader })));
+const TrimDownloader = React.lazy(() => import("./pages/TrimDownloader").then(m => ({ default: m.TrimDownloader })));
+const InstagramDownloader = React.lazy(() => import("./pages/InstagramDownloader").then(m => ({ default: m.InstagramDownloader })));
 
 // Media management & converter imports
-import { DownloadQueue } from "./pages/DownloadQueue";
-import { DownloadHistory } from "./pages/DownloadHistory";
-import { FileManager } from "./pages/FileManager";
-import { MediaConverter } from "./pages/MediaConverter";
-import { SystemStats } from "./pages/SystemStats";
+const DownloadQueue = React.lazy(() => import("./pages/DownloadQueue").then(m => ({ default: m.DownloadQueue })));
+const DownloadHistory = React.lazy(() => import("./pages/DownloadHistory").then(m => ({ default: m.DownloadHistory })));
+const FileManager = React.lazy(() => import("./pages/FileManager").then(m => ({ default: m.FileManager })));
+const MediaConverter = React.lazy(() => import("./pages/MediaConverter").then(m => ({ default: m.MediaConverter })));
+const SystemStats = React.lazy(() => import("./pages/SystemStats").then(m => ({ default: m.SystemStats })));
 
 // Settings, updates, sharing, and diagnostics imports
-import { SettingsPage } from "./pages/Settings";
-import { UpdatesManager } from "./pages/UpdatesManager";
-import { SharingGateway } from "./pages/SharingGateway";
-import { SystemDiagnostics } from "./pages/SystemDiagnostics";
+const SettingsPage = React.lazy(() => import("./pages/Settings").then(m => ({ default: m.SettingsPage })));
+const UpdatesManager = React.lazy(() => import("./pages/UpdatesManager").then(m => ({ default: m.UpdatesManager })));
+const SharingGateway = React.lazy(() => import("./pages/SharingGateway").then(m => ({ default: m.SharingGateway })));
+const SystemDiagnostics = React.lazy(() => import("./pages/SystemDiagnostics").then(m => ({ default: m.SystemDiagnostics })));
 
 // Extensibility, support, logs, developer, and onboarding imports
-import { HelpCenter } from "./pages/HelpCenter";
-import { FeedbackCenter } from "./pages/FeedbackCenter";
-import { LogCenter } from "./pages/LogCenter";
-import { PluginManager } from "./pages/PluginManager";
-import { DeveloperCenter } from "./pages/DeveloperCenter";
-import { OnboardingWizard } from "./pages/OnboardingWizard";
+const HelpCenter = React.lazy(() => import("./pages/HelpCenter").then(m => ({ default: m.HelpCenter })));
+const FeedbackCenter = React.lazy(() => import("./pages/FeedbackCenter").then(m => ({ default: m.FeedbackCenter })));
+const LogCenter = React.lazy(() => import("./pages/LogCenter").then(m => ({ default: m.LogCenter })));
+const PluginManager = React.lazy(() => import("./pages/PluginManager").then(m => ({ default: m.PluginManager })));
+const DeveloperCenter = React.lazy(() => import("./pages/DeveloperCenter").then(m => ({ default: m.DeveloperCenter })));
+const OnboardingWizard = React.lazy(() => import("./pages/OnboardingWizard").then(m => ({ default: m.OnboardingWizard })));
 
 // General placeholder component for modules implemented in future phases
 const PagePlaceholder: React.FC<{ title: string; desc: string }> = ({ title, desc }) => (
@@ -60,130 +61,142 @@ const PagePlaceholder: React.FC<{ title: string; desc: string }> = ({ title, des
   </div>
 );
 
-export const App: React.FC = () => {
+
+const PageTransition: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.2 }}
+  >
+    {children}
+  </motion.div>
+);
+
+const AppRoutes: React.FC = () => {
+  const location = useLocation();
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <GlobalLayout>
-          <Routes>
+    <AnimatePresence mode="wait">
+      <React.Suspense fallback={<div className="flex items-center justify-center h-full min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+        <Routes location={location} key={location.pathname}>
             {/* Core Dashboard */}
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<PageTransition><Dashboard /></PageTransition>} />
             
             {/* Download Hub & Extractor Engines */}
-            <Route path="/downloads" element={<DownloadCenter />} />
-            <Route path="/download/video" element={<VideoDownloader />} />
-            <Route path="/download/search" element={<YoutubeSearch />} />
-            <Route path="/download/audio" element={<AudioDownloader />} />
-            <Route path="/download/playlist" element={<PlaylistDownloader />} />
-            <Route path="/download/channel" element={<ChannelDownloader />} />
-            <Route path="/download/subtitles" element={<SubtitleDownloader />} />
-            <Route path="/download/trimmer" element={<TrimDownloader />} />
-            <Route path="/download/instagram" element={<InstagramDownloader />} />
+            <Route path="/downloads" element={<PageTransition><DownloadCenter /></PageTransition>} />
+            <Route path="/download/video" element={<PageTransition><VideoDownloader /></PageTransition>} />
+            <Route path="/download/search" element={<PageTransition><YoutubeSearch /></PageTransition>} />
+            <Route path="/download/audio" element={<PageTransition><AudioDownloader /></PageTransition>} />
+            <Route path="/download/playlist" element={<PageTransition><PlaylistDownloader /></PageTransition>} />
+            <Route path="/download/channel" element={<PageTransition><ChannelDownloader /></PageTransition>} />
+            <Route path="/download/subtitles" element={<PageTransition><SubtitleDownloader /></PageTransition>} />
+            <Route path="/download/trimmer" element={<PageTransition><TrimDownloader /></PageTransition>} />
+            <Route path="/download/instagram" element={<PageTransition><InstagramDownloader /></PageTransition>} />
 
             {/* Download Queue & Manager */}
-            <Route path="/queue" element={<DownloadQueue />} />
+            <Route path="/queue" element={<PageTransition><DownloadQueue /></PageTransition>} />
 
             {/* History logs & sub-routes */}
-            <Route path="/history" element={<DownloadHistory />} />
-            <Route path="/history/downloads" element={<DownloadHistory />} />
-            <Route path="/history/search" element={<DownloadHistory />} />
-            <Route path="/history/errors" element={<DownloadHistory />} />
+            <Route path="/history" element={<PageTransition><DownloadHistory /></PageTransition>} />
+            <Route path="/history/downloads" element={<PageTransition><DownloadHistory /></PageTransition>} />
+            <Route path="/history/search" element={<PageTransition><DownloadHistory /></PageTransition>} />
+            <Route path="/history/errors" element={<PageTransition><DownloadHistory /></PageTransition>} />
 
             {/* File manager & categories */}
-            <Route path="/files" element={<FileManager />} />
-            <Route path="/files/videos" element={<FileManager />} />
-            <Route path="/files/audio" element={<FileManager />} />
-            <Route path="/files/playlists" element={<FileManager />} />
-            <Route path="/files/images" element={<FileManager />} />
-            <Route path="/files/documents" element={<FileManager />} />
-            <Route path="/files/trash" element={<FileManager />} />
+            <Route path="/files" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/videos" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/audio" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/playlists" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/images" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/documents" element={<PageTransition><FileManager /></PageTransition>} />
+            <Route path="/files/trash" element={<PageTransition><FileManager /></PageTransition>} />
 
             {/* Converter Options */}
-            <Route path="/converter" element={<MediaConverter />} />
-            <Route path="/converter/video" element={<MediaConverter />} />
-            <Route path="/converter/audio" element={<MediaConverter />} />
-            <Route path="/converter/batch" element={<MediaConverter />} />
+            <Route path="/converter" element={<PageTransition><MediaConverter /></PageTransition>} />
+            <Route path="/converter/video" element={<PageTransition><MediaConverter /></PageTransition>} />
+            <Route path="/converter/audio" element={<PageTransition><MediaConverter /></PageTransition>} />
+            <Route path="/converter/batch" element={<PageTransition><MediaConverter /></PageTransition>} />
 
             {/* Statistics */}
-            <Route path="/stats" element={<SystemStats />} />
+            <Route path="/stats" element={<PageTransition><SystemStats /></PageTransition>} />
 
             {/* LAN Sharing Gateway */}
-            <Route path="/sharing" element={<SharingGateway />} />
-            <Route path="/share" element={<SharingGateway />} />
-            <Route path="/share/send" element={<SharingGateway />} />
-            <Route path="/share/receive" element={<SharingGateway />} />
-            <Route path="/share/history" element={<SharingGateway />} />
-            <Route path="/share/devices" element={<SharingGateway />} />
+            <Route path="/sharing" element={<PageTransition><SharingGateway /></PageTransition>} />
+            <Route path="/share" element={<PageTransition><SharingGateway /></PageTransition>} />
+            <Route path="/share/send" element={<PageTransition><SharingGateway /></PageTransition>} />
+            <Route path="/share/receive" element={<PageTransition><SharingGateway /></PageTransition>} />
+            <Route path="/share/history" element={<PageTransition><SharingGateway /></PageTransition>} />
+            <Route path="/share/devices" element={<PageTransition><SharingGateway /></PageTransition>} />
 
             {/* System Settings */}
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/settings/general" element={<SettingsPage />} />
-            <Route path="/settings/downloads" element={<SettingsPage />} />
-            <Route path="/settings/network" element={<SettingsPage />} />
-            <Route path="/settings/appearance" element={<SettingsPage />} />
-            <Route path="/settings/advanced" element={<SettingsPage />} />
-            <Route path="/settings/privacy" element={<SettingsPage />} />
-            <Route path="/settings/storage" element={<SettingsPage />} />
-            <Route path="/settings/integrations" element={<SettingsPage />} />
-            <Route path="/settings/keyboard" element={<SettingsPage />} />
-            <Route path="/settings/accessibility" element={<SettingsPage />} />
-            <Route path="/settings/import-export" element={<SettingsPage />} />
-            <Route path="/settings/experimental" element={<SettingsPage />} />
-            <Route path="/settings/about" element={<SettingsPage />} />
-            <Route path="/settings/licenses" element={<SettingsPage />} />
-            <Route path="/settings/system" element={<SettingsPage />} />
-            <Route path="/settings/logs" element={<SettingsPage />} />
+            <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/general" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/downloads" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/network" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/appearance" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/advanced" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/privacy" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/storage" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/integrations" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/keyboard" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/accessibility" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/import-export" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/experimental" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/about" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/licenses" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/system" element={<PageTransition><SettingsPage /></PageTransition>} />
+            <Route path="/settings/logs" element={<PageTransition><SettingsPage /></PageTransition>} />
 
             {/* Updates Center */}
-            <Route path="/updates" element={<UpdatesManager />} />
-            <Route path="/updates/releases" element={<UpdatesManager />} />
-            <Route path="/updates/changelog" element={<UpdatesManager />} />
+            <Route path="/updates" element={<PageTransition><UpdatesManager /></PageTransition>} />
+            <Route path="/updates/releases" element={<PageTransition><UpdatesManager /></PageTransition>} />
+            <Route path="/updates/changelog" element={<PageTransition><UpdatesManager /></PageTransition>} />
 
             {/* Diagnostics Scans */}
-            <Route path="/diagnostics" element={<SystemDiagnostics />} />
-            <Route path="/diagnostics/system" element={<SystemDiagnostics />} />
-            <Route path="/diagnostics/network" element={<SystemDiagnostics />} />
-            <Route path="/diagnostics/download" element={<SystemDiagnostics />} />
-            <Route path="/diagnostics/storage" element={<SystemDiagnostics />} />
-            <Route path="/diagnostics/report" element={<SystemDiagnostics />} />
+            <Route path="/diagnostics" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
+            <Route path="/diagnostics/system" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
+            <Route path="/diagnostics/network" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
+            <Route path="/diagnostics/download" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
+            <Route path="/diagnostics/storage" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
+            <Route path="/diagnostics/report" element={<PageTransition><SystemDiagnostics /></PageTransition>} />
 
             {/* Extensibility & Support modules */}
-            <Route path="/help" element={<HelpCenter />} />
-            <Route path="/help/getting-started" element={<HelpCenter />} />
-            <Route path="/help/tutorials" element={<HelpCenter />} />
-            <Route path="/help/faq" element={<HelpCenter />} />
-            <Route path="/help/commands" element={<HelpCenter />} />
-            <Route path="/help/troubleshooting" element={<HelpCenter />} />
-            <Route path="/help/releases" element={<HelpCenter />} />
-            <Route path="/help/keyboard-shortcuts" element={<HelpCenter />} />
-            <Route path="/help/search" element={<HelpCenter />} />
-            <Route path="/help/contact" element={<HelpCenter />} />
+            <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/getting-started" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/tutorials" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/faq" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/commands" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/troubleshooting" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/releases" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/keyboard-shortcuts" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/search" element={<PageTransition><HelpCenter /></PageTransition>} />
+            <Route path="/help/contact" element={<PageTransition><HelpCenter /></PageTransition>} />
 
-            <Route path="/feedback" element={<FeedbackCenter />} />
-            <Route path="/feedback/bug" element={<FeedbackCenter />} />
-            <Route path="/feedback/feature" element={<FeedbackCenter />} />
-            <Route path="/feedback/general" element={<FeedbackCenter />} />
+            <Route path="/feedback" element={<PageTransition><FeedbackCenter /></PageTransition>} />
+            <Route path="/feedback/bug" element={<PageTransition><FeedbackCenter /></PageTransition>} />
+            <Route path="/feedback/feature" element={<PageTransition><FeedbackCenter /></PageTransition>} />
+            <Route path="/feedback/general" element={<PageTransition><FeedbackCenter /></PageTransition>} />
 
-            <Route path="/logs" element={<LogCenter />} />
-            <Route path="/logs/application" element={<LogCenter />} />
-            <Route path="/logs/downloads" element={<LogCenter />} />
-            <Route path="/logs/network" element={<LogCenter />} />
-            <Route path="/logs/system" element={<LogCenter />} />
-            <Route path="/logs/debug" element={<LogCenter />} />
+            <Route path="/logs" element={<PageTransition><LogCenter /></PageTransition>} />
+            <Route path="/logs/application" element={<PageTransition><LogCenter /></PageTransition>} />
+            <Route path="/logs/downloads" element={<PageTransition><LogCenter /></PageTransition>} />
+            <Route path="/logs/network" element={<PageTransition><LogCenter /></PageTransition>} />
+            <Route path="/logs/system" element={<PageTransition><LogCenter /></PageTransition>} />
+            <Route path="/logs/debug" element={<PageTransition><LogCenter /></PageTransition>} />
 
-            <Route path="/plugins" element={<PluginManager />} />
-            <Route path="/plugins/installed" element={<PluginManager />} />
-            <Route path="/plugins/store" element={<PluginManager />} />
-            <Route path="/plugins/developer" element={<PluginManager />} />
-            <Route path="/plugins/settings" element={<PluginManager />} />
+            <Route path="/plugins" element={<PageTransition><PluginManager /></PageTransition>} />
+            <Route path="/plugins/installed" element={<PageTransition><PluginManager /></PageTransition>} />
+            <Route path="/plugins/store" element={<PageTransition><PluginManager /></PageTransition>} />
+            <Route path="/plugins/developer" element={<PageTransition><PluginManager /></PageTransition>} />
+            <Route path="/plugins/settings" element={<PageTransition><PluginManager /></PageTransition>} />
 
-            <Route path="/developer" element={<DeveloperCenter />} />
-            <Route path="/developer/console" element={<DeveloperCenter />} />
-            <Route path="/developer/api" element={<DeveloperCenter />} />
-            <Route path="/developer/system" element={<DeveloperCenter />} />
-            <Route path="/developer/debug" element={<DeveloperCenter />} />
+            <Route path="/developer" element={<PageTransition><DeveloperCenter /></PageTransition>} />
+            <Route path="/developer/console" element={<PageTransition><DeveloperCenter /></PageTransition>} />
+            <Route path="/developer/api" element={<PageTransition><DeveloperCenter /></PageTransition>} />
+            <Route path="/developer/system" element={<PageTransition><DeveloperCenter /></PageTransition>} />
+            <Route path="/developer/debug" element={<PageTransition><DeveloperCenter /></PageTransition>} />
 
-            <Route path="/onboarding" element={<OnboardingWizard />} />
+            <Route path="/onboarding" element={<PageTransition><OnboardingWizard /></PageTransition>} />
 
             {/* Other System Areas (Placeholders) */}
             <Route path="/about" element={<PagePlaceholder title="About Project" desc="Learn about the authors and technology credits." />} />
@@ -191,6 +204,17 @@ export const App: React.FC = () => {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+      </React.Suspense>
+    </AnimatePresence>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <BrowserRouter>
+        <GlobalLayout>
+          <AppRoutes />
         </GlobalLayout>
       </BrowserRouter>
     </ThemeProvider>

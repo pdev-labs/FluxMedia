@@ -16,7 +16,7 @@ import shutil
 import subprocess
 import urllib.parse
 import platform
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, cast
 
 # Configure UTF-8 encoding for standard streams across all environments
 for stream in (sys.stdout, sys.stderr):
@@ -27,43 +27,43 @@ for stream in (sys.stdout, sys.stderr):
             pass
 
 # --- Placeholder variables for dynamic importing ---
-Console: Any = None
-Panel: Any = None
-Table: Any = None
-Progress: Any = None
-BarColumn: Any = None
-TextColumn: Any = None
-TimeRemainingColumn: Any = None
-DownloadColumn: Any = None
-TransferSpeedColumn: Any = None
-Prompt: Any = None
-Confirm: Any = None
-IntPrompt: Any = None
-PromptBase: Any = None
-Align: Any = None
-Text: Any = None
-escape: Any = None
-requests: Any = None
-yt_dlp: Any = None
-console: Any = None
-box: Any = None
+Console: Any = cast(Any, None)
+Panel: Any = cast(Any, None)
+Table: Any = cast(Any, None)
+Progress: Any = cast(Any, None)
+BarColumn: Any = cast(Any, None)
+TextColumn: Any = cast(Any, None)
+TimeRemainingColumn: Any = cast(Any, None)
+DownloadColumn: Any = cast(Any, None)
+TransferSpeedColumn: Any = cast(Any, None)
+Prompt: Any = cast(Any, None)
+Confirm: Any = cast(Any, None)
+IntPrompt: Any = cast(Any, None)
+PromptBase: Any = cast(Any, None)
+Align: Any = cast(Any, None)
+Text: Any = cast(Any, None)
+escape: Any = cast(Any, None)
+requests: Any = cast(Any, None)
+yt_dlp: Any = cast(Any, None)
+console: Any = cast(Any, None)
+box: Any = cast(Any, None)
 
 def init_dependencies():
     """Dynamically imports the required third-party packages into the global namespace."""
     global Console, Panel, Table, Progress, BarColumn, TextColumn, TimeRemainingColumn, DownloadColumn, TransferSpeedColumn
     global Prompt, Confirm, IntPrompt, PromptBase, Align, Text, escape, requests, yt_dlp, console, box
     
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.table import Table
-    from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, DownloadColumn, TransferSpeedColumn
-    from rich.prompt import Prompt, Confirm, IntPrompt, PromptBase
-    from rich.align import Align
-    from rich.text import Text
-    from rich.markup import escape
-    from rich import box
-    import requests
-    import yt_dlp
+    from rich.console import Console # type: ignore
+    from rich.panel import Panel # type: ignore
+    from rich.table import Table # type: ignore
+    from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, DownloadColumn, TransferSpeedColumn # type: ignore
+    from rich.prompt import Prompt, Confirm, IntPrompt, PromptBase # type: ignore
+    from rich.align import Align # type: ignore
+    from rich.text import Text # type: ignore
+    from rich.markup import escape # type: ignore
+    from rich import box # type: ignore
+    import requests # type: ignore
+    import yt_dlp # type: ignore
     
     # Customize default rendering to format as (default: value)
     def _custom_render_default(self, default) -> Any:
@@ -162,8 +162,20 @@ def blink_warning():
 def install_python_package(pkg_name: str) -> bool:
     """Installs a python package using pip, showing clear output."""
     try:
-        result = subprocess.run([sys.executable, "-m", "pip", "install", pkg_name], check=True)
-        return result.returncode == 0
+        import subprocess, sys
+        result = subprocess.run([sys.executable, "-m", "pip", "install", pkg_name], capture_output=True, text=True)
+        if result.returncode != 0:
+            if "No module named pip" in result.stderr or "No module named pip" in result.stdout:
+                print(f"Error: 'pip' is not installed in the current Python environment ({sys.executable}).")
+                print("Please install 'python-pip' or run in a virtual environment (e.g. python -m venv .venv)")
+                return False
+            elif "externally-managed-environment" in result.stderr:
+                print(f"Error: Your Python environment is externally managed (PEP 668).")
+                print("Please create a virtual environment: python -m venv .venv && source .venv/bin/activate")
+                return False
+            print(f"Error installing package '{pkg_name}': {result.stderr}")
+            return False
+        return True
     except Exception as e:
         print(f"Error installing package '{pkg_name}': {e}")
         return False
@@ -179,7 +191,7 @@ def install_ffmpeg_termux() -> bool:
 
 def tag_mp3(file_path: str, title: Optional[str], artist: Optional[str], album: Optional[str], genre: Optional[str], track: Optional[str], cover_path: Optional[str] = None) -> bool:
     try:
-        from mutagen.id3 import ID3, TIT2, TPE1, TALB, TCON, TRCK, APIC
+        from mutagen.id3 import ID3, TIT2, TPE1, TALB, TCON, TRCK, APIC # type: ignore
         try:
             audio = ID3(file_path)
         except Exception:
@@ -203,7 +215,7 @@ def tag_mp3(file_path: str, title: Optional[str], artist: Optional[str], album: 
 
 def tag_m4a(file_path: str, title: Optional[str], artist: Optional[str], album: Optional[str], genre: Optional[str], track: Optional[str], cover_path: Optional[str] = None) -> bool:
     try:
-        from mutagen.mp4 import MP4, MP4Cover
+        from mutagen.mp4 import MP4, MP4Cover # type: ignore
         audio = MP4(file_path)
         if title: audio['\xa9nam'] = [title]
         if artist: audio['\xa9ART'] = [artist]
@@ -227,7 +239,7 @@ def tag_m4a(file_path: str, title: Optional[str], artist: Optional[str], album: 
 
 def tag_generic_flac(file_path: str, title: Optional[str], artist: Optional[str], album: Optional[str], genre: Optional[str], track: Optional[str], cover_path: Optional[str] = None) -> bool:
     try:
-        from mutagen.flac import FLAC, Picture
+        from mutagen.flac import FLAC, Picture # type: ignore
         audio = FLAC(file_path)
         if title: audio['title'] = [title]
         if artist: audio['artist'] = [artist]
@@ -249,7 +261,7 @@ def tag_generic_flac(file_path: str, title: Optional[str], artist: Optional[str]
 def tag_audio_file(file_path: str, tags: Dict[str, Any]) -> bool:
     """Uses mutagen to write ID3, MP4, or FLAC tags and embed cover art if present."""
     try:
-        import mutagen
+        import mutagen # type: ignore
     except ImportError:
         logger.warning("mutagen is not installed. Custom tagging skipped.")
         return False
@@ -281,7 +293,7 @@ def tag_audio_file(file_path: str, tags: Dict[str, Any]) -> bool:
     else:
         # Generic fallback
         try:
-            from mutagen import File
+            from mutagen import File # type: ignore
             audio = File(file_path)
             if audio is not None:
                 if title: audio['title'] = [title]
@@ -1503,7 +1515,7 @@ def operation_download_audio(config: Dict[str, Any]):
         })
         
     try:
-        import mutagen
+        import mutagen # type: ignore
         mutagen_available = True
     except ImportError:
         mutagen_available = False
@@ -2112,12 +2124,12 @@ def start_share_server(config: Dict[str, Any]):
     console.print("\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n")
     
     try:
-        import qrcode
+        import qrcode # type: ignore
     except ImportError:
         console.print("[yellow]Notice: 'qrcode' Python package is required to display QR codes in the terminal.[/yellow]")
         if Confirm.ask("Would you like to install 'qrcode' now?", default=True):
             if install_python_package("qrcode"):
-                import qrcode
+                import qrcode # type: ignore
             else:
                 console.print("[bold red]Failed to install 'qrcode'. Cannot print QR code.[/bold red]")
                 Prompt.ask("\nPress Enter to return...")
@@ -3508,7 +3520,7 @@ def open_folder(config: Dict[str, Any], dest_dir: str) -> bool:
         if "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ:
             return open_folder_android(dest_dir)
         elif sys.platform.startswith('win'):
-            os.startfile(dest_dir)
+            os.startfile(dest_dir) # type: ignore
             console.print("[bold green]Folder opened successfully![/bold green]")
             return True
         elif sys.platform.startswith('darwin'):
@@ -4665,8 +4677,19 @@ def main():
     parser.add_argument("urls", nargs="*", help="URLs to download")
     parser.add_argument("-a", "--audio", action="store_true", help="Download audio only")
     parser.add_argument("-o", "--output", type=str, help="Destination directory")
+    parser.add_argument("-w", "--web", action="store_true", help="Start the cross-platform Web UI server")
     args, unknown = parser.parse_known_args()
     
+    if args.web:
+        verify_and_install_requirements()
+        try:
+            from fluxmedia.api import run_server
+            run_server()
+        except ImportError as e:
+            print(f"Error starting web server: {e}")
+            sys.exit(1)
+        return
+        
     if args.urls:
         verify_and_install_requirements()
         init_dependencies()
@@ -4754,6 +4777,7 @@ def main():
             
             # Categorized sub-menus
             dl_table = Table(show_header=False, box=None, padding=(0, 1))
+            dl_table.add_row("[bold yellow]W.[/bold yellow] Launch FluxMedia Web [dim](Beta)[/dim]")
             dl_table.add_row("[bold yellow]0.[/bold yellow] Launch Advanced TUI Mode [dim](New)[/dim]")
             dl_table.add_row("[bold cyan]1.[/bold cyan] Download Video [dim](URL)[/dim]")
             dl_table.add_row("[bold cyan]2.[/bold cyan] Search & Download [dim](YT)[/dim]")
@@ -4762,7 +4786,7 @@ def main():
             dl_table.add_row("[bold cyan]5.[/bold cyan] Download Channel [dim](Batch)[/dim]")
             dl_table.add_row("[bold cyan]6.[/bold cyan] Download Subtitles [dim](Subs)[/dim]")
             dl_table.add_row("[bold cyan]7.[/bold cyan] Trim & Download [dim](Trimmer)[/dim]")
-            dl_table.add_row("[bold cyan]8.[/bold cyan] Instagram Profile [dim](Fetcher)[/dim]")
+            dl_table.add_row("[bold cyan]8.[/bold cyan] Instagram Profile [dim](Beta)[/dim]")
             
             mgmt_table = Table(show_header=False, box=None, padding=(0, 1))
             mgmt_table.add_row("[bold green]9.[/bold green] View History Logs")
@@ -4803,10 +4827,17 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)], default="19")
+            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)] + ["W", "w"], default="19")
             clear_screen()
             
-            if choice == "0":
+            if choice.upper() == "W":
+                try:
+                    from fluxmedia.api import run_server
+                    run_server()
+                except ImportError as e:
+                    console.print(f"[bold red]Failed to load Web UI. Ensure dependencies are installed: {e}[/bold red]")
+                    Prompt.ask("\nPress Enter to continue...")
+            elif choice == "0":
                 try:
                     from fluxmedia.tui import run_tui
                     run_tui()

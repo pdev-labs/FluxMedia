@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   FileVideo, Download, Sliders, Settings2, Pause, X, 
   Terminal, User, Eye, Heart, Calendar, Clock
@@ -17,35 +17,86 @@ export const VideoDownloader: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
 
-  const handleAnalyze = () => {
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [speed, setSpeed] = useState(0);
+  const [eta, setEta] = useState(0);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Helper to convert bytes to readable speed
+  const formatSpeed = (bytesPerSec: number) => {
+    if (bytesPerSec === 0) return "0 B/s";
+    const k = 1024;
+    const sizes = ["B/s", "KB/s", "MB/s", "GB/s"];
+    const i = Math.floor(Math.log(bytesPerSec) / Math.log(k));
+    return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const formatEta = (seconds: number) => {
+    if (seconds === 0) return "--";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}m ${s}s`;
+  };
+
+  useEffect(() => {
+    if (jobId) {
+      pollingRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/job/${jobId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === "success") {
+              const job = data.job;
+              setProgress(job.progress);
+              setSpeed(job.speed);
+              setEta(job.eta);
+              setLogs(job.logs);
+              
+              if (job.status === "completed" || job.status === "failed") {
+                clearInterval(pollingRef.current as ReturnType<typeof setInterval>);
+                setDownloading(false);
+              }
+            }
+          }
+        } catch (e) {}
+      }, 500);
+    }
+    
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [jobId]);
+
+  const handleAnalyze = async () => {
     if (!url) return;
     setAnalyzing(true);
     setMetadata(null);
-    setLogs(["[info] Extractor initialized...", "[info] Resolving DNS for video host..."]);
-    setTimeout(() => {
-      setAnalyzing(false);
-      setMetadata({
-        title: "Introduction to Advanced Quantum Computing & Algorithms",
-        uploader: "Physics Frontier Hub",
-        views: "482,914",
-        likes: "12,859",
-        duration: "00:45:12",
-        date: "2026-06-15",
-        thumbnail: "https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/assets/logo.png"
+    setLogs(["[info] Extractor initialized...", "[info] Contacting backend to extract metadata..."]);
+    
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
       });
-      setLogs((prev) => [
-        ...prev,
-        "[info] Connected to youtube stream protocol",
-        "[info] Available resolutions extracted: 1080p, 720p, 480p",
-        "[info] Audio tracks extracted: AAC (128kbps), OPUS (160kbps)"
-      ]);
-    }, 1500);
+      const data = await res.json();
+      if (data.status === "success") {
+        setMetadata(data.metadata);
+        setLogs((prev) => [...prev, "[success] Metadata extracted successfully!"]);
+      } else {
+        setLogs((prev) => [...prev, `[error] ${data.detail}`]);
+      }
+    } catch (e: any) {
+      setLogs((prev) => [...prev, `[error] Analysis failed: ${e.message}`]);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const handleDownload = async () => {
     setDownloading(true);
     setProgress(0);
-    setLogs((prev) => [...prev, "[info] Triggering download via API..."]);
+    setLogs(["[info] Triggering download via API..."]);
     
     try {
       const response = await fetch('/api/download', {
@@ -60,26 +111,15 @@ export const VideoDownloader: React.FC = () => {
       });
       
       const data = await response.json();
-      setLogs((prev) => [...prev, `[info] API response: ${data.message}`]);
-      
-      // Simulate progress for now until Phase 2 websockets
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setDownloading(false);
-            setLogs((prevLogs) => [
-              ...prevLogs,
-              "[success] Download completed successfully!"
-            ]);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 500);
-
+      if (data.status === "success") {
+        setLogs((prev) => [...prev, `[info] Background job started: ${data.job_id}`]);
+        setJobId(data.job_id); // This triggers the useEffect polling
+      } else {
+        setLogs((prev) => [...prev, `[error] API error: ${JSON.stringify(data)}`]);
+        setDownloading(false);
+      }
     } catch (err: any) {
-      setLogs((prev) => [...prev, `[error] Download failed: ${err.message}`]);
+      setLogs((prev) => [...prev, `[error] Download request failed: ${err.message}`]);
       setDownloading(false);
     }
   };
@@ -230,10 +270,10 @@ export const VideoDownloader: React.FC = () => {
                 <ProgressBar value={progress} size="md" variant={progress === 100 ? "success" : "default"} />
 
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2">
-                  <div>Speed: <span className="font-semibold text-foreground">4.8 MB/s</span></div>
-                  <div>ETA: <span className="font-semibold text-foreground">{progress === 100 ? "Done" : "0m 24s"}</span></div>
-                  <div>Output: <span className="font-semibold text-foreground">MP4 H.264</span></div>
-                  <div>Threads: <span className="font-semibold text-foreground">3 active</span></div>
+                  <div>Speed: <span className="font-semibold text-foreground">{formatSpeed(speed)}</span></div>
+                  <div>ETA: <span className="font-semibold text-foreground">{progress === 100 ? "Done" : formatEta(eta)}</span></div>
+                  <div>Output: <span className="font-semibold text-foreground">MP4</span></div>
+                  <div>ID: <span className="font-semibold text-foreground">{jobId}</span></div>
                 </div>
 
                 <div className="flex gap-2 justify-end pt-2">

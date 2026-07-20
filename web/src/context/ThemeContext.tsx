@@ -38,21 +38,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     palette: {
       mode: theme === 'light' ? 'light' : 'dark',
       primary: {
-        main: theme === 'light' ? '#6d28d9' : '#8b5cf6', // Deep purple
+        main: theme === 'light' ? '#4f46e5' : '#6366f1', // Vibrant indigo
       },
       secondary: {
-        main: theme === 'light' ? '#475569' : '#94a3b8',
+        main: theme === 'light' ? '#3b82f6' : '#60a5fa', // Bright blue
       },
       background: {
-        default: theme === 'light' ? '#ffffff' : '#0a0a0a',
-        paper: theme === 'light' ? '#f8f8f8' : '#121212',
+        default: theme === 'light' ? '#f8fafc' : '#020617', // Slate backgrounds
+        paper: theme === 'light' ? '#ffffff' : '#0f172a',
       },
     },
     typography: {
       fontFamily: '"Roboto", "Inter", "Helvetica", "Arial", sans-serif',
     },
     shape: {
-      borderRadius: 12,
+      borderRadius: 16,
     },
     components: {
       MuiButton: {
@@ -61,15 +61,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             textTransform: 'none',
             borderRadius: '100px', // MD3 pill buttons
             padding: '8px 24px',
+            fontWeight: 600,
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: '16px',
-            boxShadow: 'none',
-            border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid #27272a',
+            borderRadius: '20px',
+            boxShadow: theme === 'light' 
+              ? '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)' 
+              : '0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2)',
+            border: theme === 'light' ? '1px solid rgba(226, 232, 240, 0.8)' : '1px solid rgba(51, 65, 85, 0.5)',
+            backgroundImage: 'none',
+            backdropFilter: 'blur(8px)',
+            backgroundColor: theme === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.85)',
           }
         }
       }

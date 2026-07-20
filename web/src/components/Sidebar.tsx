@@ -102,7 +102,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', lg: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 256 },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: 256,
+            bgcolor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.7)',
+            backdropFilter: 'blur(12px)',
+          },
         }}
       >
         {sidebarContent}
@@ -121,7 +126,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          bgcolor: 'background.paper'
+          bgcolor: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.7)',
+          backdropFilter: 'blur(12px)',
         }}
       >
         {sidebarContent}

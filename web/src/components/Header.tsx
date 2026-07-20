@@ -19,7 +19,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle, onCommandPaletteTo
       sx={{ 
         borderBottom: 1, 
         borderColor: 'divider', 
-        bgcolor: 'background.paper',
+        bgcolor: theme === 'light' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(12px)',
         backgroundImage: 'none',
       }}
     >
