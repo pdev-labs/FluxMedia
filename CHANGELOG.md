@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.6.47] - 2026-07-20
+### Removed
+- Cleaned up the repository by permanently deleting unused files and unorganized folders (`index.html`, `style.css`, `app.js`, `assets/`, `test_pyright.py`, etc.) from the root directory to keep the codebase clean.
 ## [v1.6.46] - 2026-07-20
 ### Added
 - Expanded Linux platform compatibility in `install.sh` by adding native dependency resolution for `apk` (Alpine), `zypper` (openSUSE), and `xbps` (Void Linux) package managers. The setup script now fully supports virtually all Linux distros, macOS, and Termux natively.

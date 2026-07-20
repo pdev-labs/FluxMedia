@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.46
+## 📢 Latest Release: v1.6.47
 
-* **Expanded OS Support**: Expanded Linux platform compatibility in `install.sh` by adding native dependency resolution for `apk` (Alpine), `zypper` (openSUSE), and `xbps` (Void Linux) package managers. The setup script now fully supports virtually all Linux distros, macOS, and Termux natively.
+* **Repository Maintenance**: Cleaned up the repository by permanently deleting unused files and unorganized folders from the root directory to keep the codebase clean.
 
 ---
 
