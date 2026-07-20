@@ -16,9 +16,9 @@
 
 ---
 
-## 📢 Latest Release: v1.6.42
+## 📢 Latest Release: v1.6.43
 
-* **Sync Play (Watch Party) (Beta)**: Added a new feature that synchronizes media playback across all connected Web UI devices, fully controlled via the CLI. It leverages WebSockets to broadcast play, pause, and seek commands instantly to web clients.
+* **One-liner Install Scripts**: Refactored `install.sh` and `install.ps1` to fully support execution via piping (e.g., `curl | bash` or `iex`). The interactive CLI menus using arrow keys are now fully functional across platforms even when the script is piped directly from the web, seamlessly opening `/dev/tty` (Linux/macOS) and native console keys (Windows). Automatic and immediate privilege escalation prompts integrated into the one-liners to ensure all setup commands execute with required permissions.
 
 ---
 

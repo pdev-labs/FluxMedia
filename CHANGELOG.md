@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.6.43] - 2026-07-20
+### Fixed
+- **One-liner Install Scripts**: Refactored `install.sh` and `install.ps1` to fully support execution via piping (e.g., `curl | bash` or `iex`).
+- Interactive CLI menus using arrow keys are now fully functional across platforms even when the script is piped directly from the web, seamlessly opening `/dev/tty` (Linux/macOS) and native console keys (Windows).
+- Automatic and immediate privilege escalation prompts integrated into the one-liners to ensure all setup commands execute with required permissions.
 ## [v1.6.42] - 2026-07-20
 ### Added
 - **Sync Play (Watch Party) (Beta)**: Added a new feature that synchronizes media playback across all connected Web UI devices, fully controlled via the CLI.
