@@ -16,9 +16,11 @@
 
 ---
 
-## 📢 Latest Release: v1.6.51
+## 📢 Latest Release: v1.6.52
 
-* **Cross-Platform Fixes**: Fixed native file explorer launching specifically on Windows Subsystem for Linux (WSL) and Termux (Android). Hardened file paths throughout the system to use universally safe path joins.
+* **Sync Play via Share Portal**: Watch Party is now fully integrated into the built-in Share Portal web server. No separate backend required — devices connect, poll `/api/sync/state`, and automatically follow the master CLI's play/pause/seek commands in real time.
+* **Polling-based Browser Sync**: The portal's `app.js` registers each visiting browser client and polls the server every second to stay synchronized — videos seek and play/pause automatically on all connected devices.
+* **Headless Server Mode**: `start_share_server` now supports a `headless=True` mode so Sync Play can silently spin up the server in the background without blocking the CLI.
 
 ---
 

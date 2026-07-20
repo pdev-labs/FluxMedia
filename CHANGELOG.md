@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.6.52] - 2026-07-20
+### Enhancements
+- **Sync Play via Share Portal**: Fully migrated the Watch Party feature into the built-in Share Portal web server. The CLI `operation_sync_play` now spins up `start_share_server` in headless background mode, updates a global `SYNC_STATE` dict in-memory, and exposes two new REST endpoints (`GET /api/sync/state`, `POST /api/sync/ping`) to coordinate playback across devices.
+- **Polling-based Sync in Browser**: Added `initSyncPlay()` and `handleSyncState()` in the portal's `app.js`. Clients automatically ping the server on page load to register, then poll `/api/sync/state` every second. When the master CLI loads a media file or toggles Play/Pause/Seek, all connected browser clients instantly follow — the video player seeks and plays/pauses in sync automatically.
+- **Removed FastAPI dependency for Watch Party**: Sync Play no longer relies on the `fluxmedia.api` module or external websockets; it works entirely within the lightweight embedded HTTP server.
+- **Headless server mode**: `start_share_server` now accepts a `headless=True` flag so it can be launched silently in the background by Sync Play without printing QR codes or blocking for user input.
+
 ## [v1.6.51] - 2026-07-20
 ### Enhancements
 - **Menu Simplification**: Consolidated the "Sync Play (Watch Party)" feature into the "Share via QR-Code (LAN)" menu to reduce top-level menu clutter and unify networking features.
