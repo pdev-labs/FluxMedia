@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/assets/logo.png" alt="FluxMedia Logo" width="120" height="120" />
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/logo.png" alt="FluxMedia Logo" width="120" height="120" />
 
   # FluxMedia
 
