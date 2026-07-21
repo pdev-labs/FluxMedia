@@ -11,19 +11,7 @@ try:
 except PackageNotFoundError:
     CURRENT_VERSION = "unknown"
 
-DEFAULT_CONFIG = {
-    "download_dir": os.path.expanduser("~/Downloads/FluxMedia"),
-    "default_quality": "best",
-    "theme": "ocean",
-    "save_history": True,
-    "embed_metadata": True,
-    "embed_thumbnail": True,
-    "embed_subtitles": False,
-    "auto_update": True,
-    "ffmpeg_path": "",
-    "watch_party_name": "",
-    "watch_party_sync_mode": "strict"
-}
+
 
 # Proxy functions to resolve circular dependencies at module level
 def print_header(*args, **kwargs):
@@ -205,6 +193,34 @@ def get_default_download_dir() -> str:
     if not os.path.exists(os.path.join(home, "Downloads")):
         downloads = os.path.join(home, "FluxMediaDownloads")
     return os.path.abspath(downloads)
+
+DEFAULT_CONFIG = {
+    "download_dir": get_default_download_dir(),
+    "default_quality": "best",
+    "theme": "dark",
+    "filename_format": "%(title)s.%(ext)s",
+    "embed_metadata": True,
+    "embed_thumbnail": True,
+    "show_educational_notice": True,
+    "video_format": "default",
+    "audio_format": "mp3",
+    "cookies_browser": "none",
+    "embed_subtitles": False,
+    "audio_bitrate": "192",
+    "download_speed_limit": "disabled",
+    "web_auth_enabled": True,
+    "web_username": "admin",
+    "web_password": "admin",
+    "share_profile_name": "Admin",
+    "share_profile_photo": "",
+    "share_custom_path": "",
+    "save_history": True,
+    "auto_update": True,
+    "ffmpeg_path": "",
+    "watch_party_name": "",
+    "watch_party_sync_mode": "strict",
+    "clean_logs_enabled": True
+}
 
 def load_config() -> Dict[str, Any]:
     """Loads settings from config.json or returns default configuration."""

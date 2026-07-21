@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.7.7] - 2026-07-21
+### Fixed
+- **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.
+
 ## [v1.7.6] - 2026-07-21
 ### Fixed
 - **CLI Duplicate Option:** Suppressed duplicate output of the 'W/w' option in the CLI main menu by explicitly hiding choices in the Rich Prompt.

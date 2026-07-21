@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.6
+## 📢 Latest Release: v1.7.7
+
+* **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.
+
+---
+
+## 📢 Previous Release: v1.7.6
 
 * **CLI Duplicate Option:** Suppressed duplicate output of the 'W/w' option in the CLI main menu by explicitly hiding choices in the Rich Prompt.
 * **Web UI Launch:** Fixed `cannot import name 'load_config' from 'fluxmedia.main'` crash when launching Web UI ('W') by redirecting imports to `fluxmedia.core` in the `api.py` module.

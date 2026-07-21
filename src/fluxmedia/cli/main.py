@@ -151,27 +151,7 @@ console = Console()
 
 # --- Config & History Defaults ---
 
-DEFAULT_CONFIG = {
-    "download_dir": get_default_download_dir(),
-    "default_quality": "best",
-    "theme": "dark",
-    "filename_format": "%(title)s.%(ext)s",
-    "embed_metadata": True,
-    "embed_thumbnail": True,
-    "show_educational_notice": True,
-    "video_format": "default",
-    "audio_format": "mp3",
-    "cookies_browser": "none",
-    "embed_subtitles": False,
-    "audio_bitrate": "192",
-    "download_speed_limit": "disabled",
-    "web_auth_enabled": True,
-    "web_username": "admin",
-    "web_password": "admin",
-    "share_profile_name": "Admin",
-    "share_profile_photo": "",
-    "share_custom_path": ""
-}
+
 
 
 
