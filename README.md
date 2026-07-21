@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.2
+## 📢 Latest Release: v1.7.3
+
+* **Stability & Circular Imports:** Finalized the modular architecture transition. Fixed all remaining `Undefined variable` errors and missing global constants (`CONFIG_FILE`, `DEFAULT_CONFIG`, etc.) caused by the extraction script. Resolved circular dependency crashes between the `cli`, `core`, and `downloader` modules by implementing local proxy functions.
+
+---
+
+## 📢 Previous Release: v1.7.2
 
 * **Hotfix:** Fixed missing `requests` and `logging` imports in the `core` and `utils` modules that caused crashes during startup and updates.
 

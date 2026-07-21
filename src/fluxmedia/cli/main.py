@@ -1,3 +1,12 @@
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, DownloadColumn, TransferSpeedColumn
+from rich.markup import escape
+import os
+
 #!/usr/bin/env python3
 """
 FluxMedia - Cross-platform Command-Line Media Downloader
@@ -29,22 +38,11 @@ for stream in (sys.stdout, sys.stderr):
             pass
 
 # --- Placeholder variables for dynamic importing ---
-Console: Any = cast(Any, None)
-Panel: Any = cast(Any, None)
-Table: Any = cast(Any, None)
-Progress: Any = cast(Any, None)
-BarColumn: Any = cast(Any, None)
-TextColumn: Any = cast(Any, None)
-TimeRemainingColumn: Any = cast(Any, None)
-DownloadColumn: Any = cast(Any, None)
-TransferSpeedColumn: Any = cast(Any, None)
 Prompt: Any = cast(Any, None)
 Confirm: Any = cast(Any, None)
 IntPrompt: Any = cast(Any, None)
 PromptBase: Any = cast(Any, None)
 Align: Any = cast(Any, None)
-Text: Any = cast(Any, None)
-escape: Any = cast(Any, None)
 requests: Any = cast(Any, None)
 yt_dlp: Any = cast(Any, None)
 console: Any = cast(Any, None)

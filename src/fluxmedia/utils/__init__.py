@@ -55,7 +55,9 @@ def clear_screen():
         else:
             os.system('clear')
 
+LAST_INTERRUPT_TIME = 0
 def register_interrupt() -> bool:
+    global LAST_INTERRUPT_TIME
     """Registers a KeyboardInterrupt event. Returns True if it was a double-press within 6 seconds."""
     global LAST_INTERRUPT_TIME
     import time
@@ -746,7 +748,10 @@ def sanitize_filename(name):
 def check_input_non_blocking():
     import sys
     if sys.platform == 'win32':
-        import msvcrt
+        try:
+            import msvcrt
+        except ImportError:
+            pass
         while msvcrt.kbhit():
             try:
                 char = msvcrt.getch().decode('utf-8', errors='ignore').lower()

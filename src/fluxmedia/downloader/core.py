@@ -1,3 +1,21 @@
+
+from rich.progress import DownloadColumn, TransferSpeedColumn
+import logging
+logger = logging.getLogger(__name__)
+
+def check_input_non_blocking():
+    return None
+
+def get_unique_filename(path):
+    import os
+    if not os.path.exists(path):
+        return path
+    base, ext = os.path.splitext(path)
+    counter = 1
+    while os.path.exists(f"{base} ({counter}){ext}"):
+        counter += 1
+    return f"{base} ({counter}){ext}"
+
 import os
 import sys
 import time

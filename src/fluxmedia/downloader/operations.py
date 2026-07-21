@@ -1,3 +1,24 @@
+
+def print_header(*args, **kwargs):
+    from fluxmedia.cli.main import print_header as _ph
+    return _ph(*args, **kwargs)
+
+def handle_post_download_options(*args, **kwargs):
+    from fluxmedia.cli.main import handle_post_download_options as _hpdo
+    return _hpdo(*args, **kwargs)
+
+import shutil
+import datetime
+import logging
+logger = logging.getLogger(__name__)
+
+from rich.prompt import IntPrompt
+from rich.table import Table
+from rich.markup import escape
+
+from fluxmedia.core import *
+from fluxmedia.utils import *
+
 import os
 import sys
 import time
@@ -824,4 +845,5 @@ def operation_search_and_download_video(config: Dict[str, Any]):
         handle_post_download_options(config, dest_dir)
     else:
         Prompt.ask("\nPress Enter to return to menu...")
+
 

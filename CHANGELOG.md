@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.7.3] - 2026-07-21
+### Fixed
+- **Stability & Circular Imports:** Finalized the modular architecture transition. Fixed all remaining `Undefined variable` errors and missing global constants (`CONFIG_FILE`, `DEFAULT_CONFIG`, etc.) caused by the extraction script. Resolved circular dependency crashes between the `cli`, `core`, and `downloader` modules by implementing local proxy functions.
+
+
 ## [v1.7.2] - 2026-07-21
 ### Fixed
 - **Missing Global Imports:** Fixed `NameError` crashes (`requests` and `logger` not defined) occurring during the auto-update check on startup by properly injecting global imports into the newly isolated `core` and `utils` modules.

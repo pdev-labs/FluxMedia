@@ -1,3 +1,54 @@
+
+import datetime
+import yt_dlp
+from rich.markup import escape
+
+import os
+CURRENT_VERSION = "1.7.2"
+DEFAULT_CONFIG = {
+    "download_dir": os.path.expanduser("~/Downloads/FluxMedia"),
+    "default_quality": "best",
+    "theme": "ocean",
+    "save_history": True,
+    "embed_metadata": True,
+    "embed_thumbnail": True,
+    "embed_subtitles": False,
+    "auto_update": True,
+    "ffmpeg_path": "",
+    "watch_party_name": "",
+    "watch_party_sync_mode": "strict"
+}
+
+# Dummy imports to resolve circular dependencies at module level
+def print_header(*args, **kwargs): pass
+def operation_update_fluxmedia(*args, **kwargs): pass
+def prompt_video_quality(*args, **kwargs): return "best"
+def get_format_string(*args, **kwargs): return "best"
+def apply_common_ydl_opts(*args, **kwargs): pass
+def run_ydl_download(*args, **kwargs): pass
+
+
+import os
+import platform
+
+def get_data_dir():
+    if platform.system() == "Windows":
+        return os.path.join(os.environ.get("APPDATA", ""), "FluxMedia")
+    elif platform.system() == "Darwin":
+        return os.path.expanduser("~/Library/Application Support/FluxMedia")
+    else:
+        return os.path.expanduser("~/.local/share/FluxMedia")
+
+DATA_DIR = get_data_dir()
+os.makedirs(DATA_DIR, exist_ok=True)
+
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
+HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
+QUEUE_FILE = os.path.join(DATA_DIR, "queue.json")
+LOG_FILE = os.path.join(DATA_DIR, "fluxmedia.log")
+THUMB_CACHE_DIR = os.path.join(DATA_DIR, "thumb_cache")
+os.makedirs(THUMB_CACHE_DIR, exist_ok=True)
+
 import os
 import sys
 import json
