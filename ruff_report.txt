@@ -1,0 +1,812 @@
+F401 [*] `fastapi.Query` imported but unused
+ --> src/fluxmedia/api.py:1:71
+  |
+1 | from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam, WebSocket, WebSocketDisconnect
+  |                                                                       ^^^^^^
+2 | from fastapi.middleware.cors import CORSMiddleware
+3 | from fastapi.staticfiles import StaticFiles
+  |
+help: Remove unused import: `fastapi.Query`
+
+F401 [*] `asyncio` imported but unused
+  --> src/fluxmedia/api.py:18:8
+   |
+16 | import yt_dlp
+17 | import uuid
+18 | import asyncio
+   |        ^^^^^^^
+19 |
+20 | from fluxmedia.main import (
+   |
+help: Remove unused import: `asyncio`
+
+F401 [*] `fluxmedia.main.get_data_dir` imported but unused
+  --> src/fluxmedia/api.py:21:31
+   |
+20 | from fluxmedia.main import (
+21 |     load_config, save_config, get_data_dir,
+   |                               ^^^^^^^^^^^^
+22 |     load_history, DATA_DIR, CONFIG_FILE, HISTORY_FILE, LOG_FILE
+23 | )
+   |
+help: Remove unused import
+
+F401 [*] `fluxmedia.main.CONFIG_FILE` imported but unused
+  --> src/fluxmedia/api.py:22:29
+   |
+20 | from fluxmedia.main import (
+21 |     load_config, save_config, get_data_dir,
+22 |     load_history, DATA_DIR, CONFIG_FILE, HISTORY_FILE, LOG_FILE
+   |                             ^^^^^^^^^^^
+23 | )
+   |
+help: Remove unused import
+
+F841 Local variable `data` is assigned to but never used
+  --> src/fluxmedia/api.py:72:13
+   |
+70 |         while True:
+71 |             # We don't really expect much from the client, maybe pings.
+72 |             data = await websocket.receive_text()
+   |             ^^^^
+73 |     except WebSocketDisconnect:
+74 |         sync_manager.disconnect(client_id)
+   |
+help: Remove assignment to unused variable `data`
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:189:23
+    |
+187 |         with JOBS_LOCK:
+188 |             job = DOWNLOAD_JOBS.get(job_id)
+189 |             if not job: return
+    |                       ^
+190 |             
+191 |             if d['status'] == 'downloading':
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:368:25
+    |
+366 | def classify_file(ext: str) -> str:
+367 |     ext = ext.lower()
+368 |     if ext in VIDEO_EXTS:  return "videos"
+    |                         ^
+369 |     if ext in AUDIO_EXTS:  return "audio"
+370 |     if ext in IMAGE_EXTS:  return "images"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:369:25
+    |
+367 |     ext = ext.lower()
+368 |     if ext in VIDEO_EXTS:  return "videos"
+369 |     if ext in AUDIO_EXTS:  return "audio"
+    |                         ^
+370 |     if ext in IMAGE_EXTS:  return "images"
+371 |     if ext in DOC_EXTS:    return "documents"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:370:25
+    |
+368 |     if ext in VIDEO_EXTS:  return "videos"
+369 |     if ext in AUDIO_EXTS:  return "audio"
+370 |     if ext in IMAGE_EXTS:  return "images"
+    |                         ^
+371 |     if ext in DOC_EXTS:    return "documents"
+372 |     return "other"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:371:23
+    |
+369 |     if ext in AUDIO_EXTS:  return "audio"
+370 |     if ext in IMAGE_EXTS:  return "images"
+371 |     if ext in DOC_EXTS:    return "documents"
+    |                       ^
+372 |     return "other"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:585:29
+    |
+584 |         def human_size(b: int) -> str:
+585 |             if b < 1024 ** 2: return f"{b / 1024:.1f} KB"
+    |                             ^
+586 |             if b < 1024 ** 3: return f"{b / (1024 ** 2):.1f} MB"
+587 |             return f"{b / (1024 ** 3):.2f} GB"
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/api.py:586:29
+    |
+584 |         def human_size(b: int) -> str:
+585 |             if b < 1024 ** 2: return f"{b / 1024:.1f} KB"
+586 |             if b < 1024 ** 3: return f"{b / (1024 ** 2):.1f} MB"
+    |                             ^
+587 |             return f"{b / (1024 ** 3):.2f} GB"
+    |
+
+F401 [*] `io` imported but unused
+  --> src/fluxmedia/main.py:9:8
+   |
+ 7 | import sys
+ 8 | import os
+ 9 | import io
+   |        ^^
+10 | import math
+11 | import html
+   |
+help: Remove unused import: `io`
+
+F401 [*] `math` imported but unused
+  --> src/fluxmedia/main.py:10:8
+   |
+ 8 | import os
+ 9 | import io
+10 | import math
+   |        ^^^^
+11 | import html
+12 | import datetime
+   |
+help: Remove unused import: `math`
+
+F401 [*] `html` imported but unused
+  --> src/fluxmedia/main.py:11:8
+   |
+ 9 | import io
+10 | import math
+11 | import html
+   |        ^^^^
+12 | import datetime
+13 | import json
+   |
+help: Remove unused import: `html`
+
+E401 [*] Multiple imports on one line
+   --> src/fluxmedia/main.py:165:9
+    |
+163 |     """Installs a python package using pip, showing clear output."""
+164 |     try:
+165 |         import subprocess, sys
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+166 |         result = subprocess.run([sys.executable, "-m", "pip", "install", pkg_name], capture_output=True, text=True)
+167 |         if result.returncode != 0:
+    |
+help: Split imports
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:173:23
+    |
+171 |                 return False
+172 |             elif "externally-managed-environment" in result.stderr:
+173 |                 print(f"Error: Your Python environment is externally managed (PEP 668).")
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+174 |                 print("Please create a virtual environment: python -m venv .venv && source .venv/bin/activate")
+175 |                 return False
+    |
+help: Remove extraneous `f` prefix
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:199:17
+    |
+197 |         except Exception:
+198 |             audio = ID3()
+199 |         if title: audio['TIT2'] = TIT2(encoding=3, text=title)
+    |                 ^
+200 |         if artist: audio['TPE1'] = TPE1(encoding=3, text=artist)
+201 |         if album: audio['TALB'] = TALB(encoding=3, text=album)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:200:18
+    |
+198 |             audio = ID3()
+199 |         if title: audio['TIT2'] = TIT2(encoding=3, text=title)
+200 |         if artist: audio['TPE1'] = TPE1(encoding=3, text=artist)
+    |                  ^
+201 |         if album: audio['TALB'] = TALB(encoding=3, text=album)
+202 |         if genre: audio['TCON'] = TCON(encoding=3, text=genre)
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:201:17
+    |
+199 |         if title: audio['TIT2'] = TIT2(encoding=3, text=title)
+200 |         if artist: audio['TPE1'] = TPE1(encoding=3, text=artist)
+201 |         if album: audio['TALB'] = TALB(encoding=3, text=album)
+    |                 ^
+202 |         if genre: audio['TCON'] = TCON(encoding=3, text=genre)
+203 |         if track: audio['TRCK'] = TRCK(encoding=3, text=str(track))
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:202:17
+    |
+200 |         if artist: audio['TPE1'] = TPE1(encoding=3, text=artist)
+201 |         if album: audio['TALB'] = TALB(encoding=3, text=album)
+202 |         if genre: audio['TCON'] = TCON(encoding=3, text=genre)
+    |                 ^
+203 |         if track: audio['TRCK'] = TRCK(encoding=3, text=str(track))
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:203:17
+    |
+201 |         if album: audio['TALB'] = TALB(encoding=3, text=album)
+202 |         if genre: audio['TCON'] = TCON(encoding=3, text=genre)
+203 |         if track: audio['TRCK'] = TRCK(encoding=3, text=str(track))
+    |                 ^
+204 |         
+205 |         if cover_path and os.path.exists(cover_path):
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:220:17
+    |
+218 |         from mutagen.mp4 import MP4, MP4Cover # type: ignore
+219 |         audio = MP4(file_path)
+220 |         if title: audio['\xa9nam'] = [title]
+    |                 ^
+221 |         if artist: audio['\xa9ART'] = [artist]
+222 |         if album: audio['\xa9alb'] = [album]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:221:18
+    |
+219 |         audio = MP4(file_path)
+220 |         if title: audio['\xa9nam'] = [title]
+221 |         if artist: audio['\xa9ART'] = [artist]
+    |                  ^
+222 |         if album: audio['\xa9alb'] = [album]
+223 |         if genre: audio['\xa9gen'] = [genre]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:222:17
+    |
+220 |         if title: audio['\xa9nam'] = [title]
+221 |         if artist: audio['\xa9ART'] = [artist]
+222 |         if album: audio['\xa9alb'] = [album]
+    |                 ^
+223 |         if genre: audio['\xa9gen'] = [genre]
+224 |         if track:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:223:17
+    |
+221 |         if artist: audio['\xa9ART'] = [artist]
+222 |         if album: audio['\xa9alb'] = [album]
+223 |         if genre: audio['\xa9gen'] = [genre]
+    |                 ^
+224 |         if track:
+225 |             try:
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:244:17
+    |
+242 |         from mutagen.flac import FLAC, Picture # type: ignore
+243 |         audio = FLAC(file_path)
+244 |         if title: audio['title'] = [title]
+    |                 ^
+245 |         if artist: audio['artist'] = [artist]
+246 |         if album: audio['album'] = [album]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:245:18
+    |
+243 |         audio = FLAC(file_path)
+244 |         if title: audio['title'] = [title]
+245 |         if artist: audio['artist'] = [artist]
+    |                  ^
+246 |         if album: audio['album'] = [album]
+247 |         if genre: audio['genre'] = [genre]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:246:17
+    |
+244 |         if title: audio['title'] = [title]
+245 |         if artist: audio['artist'] = [artist]
+246 |         if album: audio['album'] = [album]
+    |                 ^
+247 |         if genre: audio['genre'] = [genre]
+248 |         if track: audio['tracknumber'] = [str(track)]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:247:17
+    |
+245 |         if artist: audio['artist'] = [artist]
+246 |         if album: audio['album'] = [album]
+247 |         if genre: audio['genre'] = [genre]
+    |                 ^
+248 |         if track: audio['tracknumber'] = [str(track)]
+249 |         if cover_path and os.path.exists(cover_path):
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:248:17
+    |
+246 |         if album: audio['album'] = [album]
+247 |         if genre: audio['genre'] = [genre]
+248 |         if track: audio['tracknumber'] = [str(track)]
+    |                 ^
+249 |         if cover_path and os.path.exists(cover_path):
+250 |             pic = Picture()
+    |
+
+F401 `mutagen` imported but unused; consider using `importlib.util.find_spec` to test for availability
+   --> src/fluxmedia/main.py:264:16
+    |
+262 |     """Uses mutagen to write ID3, MP4, or FLAC tags and embed cover art if present."""
+263 |     try:
+264 |         import mutagen # type: ignore
+    |                ^^^^^^^
+265 |     except ImportError:
+266 |         logger.warning("mutagen is not installed. Custom tagging skipped.")
+    |
+help: Remove unused import: `mutagen`
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:299:25
+    |
+297 |             audio = File(file_path)
+298 |             if audio is not None:
+299 |                 if title: audio['title'] = [title]
+    |                         ^
+300 |                 if artist: audio['artist'] = [artist]
+301 |                 if album: audio['album'] = [album]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:300:26
+    |
+298 |             if audio is not None:
+299 |                 if title: audio['title'] = [title]
+300 |                 if artist: audio['artist'] = [artist]
+    |                          ^
+301 |                 if album: audio['album'] = [album]
+302 |                 if genre: audio['genre'] = [genre]
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:301:25
+    |
+299 |                 if title: audio['title'] = [title]
+300 |                 if artist: audio['artist'] = [artist]
+301 |                 if album: audio['album'] = [album]
+    |                         ^
+302 |                 if genre: audio['genre'] = [genre]
+303 |                 audio.save()
+    |
+
+E701 Multiple statements on one line (colon)
+   --> src/fluxmedia/main.py:302:25
+    |
+300 |                 if artist: audio['artist'] = [artist]
+301 |                 if album: audio['album'] = [album]
+302 |                 if genre: audio['genre'] = [genre]
+    |                         ^
+303 |                 audio.save()
+304 |                 success = True
+    |
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:453:27
+    |
+451 |                         sys.exit(1)
+452 |                 elif req["name"] == "ffmpeg":
+453 |                     print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454 |                     install_ffmpeg_termux()
+455 |                 elif req["name"] == "Android Storage":
+    |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:456:27
+    |
+454 |                     install_ffmpeg_termux()
+455 |                 elif req["name"] == "Android Storage":
+456 |                     print(f"\n>>> Requesting System Permission: [ Android Storage Access ]...")
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457 |                     print("Running 'termux-setup-storage'. Please accept the storage prompt on your phone.")
+458 |                     try:
+    |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:599:23
+    |
+597 |                             sys.exit(1)
+598 |             if missing_ffmpeg:
+599 |                 print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+600 |                 inst_cmd = get_ffmpeg_install_instruction()
+601 |                 print(f"To install FFmpeg on your system, please run the following command:")
+    |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:601:23
+    |
+599 |                 print(f"\n>>> Setting up system dependency: [ ffmpeg ]...")
+600 |                 inst_cmd = get_ffmpeg_install_instruction()
+601 |                 print(f"To install FFmpeg on your system, please run the following command:")
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+602 |                 print(f"  {inst_cmd}")
+603 |                 input("Press Enter to continue once you have installed FFmpeg...")
+    |
+help: Remove extraneous `f` prefix
+
+E402 Module level import not at top of file
+   --> src/fluxmedia/main.py:608:1
+    |
+606 |     verify_and_install_requirements()
+607 |
+608 | import threading
+    | ^^^^^^^^^^^^^^^^
+609 |
+610 | # --- Retrieve Current Version ---
+    |
+help: Move module level imports to top of file
+
+F541 [*] f-string without any placeholders
+   --> src/fluxmedia/main.py:728:31
+    |
+726 | …     LATEST_VERSION = data.get("info", {}).get("version")
+727 | …     if is_new_version_available(CURRENT_VERSION, LATEST_VERSION):
+728 | …         console.print(f"\n[bold yellow]🔔 UPDATE AVAILABLE 🔔[/bold yellow]")
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+729 | …         console.print(f"A new version of FluxMedia is available: [bold green]{LATEST_VERSION}[/bold green] (Current: {CURRENT_VERSI…
+    |
+help: Remove extraneous `f` prefix
+
+E401 [*] Multiple imports on one line
+    --> src/fluxmedia/main.py:1170:17
+     |
+1168 |                     return [], info
+1169 |                 
+1170 |                 import os, time
+     |                 ^^^^^^^^^^^^^^^
+1171 |                 if os.path.exists(filepath):
+1172 |                     base_dir = os.path.dirname(filepath)
+     |
+help: Split imports
+
+F841 Local variable `error` is assigned to but never used
+    --> src/fluxmedia/main.py:1253:5
+     |
+1251 |     success = CURRENT_THEME_COLORS["success"]
+1252 |     warning = CURRENT_THEME_COLORS["warning"]
+1253 |     error = CURRENT_THEME_COLORS["error"]
+     |     ^^^^^
+1254 |     border = CURRENT_THEME_COLORS["border"]
+     |
+help: Remove assignment to unused variable `error`
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1416:27
+     |
+1414 |         for idx, url in enumerate(valid_urls, 1):
+1415 |             console.print(f"\n[bold cyan]--- Video [{idx}/{total_urls}] ---[/bold cyan]")
+1416 |             console.print(f"[bold green]Fetching video information...[/bold green]")
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1417 |             title = "Unknown Video"
+     |
+help: Remove extraneous `f` prefix
+
+F401 `mutagen` imported but unused; consider using `importlib.util.find_spec` to test for availability
+    --> src/fluxmedia/main.py:1518:16
+     |
+1517 |     try:
+1518 |         import mutagen # type: ignore
+     |                ^^^^^^^
+1519 |         mutagen_available = True
+1520 |     except ImportError:
+     |
+help: Remove unused import: `mutagen`
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1533:27
+     |
+1531 |         for idx, url in enumerate(valid_urls, 1):
+1532 |             console.print(f"\n[bold cyan]--- Audio [{idx}/{total_urls}] ---[/bold cyan]")
+1533 |             console.print(f"[bold green]Fetching audio information...[/bold green]")
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1534 |             title = "Unknown Audio"
+1535 |             info = {}
+     |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1574:43
+     |
+1572 |                     for filepath in downloaded_files:
+1573 |                         if os.path.exists(filepath):
+1574 |                             console.print(f"[bold green]Applying metadata tags and artwork...[/bold green]")
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1575 |                             tag_audio_file(filepath, tags)
+     |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1652:19
+     |
+1650 |         ydl_opts['postprocessors'] = postprocessors
+1651 |     
+1652 |     console.print(f"\n[bold green]Fetching playlist information...[/bold green]")
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1653 |     playlist_title = "Unknown Playlist"
+1654 |     try:
+     |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1748:19
+     |
+1746 |         ydl_opts['postprocessors'] = postprocessors
+1747 |         
+1748 |     console.print(f"\n[bold green]Fetching channel information...[/bold green]")
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1749 |     channel_name = "Unknown Channel"
+1750 |     try:
+     |
+help: Remove extraneous `f` prefix
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:1812:19
+     |
+1810 |     ydl_opts = apply_common_ydl_opts(ydl_opts, config)
+1811 |     
+1812 |     console.print(f"\n[bold green]Fetching subtitle information...[/bold green]")
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1813 |     title = "Unknown Video"
+1814 |     try:
+     |
+help: Remove extraneous `f` prefix
+
+F841 [*] Local variable `e` is assigned to but never used
+    --> src/fluxmedia/main.py:2302:41
+     |
+2300 |                             self.end_headers()
+2301 |                             self.wfile.write(json.dumps({"error": "Invalid Password"}).encode('utf-8'))
+2302 |                     except Exception as e:
+     |                                         ^
+2303 |                         self.send_response(400)
+2304 |                         self.end_headers()
+     |
+help: Remove assignment to unused variable `e`
+
+E701 Multiple statements on one line (colon)
+    --> src/fluxmedia/main.py:2567:49
+     |
+2565 | …                     ext = os.path.splitext(filename)[1].lower()
+2566 | …                     mime = 'image/jpeg'
+2567 | …                     if ext == '.png': mime = 'image/png'
+     |                                       ^
+2568 | …                     elif ext == '.webp': mime = 'image/webp'
+2569 | …                     elif ext == '.gif': mime = 'image/gif'
+     |
+
+E701 Multiple statements on one line (colon)
+    --> src/fluxmedia/main.py:2568:52
+     |
+2566 | …                     mime = 'image/jpeg'
+2567 | …                     if ext == '.png': mime = 'image/png'
+2568 | …                     elif ext == '.webp': mime = 'image/webp'
+     |                                          ^
+2569 | …                     elif ext == '.gif': mime = 'image/gif'
+2570 | …                     elif ext == '.svg': mime = 'image/svg+xml'
+     |
+
+E701 Multiple statements on one line (colon)
+    --> src/fluxmedia/main.py:2569:51
+     |
+2567 | …                     if ext == '.png': mime = 'image/png'
+2568 | …                     elif ext == '.webp': mime = 'image/webp'
+2569 | …                     elif ext == '.gif': mime = 'image/gif'
+     |                                         ^
+2570 | …                     elif ext == '.svg': mime = 'image/svg+xml'
+2571 | …                     self.send_header("Content-Type", mime)
+     |
+
+E701 Multiple statements on one line (colon)
+    --> src/fluxmedia/main.py:2570:51
+     |
+2568 | …                     elif ext == '.webp': mime = 'image/webp'
+2569 | …                     elif ext == '.gif': mime = 'image/gif'
+2570 | …                     elif ext == '.svg': mime = 'image/svg+xml'
+     |                                         ^
+2571 | …                     self.send_header("Content-Type", mime)
+2572 | …                     self.send_header("Content-Length", str(os.path.getsize(filename)))
+     |
+
+F841 Local variable `status` is assigned to but never used
+    --> src/fluxmedia/main.py:3013:104
+     |
+3012 |     try:
+3013 |         with console.status("[bold green]Running FFmpeg transcode... Please wait.", spinner="dots") as status:
+     |                                                                                                        ^^^^^^
+3014 |             result = subprocess.run(cmd, capture_output=True, text=True)
+     |
+help: Remove assignment to unused variable `status`
+
+F841 Local variable `status` is assigned to but never used
+    --> src/fluxmedia/main.py:3808:96
+     |
+3807 |     try:
+3808 |         with console.status("[bold green]Upgrading yt-dlp... Please wait.", spinner="dots") as status:
+     |                                                                                                ^^^^^^
+3809 |             result = subprocess.run(
+3810 |                 [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"],
+     |
+help: Remove assignment to unused variable `status`
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:4669:23
+     |
+4667 |         os.makedirs(profile_dir, exist_ok=True)
+4668 |         
+4669 |         console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+4670 |         try:
+4671 |             import instaloader
+     |
+help: Remove extraneous `f` prefix
+
+F841 [*] Local variable `e` is assigned to but never used
+    --> src/fluxmedia/main.py:4751:45
+     |
+4749 |                                 os.rename(os.path.join(profile_dir, nf), new_path)
+4750 |                                 
+4751 |                         except Exception as e:
+     |                                             ^
+4752 |                             pass
+     |
+help: Remove assignment to unused variable `e`
+
+F541 [*] f-string without any placeholders
+    --> src/fluxmedia/main.py:4775:23
+     |
+4773 |         os.makedirs(target_dir, exist_ok=True)
+4774 |         
+4775 |         console.print(f"\n[cyan]Initializing Instaloader...[/cyan]")
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+4776 |         try:
+4777 |             import instaloader
+     |
+help: Remove extraneous `f` prefix
+
+F841 Local variable `status` is assigned to but never used
+    --> src/fluxmedia/main.py:4977:102
+     |
+4975 |     console.print("Running: [bold cyan]pip install -U yt-dlp requests rich[/bold cyan]...")
+4976 |     try:
+4977 |         with console.status("[bold green]Upgrading dependencies... Please wait.", spinner="dots") as status:
+     |                                                                                                      ^^^^^^
+4978 |             result = subprocess.run(
+4979 |                 [sys.executable, "-m", "pip", "install", "-U", "yt-dlp", "requests", "rich"],
+     |
+help: Remove assignment to unused variable `status`
+
+E701 Multiple statements on one line (colon)
+    --> src/fluxmedia/main.py:5060:17
+     |
+5058 |         for u in args.urls:
+5059 |             n = normalize_and_validate_url(u)
+5060 |             if n: valid_urls.append(n)
+     |                 ^
+5061 |             
+5062 |         if not valid_urls:
+     |
+
+F401 [*] `sys` imported but unused
+ --> src/fluxmedia/tui.py:2:8
+  |
+1 | import os
+2 | import sys
+  |        ^^^
+3 | import shutil
+4 | import asyncio
+  |
+help: Remove unused import: `sys`
+
+F401 [*] `asyncio` imported but unused
+ --> src/fluxmedia/tui.py:4:8
+  |
+2 | import sys
+3 | import shutil
+4 | import asyncio
+  |        ^^^^^^^
+5 | from typing import Dict, Any, List
+  |
+help: Remove unused import: `asyncio`
+
+F401 [*] `typing.Dict` imported but unused
+ --> src/fluxmedia/tui.py:5:20
+  |
+3 | import shutil
+4 | import asyncio
+5 | from typing import Dict, Any, List
+  |                    ^^^^
+6 |
+7 | from textual.app import App, ComposeResult
+  |
+help: Remove unused import
+
+F401 [*] `typing.List` imported but unused
+ --> src/fluxmedia/tui.py:5:31
+  |
+3 | import shutil
+4 | import asyncio
+5 | from typing import Dict, Any, List
+  |                               ^^^^
+6 |
+7 | from textual.app import App, ComposeResult
+  |
+help: Remove unused import
+
+F401 [*] `textual.worker.Worker` imported but unused
+  --> src/fluxmedia/tui.py:10:28
+   |
+ 8 | from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+ 9 | from textual.widgets import Header, Footer, Input, Button, Label, Log, Select, Checkbox, Static, Tabs, Tab
+10 | from textual.worker import Worker, get_current_worker
+   |                            ^^^^^^
+11 | from textual import work, on
+   |
+help: Remove unused import
+
+F401 [*] `textual.worker.get_current_worker` imported but unused
+  --> src/fluxmedia/tui.py:10:36
+   |
+ 8 | from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+ 9 | from textual.widgets import Header, Footer, Input, Button, Label, Log, Select, Checkbox, Static, Tabs, Tab
+10 | from textual.worker import Worker, get_current_worker
+   |                                    ^^^^^^^^^^^^^^^^^^
+11 | from textual import work, on
+   |
+help: Remove unused import
+
+F401 [*] `fluxmedia.main.tag_audio_file` imported but unused
+  --> src/fluxmedia/tui.py:18:28
+   |
+16 | from fluxmedia.main import (
+17 |     load_config, save_config, get_format_string, normalize_and_validate_url,
+18 |     apply_common_ydl_opts, tag_audio_file, check_internet
+   |                            ^^^^^^^^^^^^^^
+19 | )
+   |
+help: Remove unused import
+
+F401 [*] `fluxmedia.main.check_internet` imported but unused
+  --> src/fluxmedia/tui.py:18:44
+   |
+16 | from fluxmedia.main import (
+17 |     load_config, save_config, get_format_string, normalize_and_validate_url,
+18 |     apply_common_ydl_opts, tag_audio_file, check_internet
+   |                                            ^^^^^^^^^^^^^^
+19 | )
+   |
+help: Remove unused import
+
+F841 [*] Local variable `e` is assigned to but never used
+   --> src/fluxmedia/tui.py:312:37
+    |
+310 |                     if downloaded % 5 == 0:
+311 |                         self.call_from_thread(self.log_msg, f"Downloaded {downloaded}/{count} posts...")
+312 |                 except Exception as e:
+    |                                     ^
+313 |                     pass
+    |
+help: Remove assignment to unused variable `e`
+
+Found 72 errors.
+[*] 34 fixable with the `--fix` option (5 hidden fixes can be enabled with the `--unsafe-fixes` option).

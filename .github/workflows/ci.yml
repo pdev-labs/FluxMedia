@@ -7,23 +7,39 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  python-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pylint bandit
+          pip install -e .
+      - name: Ruff Check
+        run: ruff check src/
+      - name: Bandit Security Scan
+        run: bandit -r src/ -ll -ii
 
+  web-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
-
       - name: Install dependencies
         run: |
           cd web
           npm ci
-
       - name: TypeScript Check
         run: |
           cd web

@@ -1,0 +1,949 @@
+Run started:2026-07-21 09:38:42.975018+00:00
+
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: src/fluxmedia/api.py:13:0
+12	import datetime
+13	import subprocess
+14	import platform
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/api.py:451:21
+450	        try:
+451	            result = subprocess.run(
+452	                ["ffmpeg", "-version"],
+453	                capture_output=True, text=True, timeout=5
+454	            )
+455	            version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg found"
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/api.py:451:21
+450	        try:
+451	            result = subprocess.run(
+452	                ["ffmpeg", "-version"],
+453	                capture_output=True, text=True, timeout=5
+454	            )
+455	            version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg found"
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/api.py:676:12
+675	        try:
+676	            subprocess.run(cmd, capture_output=True, timeout=3600)
+677	        except Exception:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/api.py:677:8
+676	            subprocess.run(cmd, capture_output=True, timeout=3600)
+677	        except Exception:
+678	            pass
+679	
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/api.py:696:17
+695	    try:
+696	        result = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, timeout=5)
+697	        version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg"
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/api.py:696:17
+695	    try:
+696	        result = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, timeout=5)
+697	        version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg"
+
+--------------------------------------------------
+>> Issue: [B104:hardcoded_bind_all_interfaces] Possible binding to all interfaces.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-605 (https://cwe.mitre.org/data/definitions/605.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b104_hardcoded_bind_all_interfaces.html
+   Location: src/fluxmedia/api.py:727:45
+726	
+727	def run_server(port: int = 8000, host: str = "0.0.0.0"):
+728	    print(f"Starting FluxMedia Web server on {host}:{port}...")
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: src/fluxmedia/main.py:13:0
+12	import shutil
+13	import subprocess
+14	import urllib.parse
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:23:8
+22	            getattr(stream, 'reconfigure')(encoding='utf-8')
+23	        except Exception:
+24	            pass
+25	
+
+--------------------------------------------------
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b605_start_process_with_a_shell.html
+   Location: src/fluxmedia/main.py:75:8
+74	    if sys.platform.startswith('win'):
+75	        os.system('cls')
+76	    else:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:75:8
+74	    if sys.platform.startswith('win'):
+75	        os.system('cls')
+76	    else:
+
+--------------------------------------------------
+>> Issue: [B605:start_process_with_a_shell] Starting a process with a shell: Seems safe, but may be changed in the future, consider rewriting without shell
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b605_start_process_with_a_shell.html
+   Location: src/fluxmedia/main.py:80:12
+79	        else:
+80	            os.system('clear')
+81	
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:80:12
+79	        else:
+80	            os.system('clear')
+81	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:119:4
+118	        sys.stdout.flush()
+119	    except Exception:
+120	        pass
+121	        
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:144:8
+143	            sys.stdout.flush()
+144	        except Exception:
+145	            pass
+146	        if console:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:156:8
+155	            sys.stdout.flush()
+156	        except Exception:
+157	            pass
+158	
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: src/fluxmedia/main.py:162:8
+161	    try:
+162	        import subprocess
+163	        import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:164:17
+163	        import sys
+164	        result = subprocess.run([sys.executable, "-m", "pip", "install", pkg_name], capture_output=True, text=True)
+165	        if result.returncode != 0:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:184:17
+183	    try:
+184	        result = subprocess.run(["pkg", "install", "-y", "ffmpeg"], check=True)
+185	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:184:17
+183	    try:
+184	        result = subprocess.run(["pkg", "install", "-y", "ffmpeg"], check=True)
+185	        return result.returncode == 0
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:311:8
+310	            os.remove(cover_path)
+311	        except Exception:
+312	            pass
+313	            
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: src/fluxmedia/main.py:383:8
+382	    if rich_available:
+383	        assert Console is not None
+384	        assert Table is not None
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: src/fluxmedia/main.py:384:8
+383	        assert Console is not None
+384	        assert Table is not None
+385	        assert Panel is not None
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: src/fluxmedia/main.py:385:8
+384	        assert Table is not None
+385	        assert Panel is not None
+386	        assert Align is not None
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: src/fluxmedia/main.py:386:8
+385	        assert Panel is not None
+386	        assert Align is not None
+387	        temp_console = Console()
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:457:24
+456	                    try:
+457	                        subprocess.run(["termux-setup-storage"], check=True)
+458	                    except Exception as e:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:457:24
+456	                    try:
+457	                        subprocess.run(["termux-setup-storage"], check=True)
+458	                    except Exception as e:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:499:16
+498	                import shlex
+499	                subprocess.Popen(['cmd.exe', '/c', 'start', 'FluxMedia Installer', bat_path])
+500	                launched_new_terminal = True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:499:16
+498	                import shlex
+499	                subprocess.Popen(['cmd.exe', '/c', 'start', 'FluxMedia Installer', bat_path])
+500	                launched_new_terminal = True
+
+--------------------------------------------------
+>> Issue: [B103:set_bad_file_permissions] Chmod setting a permissive mask 0o755 on file (sh_path).
+   Severity: Medium   Confidence: High
+   CWE: CWE-732 (https://cwe.mitre.org/data/definitions/732.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b103_set_bad_file_permissions.html
+   Location: src/fluxmedia/main.py:526:16
+525	                
+526	                os.chmod(sh_path, 0o755)
+527	                cmd = f'tell application "Terminal" to do script "{sh_path}"'
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:528:16
+527	                cmd = f'tell application "Terminal" to do script "{sh_path}"'
+528	                subprocess.Popen(["osascript", "-e", cmd])
+529	                launched_new_terminal = True
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:528:16
+527	                cmd = f'tell application "Terminal" to do script "{sh_path}"'
+528	                subprocess.Popen(["osascript", "-e", cmd])
+529	                launched_new_terminal = True
+
+--------------------------------------------------
+>> Issue: [B103:set_bad_file_permissions] Chmod setting a permissive mask 0o755 on file (sh_path).
+   Severity: Medium   Confidence: High
+   CWE: CWE-732 (https://cwe.mitre.org/data/definitions/732.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b103_set_bad_file_permissions.html
+   Location: src/fluxmedia/main.py:562:16
+561	                
+562	                os.chmod(sh_path, 0o755)
+563	                terminals = [
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:573:28
+572	                        try:
+573	                            subprocess.Popen(term)
+574	                            launched_new_terminal = True
+
+--------------------------------------------------
+>> Issue: [B112:try_except_continue] Try, Except, Continue detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html
+   Location: src/fluxmedia/main.py:576:24
+575	                            break
+576	                        except Exception:
+577	                            continue
+578	            except Exception as e:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:708:4
+707	            LATEST_VERSION = data.get("info", {}).get("version")
+708	    except Exception:
+709	        pass
+710	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:777:8
+776	                            break
+777	        except Exception:
+778	            pass
+779	        return distro
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: src/fluxmedia/main.py:876:4
+875	    "web_username": "admin",
+876	    "web_password": "admin",
+877	    "share_profile_name": "Admin",
+878	    "share_profile_photo": "",
+879	    "share_custom_path": ""
+880	}
+881	
+882	def load_config() -> Dict[str, Any]:
+883	    """Loads settings from config.json or returns default configuration."""
+884	    if not os.path.exists(CONFIG_FILE):
+885	        try:
+886	            with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+887	                json.dump(DEFAULT_CONFIG, f, indent=4, ensure_ascii=False)
+888	            logger.info("Created default configuration file.")
+889	            return DEFAULT_CONFIG.copy()
+890	        except Exception as e:
+891	            logger.error(f"Failed to create config.json: {e}")
+892	            return DEFAULT_CONFIG.copy()
+893	    
+894	    try:
+895	        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+896	            config = json.load(f)
+897	            updated = False
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:997:12
+996	            )
+997	            subprocess.run(["powershell", "-Command", ps_script], capture_output=True, check=False)
+998	        elif system == "Darwin":
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:997:12
+996	            )
+997	            subprocess.run(["powershell", "-Command", ps_script], capture_output=True, check=False)
+998	        elif system == "Darwin":
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:1003:12
+1002	            osascript_cmd = f'display notification "{escaped_message}" with title "{escaped_title}"'
+1003	            subprocess.run(["osascript", "-e", osascript_cmd], capture_output=True, check=False)
+1004	        elif "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:1003:12
+1002	            osascript_cmd = f'display notification "{escaped_message}" with title "{escaped_title}"'
+1003	            subprocess.run(["osascript", "-e", osascript_cmd], capture_output=True, check=False)
+1004	        elif "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:1007:16
+1006	            if shutil.which("termux-notification"):
+1007	                subprocess.run(["termux-notification", "-t", title, "-c", message], capture_output=True, check=False)
+1008	        elif system == "Linux":
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:1007:16
+1006	            if shutil.which("termux-notification"):
+1007	                subprocess.run(["termux-notification", "-t", title, "-c", message], capture_output=True, check=False)
+1008	        elif system == "Linux":
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:1011:16
+1010	            if shutil.which("notify-send"):
+1011	                subprocess.run(["notify-send", title, message], capture_output=True, check=False)
+1012	    except Exception as e:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:1011:16
+1010	            if shutil.which("notify-send"):
+1011	                subprocess.run(["notify-send", title, message], capture_output=True, check=False)
+1012	    except Exception as e:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:1028:4
+1027	            return url
+1028	    except Exception:
+1029	        pass
+1030	    return None
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:1857:4
+1856	            return h * 3600 + m * 60 + s
+1857	    except Exception:
+1858	        pass
+1859	    return None
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:1961:8
+1960	                    return ip_addr
+1961	        except Exception:
+1962	            pass
+1963	        return "127.0.0.1"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: src/fluxmedia/main.py:2243:24
+2242	                
+2243	                token = ""
+2244	                # 1. Header check
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2274:20
+2273	                            }
+2274	                    except Exception:
+2275	                        pass
+2276	                    is_synced = (client_id in SYNC_STATE["synced_clients"]) if client_id else False
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2329:24
+2328	                            os.makedirs(thumb_dir)
+2329	                        except Exception:
+2330	                            pass
+2331	                    
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:2342:24
+2341	                        cmd = ['ffmpeg', '-y', '-ss', '00:00:02', '-i', real_file, '-vframes', '1', '-vf', 'scale=320:-1', cache_path]
+2342	                        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+2343	                        if os.path.isfile(cache_path):
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2345:20
+2344	                            return cache_path
+2345	                    except Exception:
+2346	                        pass
+2347	                    
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:2350:24
+2349	                        cmd = ['ffmpeg', '-y', '-i', real_file, '-vframes', '1', '-vf', 'scale=320:-1', cache_path]
+2350	                        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+2351	                        if os.path.isfile(cache_path):
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2353:20
+2352	                            return cache_path
+2353	                    except Exception:
+2354	                        pass
+2355	                
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2587:20
+2586	                                    return
+2587	                    except Exception:
+2588	                        pass
+2589	                        
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2609:20
+2608	                                return
+2609	                    except Exception:
+2610	                        pass
+2611	                        
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:2646:20
+2645	                                return
+2646	                    except Exception:
+2647	                        pass
+2648	                        
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: src/fluxmedia/main.py:2859:35
+2858	                        if not config.get("web_password"):
+2859	                            config["web_password"] = "admin"
+2860	                    save_config(config)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3014:21
+3013	        with console.status("[bold green]Running FFmpeg transcode... Please wait.", spinner="dots") as status:
+3014	            result = subprocess.run(cmd, capture_output=True, text=True)
+3015	            
+
+--------------------------------------------------
+>> Issue: [B310:blacklist] Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-22 (https://cwe.mitre.org/data/definitions/22.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen
+   Location: src/fluxmedia/main.py:3041:8
+3040	    try:
+3041	        _urlreq.urlopen(f"{server_url}/api/sync/state", timeout=2)
+3042	        server_running = True
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:3043:4
+3042	        server_running = True
+3043	    except Exception:
+3044	        pass
+3045	
+
+--------------------------------------------------
+>> Issue: [B310:blacklist] Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-22 (https://cwe.mitre.org/data/definitions/22.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen
+   Location: src/fluxmedia/main.py:3053:16
+3052	            try:
+3053	                _urlreq.urlopen(f"{server_url}/api/sync/state", timeout=1)
+3054	                server_running = True
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:3056:12
+3055	                break
+3056	            except Exception:
+3057	                pass
+3058	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'admin'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: src/fluxmedia/main.py:3765:35
+3764	                        if not config.get("web_password"):
+3765	                            config["web_password"] = "admin"
+3766	                    save_config(config)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3809:21
+3808	        with console.status("[bold green]Upgrading yt-dlp... Please wait.", spinner="dots") as status:
+3809	            result = subprocess.run(
+3810	                [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"],
+3811	                capture_output=True,
+3812	                text=True
+3813	            )
+3814	            
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:3844:8
+3843	    try:
+3844	        subprocess.run(["termux-open", abs_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3845	        if console:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3844:8
+3843	    try:
+3844	        subprocess.run(["termux-open", abs_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3845	        if console:
+
+--------------------------------------------------
+>> Issue: [B606:start_process_with_no_shell] Starting a process without a shell.
+   Severity: Low   Confidence: Medium
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html
+   Location: src/fluxmedia/main.py:3870:12
+3869	        elif sys.platform.startswith('win'):
+3870	            os.startfile(dest_dir) # type: ignore
+3871	            console.print("[bold green]Folder opened successfully![/bold green]")
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:3874:12
+3873	        elif sys.platform.startswith('darwin'):
+3874	            subprocess.run(["open", dest_dir], check=True)
+3875	            console.print("[bold green]Folder opened successfully![/bold green]")
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3874:12
+3873	        elif sys.platform.startswith('darwin'):
+3874	            subprocess.run(["open", dest_dir], check=True)
+3875	            console.print("[bold green]Folder opened successfully![/bold green]")
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:3880:20
+3879	                try:
+3880	                    subprocess.run(["wslview", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3881	                except Exception:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3880:20
+3879	                try:
+3880	                    subprocess.run(["wslview", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3881	                except Exception:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:3882:20
+3881	                except Exception:
+3882	                    subprocess.run(["explorer.exe", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3883	            else:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3882:20
+3881	                except Exception:
+3882	                    subprocess.run(["explorer.exe", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3883	            else:
+
+--------------------------------------------------
+>> Issue: [B607:start_process_with_partial_path] Starting a process with a partial executable path
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b607_start_process_with_partial_path.html
+   Location: src/fluxmedia/main.py:3884:16
+3883	            else:
+3884	                subprocess.run(["xdg-open", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3885	            console.print("[bold green]Folder opened successfully![/bold green]")
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:3884:16
+3883	            else:
+3884	                subprocess.run(["xdg-open", dest_dir], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+3885	            console.print("[bold green]Folder opened successfully![/bold green]")
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:4540:12
+4539	                    return char
+4540	            except Exception:
+4541	                pass
+4542	    else:
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/main.py:4751:24
+4750	                                
+4751	                        except Exception:
+4752	                            pass
+4753	                    
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:4930:17
+4929	    try:
+4930	        result = subprocess.run([sys.executable, "-m", "pip", "install", "-U", "fluxmedia"], capture_output=True, text=True)
+4931	        if result.returncode == 0:
+
+--------------------------------------------------
+>> Issue: [B606:start_process_with_no_shell] Starting a process without a shell.
+   Severity: Low   Confidence: Medium
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html
+   Location: src/fluxmedia/main.py:4941:20
+4940	                if exe_path.endswith(('.py', '.pyw', '__main__.py')):
+4941	                    os.execv(sys.executable, [sys.executable] + sys.argv)
+4942	                else:
+
+--------------------------------------------------
+>> Issue: [B606:start_process_with_no_shell] Starting a process without a shell.
+   Severity: Low   Confidence: Medium
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b606_start_process_with_no_shell.html
+   Location: src/fluxmedia/main.py:4943:20
+4942	                else:
+4943	                    os.execv(exe_path, [exe_path] + sys.argv[1:])
+4944	            except Exception:
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:4958:16
+4957	                cmd_args = ["cmd.exe", "/c", "start", "cmd", "/c", f"title FluxMedia Auto-Updater && echo Upgrading FluxMedia... && \"{sys.executable}\" -m pip install -U fluxmedia"]
+4958	                subprocess.Popen(cmd_args)
+4959	                sys.exit(0)
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src/fluxmedia/main.py:4978:21
+4977	        with console.status("[bold green]Upgrading dependencies... Please wait.", spinner="dots") as status:
+4978	            result = subprocess.run(
+4979	                [sys.executable, "-m", "pip", "install", "-U", "yt-dlp", "requests", "rich"],
+4980	                capture_output=True,
+4981	                text=True
+4982	            )
+4983	            
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src/fluxmedia/tui.py:309:16
+308	                        self.call_from_thread(self.log_msg, f"Downloaded {downloaded}/{count} posts...")
+309	                except Exception:
+310	                    pass
+311	                    
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 5434
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 82
+		Medium: 5
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 8
+		High: 79
+Files skipped (0):

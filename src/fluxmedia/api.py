@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query as QParam, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -15,11 +15,9 @@ import platform
 import threading
 import yt_dlp
 import uuid
-import asyncio
 
 from fluxmedia.main import (
-    load_config, save_config, get_data_dir,
-    load_history, DATA_DIR, CONFIG_FILE, HISTORY_FILE, LOG_FILE
+    load_config, save_config, load_history, DATA_DIR, HISTORY_FILE, LOG_FILE
 )
 
 app = FastAPI(title="FluxMedia API")

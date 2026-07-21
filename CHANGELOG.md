@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.7.0] - 2026-07-21
+### Major Architectural Overhaul & Security Patches
+- **Modular Refactor:** The legacy 5,200-line monolithic `main.py` God Object has been completely decoupled into distinct `cli`, `core`, `downloader`, `server`, and `utils` modules.
+- **FastAPI Share Portal:** Completely replaced the legacy synchronous `http.server` with an asynchronous, high-performance `FastAPI` & `Uvicorn` instance for the LAN Share Portal, inherently supporting HTTP Range requests for flawless video streaming.
+- **Security:** Eliminated all High-Severity `shell=True` subprocess vulnerabilities across the installation and auto-updater modules. Upgraded thumbnail cache hashing from MD5 to SHA-256.
+- **CI/CD Pipelines:** Introduced GitHub Actions workflows to enforce strict `ruff`, `bandit`, and `pylint` code quality standards.
+
 ## [v1.6.57] - 2026-07-21
 ### Optimization
 - **Highly Optimized Sync Option & Share Portal**: Upgraded the internal server to use multithreading (`socketserver.ThreadingTCPServer`). This allows multiple requests to be processed concurrently across all platforms (Linux, Windows, macOS, Termux).

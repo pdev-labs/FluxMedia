@@ -1,13 +1,10 @@
 import os
-import sys
 import shutil
-import asyncio
-from typing import Dict, Any, List
+from typing import Any
 
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.widgets import Header, Footer, Input, Button, Label, Log, Select, Checkbox, Static, Tabs, Tab
-from textual.worker import Worker, get_current_worker
 from textual import work, on
 
 import yt_dlp
@@ -15,7 +12,7 @@ import yt_dlp
 # Import existing functions from fluxmedia
 from fluxmedia.main import (
     load_config, save_config, get_format_string, normalize_and_validate_url,
-    apply_common_ydl_opts, tag_audio_file, check_internet
+    apply_common_ydl_opts
 )
 
 class TuiLogger:
@@ -309,7 +306,7 @@ class FluxMediaApp(App):
                     downloaded += 1
                     if downloaded % 5 == 0:
                         self.call_from_thread(self.log_msg, f"Downloaded {downloaded}/{count} posts...")
-                except Exception as e:
+                except Exception:
                     pass
                     
             self.call_from_thread(self.log_msg, f"[bold green]✅ Finished downloading profile @{username} to {profile_dir}[/bold green]")

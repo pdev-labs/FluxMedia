@@ -1,0 +1,18 @@
+************* Module fluxmedia.main
+src/fluxmedia/main.py:62:4: E0401: Unable to import 'requests' (import-error)
+src/fluxmedia/main.py:63:4: E0401: Unable to import 'yt_dlp' (import-error)
+src/fluxmedia/main.py:87:22: E0601: Using variable 'LAST_INTERRUPT_TIME' before assignment (used-before-assignment)
+src/fluxmedia/main.py:192:8: E0401: Unable to import 'mutagen.id3' (import-error)
+src/fluxmedia/main.py:216:8: E0401: Unable to import 'mutagen.mp4' (import-error)
+src/fluxmedia/main.py:240:8: E0401: Unable to import 'mutagen.flac' (import-error)
+src/fluxmedia/main.py:294:12: E0401: Unable to import 'mutagen' (import-error)
+src/fluxmedia/main.py:3870:12: E1101: Module 'os' has no 'startfile' member (no-member)
+src/fluxmedia/main.py:4534:8: E0401: Unable to import 'msvcrt' (import-error)
+src/fluxmedia/main.py:4620:8: E0401: Unable to import 'instaloader' (import-error)
+src/fluxmedia/main.py:4671:12: E0401: Unable to import 'instaloader' (import-error)
+src/fluxmedia/main.py:4719:40: E1126: Sequence index is not an int, slice, or instance with __index__ (invalid-sequence-index)
+src/fluxmedia/main.py:4777:12: E0401: Unable to import 'instaloader' (import-error)
+
+-----------------------------------
+Your code has been rated at 9.82/10
+

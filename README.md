@@ -16,7 +16,15 @@
 
 ---
 
-## 📢 Latest Release: v1.6.57
+## 📢 Latest Release: v1.7.0
+
+* **Major Architectural Overhaul:** The legacy 5,200-line monolithic God Object has been completely decoupled into distinct modular packages.
+* **FastAPI Share Portal:** Completely replaced the legacy synchronous `http.server` with an asynchronous, high-performance `FastAPI` instance for the LAN Share Portal.
+* **Security & CI/CD:** Eliminated all High-Severity `shell=True` subprocess vulnerabilities and integrated strict GitHub Actions workflows for continuous integration and deployment.
+
+---
+
+## 📢 Previous Release: v1.6.57
 
 * **Highly Optimized Sync Option**: Upgraded the internal sync and share portal server to use multithreading (`socketserver.ThreadingTCPServer`). This allows multiple requests to be processed concurrently across all platforms (Linux, Windows, macOS, Termux).
 * **Improved Streaming Performance**: Increased the file chunk size to 1MB, greatly improving file streaming efficiency and reducing overhead for the Share Portal.
