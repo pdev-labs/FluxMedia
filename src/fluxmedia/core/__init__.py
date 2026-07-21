@@ -19,13 +19,30 @@ DEFAULT_CONFIG = {
     "watch_party_sync_mode": "strict"
 }
 
-# Dummy imports to resolve circular dependencies at module level
-def print_header(*args, **kwargs): pass
-def operation_update_fluxmedia(*args, **kwargs): pass
-def prompt_video_quality(*args, **kwargs): return "best"
-def get_format_string(*args, **kwargs): return "best"
-def apply_common_ydl_opts(*args, **kwargs): pass
-def run_ydl_download(*args, **kwargs): pass
+# Proxy functions to resolve circular dependencies at module level
+def print_header(*args, **kwargs):
+    from fluxmedia.cli.main import print_header as _ph
+    return _ph(*args, **kwargs)
+
+def operation_update_fluxmedia(*args, **kwargs):
+    from fluxmedia.cli.main import operation_update_fluxmedia as _upd
+    return _upd(*args, **kwargs)
+
+def prompt_video_quality(*args, **kwargs):
+    from fluxmedia.downloader.utils import prompt_video_quality as _pvq
+    return _pvq(*args, **kwargs)
+
+def get_format_string(*args, **kwargs):
+    from fluxmedia.downloader.utils import get_format_string as _gfs
+    return _gfs(*args, **kwargs)
+
+def apply_common_ydl_opts(*args, **kwargs):
+    from fluxmedia.downloader.core import apply_common_ydl_opts as _aco
+    return _aco(*args, **kwargs)
+
+def run_ydl_download(*args, **kwargs):
+    from fluxmedia.downloader.core import run_ydl_download as _ryd
+    return _ryd(*args, **kwargs)
 
 
 import os

@@ -16,9 +16,14 @@
 
 ---
 
-## 📢 Latest Release: v1.7.3
+## 📢 Latest Release: v1.7.4
 
-* **Stability & Circular Imports:** Finalized the modular architecture transition. Fixed all remaining `Undefined variable` errors and missing global constants (`CONFIG_FILE`, `DEFAULT_CONFIG`, etc.) caused by the extraction script. Resolved circular dependency crashes between the `cli`, `core`, and `downloader` modules by implementing local proxy functions.
+* **UI Crashes & Type Hints:** Fixed a critical `AttributeError: 'NoneType' object has no attribute 'width'` that occurred when navigating the UI due to the `rich.console.Console` instance being overwritten by a residual dummy type hint during the modular extraction. Removed all remaining `cast(Any, None)` dummies.
+* **Update Checker Proxy Fix:** Fixed an issue where selecting "Update Now" in the UI would silently exit the program without performing the update. This was caused by the dummy proxy function evaluating to `pass` instead of lazy-loading the actual CLI update handler.
+
+---
+
+## 📢 Previous Release: v1.7.3
 
 ---
 

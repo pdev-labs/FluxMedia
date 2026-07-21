@@ -4,7 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def check_input_non_blocking():
-    return None
+    from fluxmedia.utils import check_input_non_blocking as _cinb
+    return _cinb()
 
 def get_unique_filename(path):
     import os

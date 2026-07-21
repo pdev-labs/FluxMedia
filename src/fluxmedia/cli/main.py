@@ -3,6 +3,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
+from rich.align import Align
 from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, DownloadColumn, TransferSpeedColumn
 from rich.markup import escape
 import os
@@ -38,15 +39,10 @@ for stream in (sys.stdout, sys.stderr):
             pass
 
 # --- Placeholder variables for dynamic importing ---
-Prompt: Any = cast(Any, None)
-Confirm: Any = cast(Any, None)
-IntPrompt: Any = cast(Any, None)
-PromptBase: Any = cast(Any, None)
-Align: Any = cast(Any, None)
-requests: Any = cast(Any, None)
-yt_dlp: Any = cast(Any, None)
-console: Any = cast(Any, None)
-box: Any = cast(Any, None)
+from rich.prompt import Prompt, Confirm, IntPrompt, PromptBase
+from rich import box
+import requests
+import yt_dlp
 
 
 
@@ -151,7 +147,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("FluxMedia")
 
-console = None
+console = Console()
 
 # --- Config & History Defaults ---
 
