@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.0
+## 📢 Latest Release: v1.7.1
+
+* **Hotfix:** Fixed package discovery to ensure the new `fluxmedia.cli`, `fluxmedia.core`, and other modules are properly included in the PyPI wheel, resolving `ModuleNotFoundError` during startup.
+
+---
+
+## 📢 Previous Release: v1.7.0
 
 * **Major Architectural Overhaul:** The legacy 5,200-line monolithic God Object has been completely decoupled into distinct modular packages.
 * **FastAPI Share Portal:** Completely replaced the legacy synchronous `http.server` with an asynchronous, high-performance `FastAPI` instance for the LAN Share Portal.

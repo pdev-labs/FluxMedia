@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import urllib.parse
 import platform
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 from fluxmedia.downloader.core import *
 from fluxmedia.downloader.operations import *
 from fluxmedia.core import *

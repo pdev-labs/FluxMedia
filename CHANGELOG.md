@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.7.1] - 2026-07-21
+### Fixed
+- **Package Discovery:** Fixed an issue where the newly created modular packages (`fluxmedia.cli`, `fluxmedia.core`, etc.) were missing from the built PyPI wheel, causing a `ModuleNotFoundError` during startup.
+- **Import Error:** Fixed a missing `cast` import in the CLI entry point.
+
+
 ## [v1.7.0] - 2026-07-21
 ### Major Architectural Overhaul & Security Patches
 - **Modular Refactor:** The legacy 5,200-line monolithic `main.py` God Object has been completely decoupled into distinct `cli`, `core`, `downloader`, `server`, and `utils` modules.
