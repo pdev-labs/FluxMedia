@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.7.8] - 2026-07-21
+### Fixed
+- **Android/Termux Installation:** Fixed `Failed to build 'pydantic-core'` error occurring during installation on Termux. Updated the one-liner installation script and auto-updater to explicitly fetch pre-compiled `pydantic-core` Android wheels using a custom PyPI index, bypassing local rust compiler requirements.
+
 ## [v1.7.7] - 2026-07-21
 ### Fixed
 - **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.

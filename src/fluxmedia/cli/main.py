@@ -2101,7 +2101,11 @@ def operation_update_fluxmedia():
 
     console.print("\nRunning: [bold cyan]pip install -U fluxmedia[/bold cyan]...")
     try:
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "-U", "fluxmedia"], capture_output=True, text=True)
+        pip_args = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia"]
+        if "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ:
+            pip_args.extend(["--extra-index-url", "https://eutalix.github.io/android-pydantic-core/"])
+            
+        result = subprocess.run(pip_args, capture_output=True, text=True)
         if result.returncode == 0:
             console.print("[bold green]Successfully updated FluxMedia![/bold green]")
             console.print("Restarting application to apply changes...\n")

@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.7
+## 📢 Latest Release: v1.7.8
+
+* **Android/Termux Installation:** Fixed `Failed to build 'pydantic-core'` error occurring during installation on Termux. Updated the one-liner installation script and auto-updater to explicitly fetch pre-compiled `pydantic-core` Android wheels using a custom PyPI index, bypassing local rust compiler requirements.
+
+---
+
+## 📢 Previous Release: v1.7.7
 
 * **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.
 
@@ -124,6 +130,8 @@ Alternatively, you can install directly via `pip`:
 ```bash
 pip install fluxmedia
 ```
+*(**Android/Termux Users:** Pydantic-core requires compilation. See the [Installation Guide](docs/installation.md) for the correct pip command.)*
+
 *For detailed, OS-specific manual installation instructions, please check the **[Installation Guide](docs/installation.md)**.*
 
 ### 2. Usage

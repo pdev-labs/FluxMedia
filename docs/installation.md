@@ -95,7 +95,8 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
    ```bash
    termux-setup-storage
    ```
-4. Install FluxMedia:
+4. Install FluxMedia (requires pre-compiled `pydantic-core` wheels for Android):
    ```bash
+   pip install pydantic-core --extra-index-url https://eutalix.github.io/android-pydantic-core/
    pip install fluxmedia
    ```
