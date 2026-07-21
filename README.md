@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.1
+## 📢 Latest Release: v1.7.2
+
+* **Hotfix:** Fixed missing `requests` and `logging` imports in the `core` and `utils` modules that caused crashes during startup and updates.
+
+---
+
+## 📢 Previous Release: v1.7.1
 
 * **Hotfix:** Fixed package discovery to ensure the new `fluxmedia.cli`, `fluxmedia.core`, and other modules are properly included in the PyPI wheel, resolving `ModuleNotFoundError` during startup.
 

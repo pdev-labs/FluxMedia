@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.7.2] - 2026-07-21
+### Fixed
+- **Missing Global Imports:** Fixed `NameError` crashes (`requests` and `logger` not defined) occurring during the auto-update check on startup by properly injecting global imports into the newly isolated `core` and `utils` modules.
+
+
 ## [v1.7.1] - 2026-07-21
 ### Fixed
 - **Package Discovery:** Fixed an issue where the newly created modular packages (`fluxmedia.cli`, `fluxmedia.core`, etc.) were missing from the built PyPI wheel, causing a `ModuleNotFoundError` during startup.

@@ -14,6 +14,11 @@ from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeRemainingColumn
 import threading
 import urllib.request
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
 console = Console()
 
 def init_dependencies():
