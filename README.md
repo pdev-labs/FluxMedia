@@ -16,7 +16,14 @@
 
 ---
 
-## 📢 Latest Release: v1.6.56
+## 📢 Latest Release: v1.6.57
+
+* **Highly Optimized Sync Option**: Upgraded the internal sync and share portal server to use multithreading (`socketserver.ThreadingTCPServer`). This allows multiple requests to be processed concurrently across all platforms (Linux, Windows, macOS, Termux).
+* **Improved Streaming Performance**: Increased the file chunk size to 1MB, greatly improving file streaming efficiency and reducing overhead for the Share Portal.
+
+---
+
+## 📢 Previous Release: v1.6.56
 
 * **Synchronous Playback Barrier**: Added a distributed state barrier for Watch Parties. If any synced device stops playback (due to internet buffering or a browser autoplay block), the host CLI will automatically detect it and transition the entire Watch Party into a "Waiting" state. Playback will only resume perfectly synchronously once every synced device reports it is ready to play.
 * **Mobile Browser Caching Fixed**: Added `Cache-Control` headers and cache-busting query strings to the portal's UI assets. This ensures Android and iOS devices always load the latest version of the Watch Party features instead of stale cached files.

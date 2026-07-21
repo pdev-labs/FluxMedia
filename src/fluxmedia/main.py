@@ -2428,7 +2428,7 @@ def start_share_server(config: Dict[str, Any], headless: bool = False):
                 with open(path, "rb") as f:
                     f.seek(start)
                     bytes_to_send = content_length
-                    chunk_size = 64 * 1024
+                    chunk_size = 1024 * 1024  # 1MB chunk size for highly optimized streaming across platforms
                     while bytes_to_send > 0:
                         chunk = f.read(min(chunk_size, bytes_to_send))
                         if not chunk:
@@ -2732,11 +2732,12 @@ def start_share_server(config: Dict[str, Any], headless: bool = False):
         # Dynamically allocate an open port starting from 8000
         httpd = None
         max_attempts = 20
-        socketserver.TCPServer.allow_reuse_address = True
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
+        socketserver.ThreadingTCPServer.daemon_threads = True
         new_port = port
         for attempt in range(max_attempts):
             try:
-                httpd = socketserver.TCPServer(("", new_port), SilentHandler)
+                httpd = socketserver.ThreadingTCPServer(("", new_port), SilentHandler)
                 break
             except OSError:
                 new_port += 1

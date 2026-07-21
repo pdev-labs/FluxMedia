@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.6.57] - 2026-07-21
+### Optimization
+- **Highly Optimized Sync Option & Share Portal**: Upgraded the internal server to use multithreading (`socketserver.ThreadingTCPServer`). This allows multiple requests to be processed concurrently across all platforms (Linux, Windows, macOS, Termux).
+- **Streaming Performance**: Increased the file stream chunk size to 1MB, greatly improving media streaming efficiency and reducing CPU overhead for the host.
 ## [v1.6.56] - 2026-07-20
 ### Added
 - **Synchronous Playback Barrier**: Added a distributed state barrier for Watch Parties. If any synced device stops playback (due to internet buffering or a browser autoplay block), the host CLI will automatically detect it and transition the entire Watch Party into a "Waiting" state. Playback will only resume once every synced device reports it is ready to play.
