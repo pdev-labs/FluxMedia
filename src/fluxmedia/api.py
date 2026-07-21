@@ -16,7 +16,7 @@ import threading
 import yt_dlp
 import uuid
 
-from fluxmedia.main import (
+from fluxmedia.core import (
     load_config, save_config, load_history, DATA_DIR, HISTORY_FILE, LOG_FILE
 )
 

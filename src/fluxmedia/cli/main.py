@@ -2374,7 +2374,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option", choices=[str(i) for i in range(0, 20)] + ["W", "w"], default="19")
+            choice = Prompt.ask("Choose an option (0-19, W)", choices=[str(i) for i in range(0, 20)] + ["W", "w"], show_choices=False, default="19")
             clear_screen()
             
             if choice.upper() == "W":

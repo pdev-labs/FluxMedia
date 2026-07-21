@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.7.6] - 2026-07-21
+### Fixed
+- **CLI Duplicate Option:** Suppressed duplicate output of the 'W/w' option in the CLI main menu by explicitly hiding choices in the Rich Prompt.
+- **Web UI Launch:** Fixed `cannot import name 'load_config' from 'fluxmedia.main'` crash when launching Web UI ('W') by redirecting imports to `fluxmedia.core` in the `api.py` module.
+
 ## [v1.7.5] - 2026-07-21
 ### Fixed
 - **Version Tracking:** Fixed an issue where the application would incorrectly prompt users to update due to a hardcoded version string (`1.7.2`). The version is now dynamically loaded from the package metadata.
