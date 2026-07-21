@@ -119,7 +119,8 @@ show_menu() {
     
     # Show cursor
     tput cnorm 2>/dev/null || true
-    return $selected
+    MENU_CHOICE=$selected
+    return 0
 }
 
 # --- OS Detection ---
@@ -154,7 +155,7 @@ install_dependencies() {
             sudo apt update >/dev/null 2>&1
             cmd="sudo apt install python3-pip python3-venv pipx ffmpeg -y"
         elif command -v pacman &> /dev/null; then
-            cmd="sudo pacman -S python-pip pipx ffmpeg --noconfirm"
+            cmd="sudo pacman -Sy python-pip python-pipx ffmpeg --noconfirm"
         elif command -v dnf &> /dev/null; then
             cmd="sudo dnf install python3-pip pipx ffmpeg -y"
         elif command -v zypper &> /dev/null; then
@@ -257,7 +258,7 @@ do_install() {
     # Quick Yes/No menu for launching
     local launch_opts=("Yes, launch it now" "No, exit")
     show_menu "Would you like to launch FluxMedia right now?" "${launch_opts[@]}"
-    local choice=$?
+    local choice=$MENU_CHOICE
     
     if [ "$choice" -eq 0 ]; then
         clear
@@ -279,7 +280,7 @@ show_uninstall_menu() {
     )
     while true; do
         show_menu "Uninstall Menu" "${opts[@]}"
-        local choice=$?
+        local choice=$MENU_CHOICE
         case $choice in
             0) uninstall_fluxmedia; pause_and_return; return ;;
             1) uninstall_fluxmedia; uninstall_ffmpeg; pause_and_return; return ;;
@@ -313,7 +314,7 @@ show_reinstall_menu() {
     )
     while true; do
         show_menu "Reinstall Menu" "${opts[@]}"
-        local choice=$?
+        local choice=$MENU_CHOICE
         case $choice in
             0) uninstall_fluxmedia; install_fluxmedia; pause_and_return; return ;;
             1) uninstall_fluxmedia; do_install; pause_and_return; return ;;
@@ -331,7 +332,7 @@ show_main_menu() {
     )
     while true; do
         show_menu "Please select an action:" "${opts[@]}"
-        local choice=$?
+        local choice=$MENU_CHOICE
         case $choice in
             0) do_install; return ;;
             1) show_reinstall_menu ;;

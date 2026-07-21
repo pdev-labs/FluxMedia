@@ -16,80 +16,12 @@
 
 ---
 
-## 📢 Latest Release: v1.7.9
+## 📢 Latest Release: v1.7.10
 
-* **Termux Silent Install Failure:** Fixed an issue where the `install.sh` script would silently exit if pip encountered a build error while fetching dependencies. 
-* **Termux Pydantic-Core Build:** Added `rust` and `binutils` to the Termux `pkg install` dependency list to allow `pydantic-core` to be compiled natively from source if no pre-built wheels exist for the user's specific Python version. Also added the Termux User Repository PyPI index to increase the chance of pulling pre-built wheels.
+* **Installer Silent Exit on Sub-Menu Selection:** Fixed a critical bug in `install.sh` where selecting any submenu option other than the first (such as "Uninstall") would cause the entire script to instantly exit and return to the prompt. This occurred due to the `show_menu` function returning non-zero exit codes for downstream options while `set -e` was active.
+* **Arch Linux Installer:** Fixed the package name for `pipx` (`python-pipx`) and added `-Sy` to sync databases before downloading during the `pacman` dependency installation step on Arch Linux.
 
----
 
-## 📢 Previous Release: v1.7.8
-
-* **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.
-
----
-
-## 📢 Previous Release: v1.7.6
-
-* **CLI Duplicate Option:** Suppressed duplicate output of the 'W/w' option in the CLI main menu by explicitly hiding choices in the Rich Prompt.
-* **Web UI Launch:** Fixed `cannot import name 'load_config' from 'fluxmedia.main'` crash when launching Web UI ('W') by redirecting imports to `fluxmedia.core` in the `api.py` module.
-
----
-
-## 📢 Previous Release: v1.7.5
-
-* **Version Tracking:** Fixed an issue where the application would incorrectly prompt users to update due to a hardcoded version string (`1.7.2`). The version is now dynamically loaded from the package metadata.
-
----
-
-## 📢 Previous Release: v1.7.4
-
-* **UI Crashes & Type Hints:** Fixed a critical `AttributeError: 'NoneType' object has no attribute 'width'` that occurred when navigating the UI due to the `rich.console.Console` instance being overwritten by a residual dummy type hint during the modular extraction. Removed all remaining `cast(Any, None)` dummies.
-* **Update Checker Proxy Fix:** Fixed an issue where selecting "Update Now" in the UI would silently exit the program without performing the update. This was caused by the dummy proxy function evaluating to `pass` instead of lazy-loading the actual CLI update handler.
-
----
-
-## 📢 Previous Release: v1.7.3
-
----
-
-## 📢 Previous Release: v1.7.2
-
-* **Hotfix:** Fixed missing `requests` and `logging` imports in the `core` and `utils` modules that caused crashes during startup and updates.
-
----
-
-## 📢 Previous Release: v1.7.1
-
-* **Hotfix:** Fixed package discovery to ensure the new `fluxmedia.cli`, `fluxmedia.core`, and other modules are properly included in the PyPI wheel, resolving `ModuleNotFoundError` during startup.
-
----
-
-## 📢 Previous Release: v1.7.0
-
-* **Major Architectural Overhaul:** The legacy 5,200-line monolithic God Object has been completely decoupled into distinct modular packages.
-* **FastAPI Share Portal:** Completely replaced the legacy synchronous `http.server` with an asynchronous, high-performance `FastAPI` instance for the LAN Share Portal.
-* **Security & CI/CD:** Eliminated all High-Severity `shell=True` subprocess vulnerabilities and integrated strict GitHub Actions workflows for continuous integration and deployment.
-
----
-
-## 📢 Previous Release: v1.6.57
-
-* **Highly Optimized Sync Option**: Upgraded the internal sync and share portal server to use multithreading (`socketserver.ThreadingTCPServer`). This allows multiple requests to be processed concurrently across all platforms (Linux, Windows, macOS, Termux).
-* **Improved Streaming Performance**: Increased the file chunk size to 1MB, greatly improving file streaming efficiency and reducing overhead for the Share Portal.
-
----
-
-## 📢 Previous Release: v1.6.56
-
-* **Synchronous Playback Barrier**: Added a distributed state barrier for Watch Parties. If any synced device stops playback (due to internet buffering or a browser autoplay block), the host CLI will automatically detect it and transition the entire Watch Party into a "Waiting" state. Playback will only resume perfectly synchronously once every synced device reports it is ready to play.
-* **Mobile Browser Caching Fixed**: Added `Cache-Control` headers and cache-busting query strings to the portal's UI assets. This ensures Android and iOS devices always load the latest version of the Watch Party features instead of stale cached files.
-* **Watch Party Host Waiting Flow**: The CLI now properly waits and displays a live-updating table of connected devices for the host to review before proceeding to the device selection stage.
-* **Full Watch Party in Share Portal**: Connected devices now appear in a live panel (FAB or tab mode) with green pulsing dots for SYNCED vs grey for WATCHING. The CLI host picks which devices to sync, and the browser clients automatically seek and play/pause in real time.
-* **Sync Lock Modes**: Strict (full lock) or Loose (volume/fullscreen allowed) — user-configurable in Settings.
-* **Custom Device Names**: Each device auto-detects its name (iPhone, Android, Mac...) and lets users override it in Settings > Watch Party.
-
----
 
 
 ## 🌟 Key Features

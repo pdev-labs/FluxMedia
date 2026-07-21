@@ -1,5 +1,10 @@
 # Changelog
 
+## [v1.7.10] - 2026-07-21
+### Fixed
+- **Installer Silent Exit on Sub-Menu Selection:** Fixed a critical bug in `install.sh` where selecting any submenu option other than the first (such as "Uninstall") would cause the entire script to instantly exit and return to the prompt. This occurred due to the `show_menu` function returning non-zero exit codes for downstream options while `set -e` was active.
+- **Arch Linux Installer:** Fixed the package name for `pipx` (`python-pipx`) and added `-Sy` to sync databases before downloading during the `pacman` dependency installation step on Arch Linux.
+
 ## [v1.7.9] - 2026-07-21
 ### Fixed
 - **Termux Silent Install Failure:** Fixed an issue where the `install.sh` script would silently exit if pip encountered a build error while fetching dependencies. 
