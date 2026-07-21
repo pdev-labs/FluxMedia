@@ -16,13 +16,14 @@
 
 ---
 
-## 📢 Latest Release: v1.7.8
+## 📢 Latest Release: v1.7.9
 
-* **Android/Termux Installation:** Fixed `Failed to build 'pydantic-core'` error occurring during installation on Termux. Updated the one-liner installation script and auto-updater to explicitly fetch pre-compiled `pydantic-core` Android wheels using a custom PyPI index, bypassing local rust compiler requirements.
+* **Termux Silent Install Failure:** Fixed an issue where the `install.sh` script would silently exit if pip encountered a build error while fetching dependencies. 
+* **Termux Pydantic-Core Build:** Added `rust` and `binutils` to the Termux `pkg install` dependency list to allow `pydantic-core` to be compiled natively from source if no pre-built wheels exist for the user's specific Python version. Also added the Termux User Repository PyPI index to increase the chance of pulling pre-built wheels.
 
 ---
 
-## 📢 Previous Release: v1.7.7
+## 📢 Previous Release: v1.7.8
 
 * **Settings Menu Crash:** Fixed a `KeyError: 'filename_format'` crash when opening the settings menu. Restored the complete list of missing default configuration keys that were accidentally dropped during the modular extraction, enabling `config.json` to self-heal missing properties automatically.
 

@@ -60,8 +60,10 @@ run_with_spinner() {
         sleep $delay
     done
     
+    set +e
     wait $pid
     local exit_code=$?
+    set -e
     
     tput cnorm 2>/dev/null || true
     
@@ -140,7 +142,7 @@ is_termux() {
 install_dependencies() {
     local cmd=""
     if is_termux; then
-        cmd="pkg install python python-pip ffmpeg termux-api -y"
+        cmd="pkg install python python-pip ffmpeg termux-api rust binutils -y"
     elif [ "$OS" = "Darwin" ]; then
         if ! command -v brew &> /dev/null; then
             echo -e "\n${RED}Homebrew is required on macOS. Please install it first.${NC}"
@@ -173,7 +175,9 @@ install_dependencies() {
 
 install_fluxmedia() {
     local cmd=""
-    if is_termux || [ "$OS" = "Darwin" ]; then
+    if is_termux; then
+        cmd="pip install --upgrade pip -q && pip install pydantic-core --extra-index-url https://termux-user-repository.github.io/pypi/ --extra-index-url https://eutalix.github.io/android-pydantic-core/ -q && pip install -U fluxmedia -q"
+    elif [ "$OS" = "Darwin" ]; then
         cmd="pip install --upgrade pip -q && pip install -U fluxmedia -q"
     else
         if command -v pipx &> /dev/null; then
