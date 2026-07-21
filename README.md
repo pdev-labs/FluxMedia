@@ -16,7 +16,13 @@
 
 ---
 
-## 📢 Latest Release: v1.7.4
+## 📢 Latest Release: v1.7.5
+
+* **Version Tracking:** Fixed an issue where the application would incorrectly prompt users to update due to a hardcoded version string (`1.7.2`). The version is now dynamically loaded from the package metadata.
+
+---
+
+## 📢 Previous Release: v1.7.4
 
 * **UI Crashes & Type Hints:** Fixed a critical `AttributeError: 'NoneType' object has no attribute 'width'` that occurred when navigating the UI due to the `rich.console.Console` instance being overwritten by a residual dummy type hint during the modular extraction. Removed all remaining `cast(Any, None)` dummies.
 * **Update Checker Proxy Fix:** Fixed an issue where selecting "Update Now" in the UI would silently exit the program without performing the update. This was caused by the dummy proxy function evaluating to `pass` instead of lazy-loading the actual CLI update handler.

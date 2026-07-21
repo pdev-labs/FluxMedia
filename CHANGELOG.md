@@ -1,5 +1,8 @@
 # Changelog
 
+## [v1.7.5] - 2026-07-21
+### Fixed
+- **Version Tracking:** Fixed an issue where the application would incorrectly prompt users to update due to a hardcoded version string (`1.7.2`). The version is now dynamically loaded from the package metadata.
 ## [v1.7.4] - 2026-07-21
 ### Fixed
 - **UI Crashes & Type Hints:** Fixed a critical `AttributeError: 'NoneType' object has no attribute 'width'` that occurred when navigating the UI due to the `rich.console.Console` instance being overwritten by a residual dummy type hint during the modular extraction. Removed all remaining `cast(Any, None)` dummies.

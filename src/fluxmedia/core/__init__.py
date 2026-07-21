@@ -4,7 +4,13 @@ import yt_dlp
 from rich.markup import escape
 
 import os
-CURRENT_VERSION = "1.7.2"
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    CURRENT_VERSION = version("fluxmedia")
+except PackageNotFoundError:
+    CURRENT_VERSION = "unknown"
+
 DEFAULT_CONFIG = {
     "download_dir": os.path.expanduser("~/Downloads/FluxMedia"),
     "default_quality": "best",
