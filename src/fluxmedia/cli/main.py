@@ -1854,6 +1854,16 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
                 post_metadata_txt_pattern=""
             )
             
+            session_file = get_ig_session_file()
+            if os.path.exists(session_file) and os.path.exists(session_file + "_user"):
+                try:
+                    with open(session_file + "_user", "r") as f:
+                        session_user = f.read().strip()
+                    L.load_session_from_file(session_user, session_file)
+                    console.print(f"[green]Loaded Instagram session for {session_user}[/green]")
+                except Exception as e:
+                    console.print(f"[yellow]Failed to load Instagram session: {e}[/yellow]")
+            
             console.print(f"[yellow]Fetching profile: {username}[/yellow]")
             profile = instaloader.Profile.from_username(L.context, username)
             
@@ -1959,6 +1969,16 @@ def operation_download_instagram_profile(config: Dict[str, Any]):
                 compress_json=False,
                 post_metadata_txt_pattern=""
             )
+            
+            session_file = get_ig_session_file()
+            if os.path.exists(session_file) and os.path.exists(session_file + "_user"):
+                try:
+                    with open(session_file + "_user", "r") as f:
+                        session_user = f.read().strip()
+                    L.load_session_from_file(session_user, session_file)
+                    console.print(f"[green]Loaded Instagram session for {session_user}[/green]")
+                except Exception as e:
+                    console.print(f"[yellow]Failed to load Instagram session: {e}[/yellow]")
             
             import re
             

@@ -16,7 +16,11 @@
 
 ---
 
-## 📢 Latest Release: v1.7.10
+## 📢 Latest Release: v1.7.11
+
+* **Instagram 403 Forbidden Fix:** Fixed an issue where the Instagram Profile Downloader would fail with a `403 Forbidden` error because it was not loading the authenticated `instaloader` session. The session is now properly loaded when fetching profiles or posts.
+
+## 📢 Previous Release: v1.7.10
 
 * **Installer Silent Exit on Sub-Menu Selection:** Fixed a critical bug in `install.sh` where selecting any submenu option other than the first (such as "Uninstall") would cause the entire script to instantly exit and return to the prompt. This occurred due to the `show_menu` function returning non-zero exit codes for downstream options while `set -e` was active.
 * **Arch Linux Installer:** Fixed the package name for `pipx` (`python-pipx`) and added `-Sy` to sync databases before downloading during the `pacman` dependency installation step on Arch Linux.

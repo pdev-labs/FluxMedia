@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.7.11] - 2026-07-22
+### Fixed
+- **Instagram 403 Forbidden Fix:** Fixed an issue where the Instagram Profile Downloader would fail with a `403 Forbidden` error because it was not loading the authenticated `instaloader` session. The session is now properly loaded when fetching profiles or posts.
+
 ## [v1.7.10] - 2026-07-21
 ### Fixed
 - **Installer Silent Exit on Sub-Menu Selection:** Fixed a critical bug in `install.sh` where selecting any submenu option other than the first (such as "Uninstall") would cause the entire script to instantly exit and return to the prompt. This occurred due to the `show_menu` function returning non-zero exit codes for downstream options while `set -e` was active.
