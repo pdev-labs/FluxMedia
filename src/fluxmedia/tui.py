@@ -10,10 +10,10 @@ from textual import work, on
 import yt_dlp
 
 # Import existing functions from fluxmedia
-from fluxmedia.main import (
-    load_config, save_config, get_format_string, normalize_and_validate_url,
-    apply_common_ydl_opts
-)
+from fluxmedia.core import load_config, save_config
+from fluxmedia.downloader.utils import get_format_string
+from fluxmedia.utils import normalize_and_validate_url
+from fluxmedia.downloader.core import apply_common_ydl_opts
 
 class TuiLogger:
     """Redirects yt-dlp logs to Textual Log widget."""

@@ -35,6 +35,11 @@
 ## 💻 Visual Preview
 
 <div align="center">
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_dashboard.svg" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
+  <p><i>FluxMedia CLI Dashboard (TUI)</i></p>
+  
+  <br>
+
   <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
   <p><i>FluxMedia Web Dashboard</i></p>
 </div>
