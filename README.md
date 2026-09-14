@@ -35,8 +35,8 @@
 ## 💻 Visual Preview
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/fluxmedia_preview.png" alt="FluxMedia CLI Dashboard" width="700" style="border-radius: 8px;" />
-  <p><i>FluxMedia CLI showing QR Share Gateway active on the local network.</i></p>
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
+  <p><i>FluxMedia Web Dashboard</i></p>
 </div>
 
 ---
