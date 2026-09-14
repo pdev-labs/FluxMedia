@@ -35,8 +35,13 @@
 ## 💻 Visual Preview
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_dashboard.svg" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
-  <p><i>FluxMedia CLI Dashboard (TUI)</i></p>
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_main_menu.png" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
+  <p><i>FluxMedia CLI Main Dashboard</i></p>
+
+  <br>
+
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_disclaimer.png" alt="FluxMedia CLI Disclaimer" width="800" style="border-radius: 8px;" />
+  <p><i>Initial Setup & Disclaimer</i></p>
   
   <br>
 
@@ -51,7 +56,15 @@
 ### 1. Installation
 
 **Cross-Platform (Python):**
-Ensure Python 3 is installed, then download and run the installer:
+Ensure Python 3 is installed, then you can install directly via `pip`:
+```powershell
+pip install fluxmedia
+```
+<div align="center">
+  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_install.png" alt="Pip Install FluxMedia" width="700" style="border-radius: 8px;" />
+</div>
+
+Alternatively, download and run the installer:
 ```bash
 wget https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.py
 python3 install.py
