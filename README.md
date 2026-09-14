@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/logo.png" alt="FluxMedia Logo" width="120" height="120" />
+  <img src="website/logo.png" alt="FluxMedia Logo" width="120" height="120" />
 
   # FluxMedia
 
@@ -35,17 +35,17 @@
 ## 💻 Visual Preview
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_main_menu.png" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
+  <img src="website/cli_main_menu.png" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
   <p><i>FluxMedia CLI Main Dashboard</i></p>
 
   <br>
 
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_disclaimer.png" alt="FluxMedia CLI Disclaimer" width="800" style="border-radius: 8px;" />
+  <img src="website/cli_disclaimer.png" alt="FluxMedia CLI Disclaimer" width="800" style="border-radius: 8px;" />
   <p><i>Initial Setup & Disclaimer</i></p>
   
   <br>
 
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
+  <img src="website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
   <p><i>FluxMedia Web Dashboard</i></p>
 </div>
 
@@ -61,7 +61,7 @@ Ensure Python 3 is installed, then you can install directly via `pip`:
 pip install fluxmedia
 ```
 <div align="center">
-  <img src="https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/website/cli_install.png" alt="Pip Install FluxMedia" width="700" style="border-radius: 8px;" />
+  <img src="website/cli_install.png" alt="Pip Install FluxMedia" width="700" style="border-radius: 8px;" />
 </div>
 
 Alternatively, download and run the installer:
