@@ -1,3 +1,11 @@
+## v1.8.0
+- **Feature:** Replaced OS-specific installer scripts with a unified cross-platform `install.py`.
+- **Feature:** Added interactive cookie failure prompts and retries in the downloader.
+- **Fix:** Resolved cookie loading bugs, impersonate crashes, and missing NodeJS dependencies.
+- **Fix:** Added web client payload to bypass YouTube bot protection checks.
+- **Fix:** Updated installer to fallback to `--break-system-packages` for PEP 668 environments.
+- **Docs:** Updated documentation with real CLI and Web dashboard screenshots, and fixed broken image links.
+
 ## v1.7.22
 - Enabled impersonation and set YouTube client to iOS in yt-dlp configuration to resolve persistent page reload blocks.
 

@@ -12,10 +12,11 @@
 
 ---
 
-## 📢 Latest Release: v1.7.22
+## 📢 Latest Release: v1.8.0
 
-* **Bug Fix:** Enabled TLS impersonation and iOS player client in yt-dlp to fully resolve the YouTube "page needs to be reloaded" challenge block.
-
+* **Feature:** Unified cross-platform `install.py` and interactive cookie failure prompts.
+* **Bug Fix:** Resolved YouTube bot protection checks and cookie loading crashes.
+* **Docs:** Updated visual previews with real screenshots.
 
 
 
