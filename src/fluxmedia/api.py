@@ -15,10 +15,40 @@ import platform
 import threading
 import yt_dlp
 import uuid
+import logging
 
 from fluxmedia.core import (
     load_config, save_config, load_history, DATA_DIR, HISTORY_FILE, LOG_FILE
 )
+
+# File logging for the web server. The CLI configures this in cli/main.py,
+# but the server module is often loaded directly (uvicorn / run_server),
+# in which case fluxmedia.log stays empty and /api/logs — the nav Logs
+# tab — shows nothing. Same format the log parser expects.
+# propagate=False + duplicate guard: running via the CLI (which also has a
+# root file handler) must not write lines twice.
+_api_logger = logging.getLogger("fluxmedia.api")
+_api_logger.propagate = False
+_api_logger.setLevel(logging.INFO)
+if LOG_FILE:
+    try:
+        os.makedirs(os.path.dirname(LOG_FILE) or ".", exist_ok=True)
+        _abs_log = os.path.abspath(LOG_FILE)
+        if not any(
+            isinstance(h, logging.FileHandler)
+            and getattr(h, "baseFilename", "") == _abs_log
+            for h in _api_logger.handlers
+        ):
+            _fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
+            _fh.setLevel(logging.INFO)
+            _fh.setFormatter(logging.Formatter(
+                "%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+            ))
+            _api_logger.addHandler(_fh)
+    except Exception:
+        pass
+# Child of fluxmedia.api: handled exactly once by the handler above.
+job_logger = logging.getLogger("fluxmedia.api.downloader")
 
 app = FastAPI(title="FluxMedia API")
 
@@ -241,6 +271,7 @@ def _build_quality_options(info: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 @app.post("/api/analyze")
 def analyze_media(req: AnalyzeRequest):
+    _api_logger.info(f"analyze: {req.url}")
     try:
         ydl_opts = {
             'quiet': True,
@@ -317,18 +348,27 @@ def run_download_job(job_id: str, req: DownloadRequest):
             with JOBS_LOCK:
                 if job_id in DOWNLOAD_JOBS:
                     DOWNLOAD_JOBS[job_id]["logs"].append(f"[debug] {msg}")
+            job_logger.debug(msg)
+
         def info(self, msg):
             with JOBS_LOCK:
                 if job_id in DOWNLOAD_JOBS:
                     DOWNLOAD_JOBS[job_id]["logs"].append(f"[info] {msg}")
+            # Mirror into the server log so the nav Logs tab shows the
+            # same real terminal output as the per-download view.
+            job_logger.info(f"[job {job_id}] {msg}")
+
         def warning(self, msg):
             with JOBS_LOCK:
                 if job_id in DOWNLOAD_JOBS:
                     DOWNLOAD_JOBS[job_id]["logs"].append(f"[warning] {msg}")
+            job_logger.warning(f"[job {job_id}] {msg}")
+
         def error(self, msg):
             with JOBS_LOCK:
                 if job_id in DOWNLOAD_JOBS:
                     DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] {msg}")
+            job_logger.error(f"[job {job_id}] {msg}")
 
     config = load_config()
     if req.browser:
@@ -395,14 +435,17 @@ def run_download_job(job_id: str, req: DownloadRequest):
                             break
                 except Exception:
                     continue
+        _api_logger.info(f"[job {job_id}] completed: {req.url}")
     except Exception as e:
         with JOBS_LOCK:
             DOWNLOAD_JOBS[job_id]["status"] = "failed"
             DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] Download failed: {str(e)}")
+        _api_logger.error(f"[job {job_id}] failed: {req.url} — {e}")
 
 @app.post("/api/download")
 def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
     job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
+    _api_logger.info(f"download queued [job {job_id}]: {req.url} (quality={req.quality}, browser={req.browser})")
     with JOBS_LOCK:
         DOWNLOAD_JOBS[job_id] = {
             "status": "starting",
