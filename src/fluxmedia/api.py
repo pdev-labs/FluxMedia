@@ -146,6 +146,68 @@ JOBS_LOCK = threading.Lock()
 class AnalyzeRequest(BaseModel):
     url: str
 
+# Curated quality buckets shown in the web UI (label, tag, max height).
+QUALITY_BUCKETS = [
+    ("1080p", "Full HD", 1080),
+    ("720p", "HD", 720),
+    ("480p", "SD", 480),
+    ("360p", "Basic", 360),
+    ("240p", "Mobile", 240),
+    ("144p", "Data saver", 144),
+]
+
+def _human_size(n) -> Optional[str]:
+    if not n or n <= 0:
+        return None
+    if n < 1024 ** 2:
+        return f"~{n / 1024:.0f} KB"
+    if n < 1024 ** 3:
+        return f"~{n / (1024 ** 2):.1f} MB"
+    return f"~{n / (1024 ** 3):.2f} GB"
+
+def _build_quality_options(info: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Derives a small curated quality list from yt-dlp formats.
+
+    Never raises — returns buckets without sizes when formats are missing.
+    """
+    try:
+        formats = info.get("formats") or []
+        options: List[Dict[str, Any]] = []
+        for label, tag, max_h in QUALITY_BUCKETS:
+            best_size = 0
+            found = False
+            for f in formats:
+                h = f.get("height") or 0
+                if h and h <= max_h and f.get("vcodec", "none") != "none":
+                    found = True
+                    size = f.get("filesize") or f.get("filesize_approx") or 0
+                    if size > best_size:
+                        best_size = size
+            # Only list buckets that actually have a matching stream,
+            # unless no format info exists at all (fallback: list all).
+            if found or not formats:
+                options.append({
+                    "id": label, "label": label, "tag": tag,
+                    "size": _human_size(best_size),
+                })
+        # Audio-only option
+        audio_size = 0
+        for f in formats:
+            if f.get("vcodec") == "none" and f.get("acodec", "none") != "none":
+                size = f.get("filesize") or f.get("filesize_approx") or 0
+                if size > audio_size:
+                    audio_size = size
+        options.append({
+            "id": "audio", "label": "Audio", "tag": "MP3",
+            "size": _human_size(audio_size),
+        })
+        return options
+    except Exception:
+        return [
+            {"id": label, "label": label, "tag": tag, "size": None}
+            for label, tag, _ in QUALITY_BUCKETS
+        ] + [{"id": "audio", "label": "Audio", "tag": "MP3", "size": None}]
+
 @app.post("/api/analyze")
 def analyze_media(req: AnalyzeRequest):
     try:
@@ -156,7 +218,7 @@ def analyze_media(req: AnalyzeRequest):
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(req.url, download=False)
-            
+
             # Extract basic metadata
             return {
                 "status": "success",
@@ -167,7 +229,8 @@ def analyze_media(req: AnalyzeRequest):
                     "likes": info.get("like_count", 0),
                     "duration": info.get("duration_string", "Unknown"),
                     "date": info.get("upload_date", "Unknown"),
-                    "thumbnail": info.get("thumbnail", "")
+                    "thumbnail": info.get("thumbnail", ""),
+                    "qualities": _build_quality_options(info),
                 }
             }
     except Exception as e:
@@ -235,7 +298,20 @@ def run_download_job(job_id: str, req: DownloadRequest):
             'preferredquality': '192',
         }]
     else:
-        ydl_opts['format'] = 'bestvideo+bestaudio/best'
+        # Honor the quality picked in the web UI (e.g. "480p").
+        # Falls back to best when no (or an unknown) quality is given.
+        height_map = {
+            "1080p": 1080, "720p": 720, "480p": 480,
+            "360p": 360, "240p": 240, "144p": 144,
+        }
+        max_h = height_map.get((req.quality or "").strip().lower())
+        if max_h:
+            ydl_opts['format'] = (
+                f"bestvideo[height<={max_h}]+bestaudio/"
+                f"best[height<={max_h}]/best"
+            )
+        else:
+            ydl_opts['format'] = 'bestvideo+bestaudio/best'
         ydl_opts['merge_output_format'] = 'mp4'
 
     try:
