@@ -426,8 +426,13 @@ def get_job_status(job_id: str):
         job = DOWNLOAD_JOBS.get(job_id)
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
-        # Return a copy to avoid race conditions during serialization
-        return {"status": "success", "job": job.copy()}
+        # Return a copy to avoid race conditions during serialization.
+        # Cap the terminal log tail so polling stays light.
+        snapshot = job.copy()
+        logs = snapshot.get("logs") or []
+        if len(logs) > 500:
+            snapshot["logs"] = logs[-500:]
+        return {"status": "success", "job": snapshot}
 
 
 # ─────────────────────────────────────────────────────────────

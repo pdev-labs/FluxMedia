@@ -448,6 +448,49 @@ body {
   text-align: center;
 }
 
+/* ---------- terminal log ---------- */
+
+.term {
+  margin-top: 16px;
+}
+
+.term-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #f7f8f9;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.term-toggle:hover {
+  border-color: var(--faint);
+}
+
+.term-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.term-caret {
+  margin-left: auto;
+  color: var(--faint);
+}
+
+.term .log-box {
+  margin-top: 8px;
+  max-height: 260px;
+}
+
 /* ---------- tables & panels ---------- */
 
 .panel h2 {

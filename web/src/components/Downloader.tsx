@@ -34,6 +34,9 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
   const [speed, setSpeed] = useState(0);
   const [eta, setEta] = useState(0);
   const [status, setStatus] = useState("");
+  const [termLogs, setTermLogs] = useState<string[]>([]);
+  const [showTerm, setShowTerm] = useState(false);
+  const termRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState("");
   const pollRef = useRef<number | null>(null);
 
@@ -44,6 +47,12 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
       if (pollRef.current !== null) window.clearInterval(pollRef.current);
     };
   }, []);
+
+  // Auto-scroll the terminal view as new lines arrive.
+  useEffect(() => {
+    const el = termRef.current;
+    if (el && showTerm) el.scrollTop = el.scrollHeight;
+  }, [termLogs, showTerm]);
 
   // Reset the flow when switching source tab.
   useEffect(() => {
@@ -58,6 +67,8 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setProgress(0);
     setError("");
     setStatus("");
+    setTermLogs([]);
+    setShowTerm(false);
   }, [source]);
 
   async function handleAnalyze(e: React.FormEvent): Promise<void> {
@@ -86,6 +97,8 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setEta(0);
     setDownloadUrl("");
     setDownloadName("");
+    setTermLogs([]);
+    setShowTerm(true);
     setStatus("Starting download…");
     setPhase("downloading");
     try {
@@ -99,6 +112,7 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
           setEta(job.eta ?? 0);
           const last = job.logs?.[job.logs.length - 1] ?? "";
           if (last) setStatus(last.replace(/^\[(info|debug|warning|error|success)\]\s*/, ""));
+          if (job.logs) setTermLogs([...job.logs]);
           if (job.status === "completed") {
             if (pollRef.current !== null) window.clearInterval(pollRef.current);
             setProgress(100);
@@ -138,6 +152,8 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setProgress(0);
     setError("");
     setStatus("");
+    setTermLogs([]);
+    setShowTerm(false);
   }
 
   const showHero = phase === "idle" || phase === "analyzing";
@@ -271,6 +287,26 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
                 )}
               </div>
             )}
+
+            {(phase === "downloading" || phase === "done") &&
+              termLogs.length > 0 && (
+                <div className="term">
+                  <button
+                    className="term-toggle"
+                    onClick={() => setShowTerm((v) => !v)}
+                    aria-expanded={showTerm}
+                  >
+                    <span className="term-dot" />
+                    Terminal log
+                    <span className="term-caret">{showTerm ? "▾" : "▸"}</span>
+                  </button>
+                  {showTerm && (
+                    <div className="log-box" ref={termRef}>
+                      {termLogs.join("\n")}
+                    </div>
+                  )}
+                </div>
+              )}
           </div>
         </article>
       )}
