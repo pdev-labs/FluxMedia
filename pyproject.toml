@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxmedia"
-version = "1.8.0"
+version = "1.8.1"
 description = "A powerful, cross-platform media portal and processing toolkit."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -25,8 +25,21 @@ dependencies = [
     "fastapi>=0.100.0",
     "uvicorn>=0.23.0",
     "curl_cffi>=0.7.4",
-    "quickjs>=1.19.2",
+    # NOTE: quickjs intentionally NOT a hard dependency.
+    # The `quickjs` PyPI package ships no Windows wheels and requires
+    # "Microsoft Visual C++ 14.0 or greater" to build from source, which
+    # breaks `pip install fluxmedia` on Windows.
+    # yt-dlp does not import quickjs directly — it auto-detects any available
+    # JS runtime (Deno / Node / Bun / QuickJS) for YouTube signature/n-token
+    # challenges. Node.js (installed by install.ps1/install.sh/install.py)
+    # already covers Windows, so keep quickjs optional.
+    "quickjs>=1.19.2; sys_platform!='win32'",
 ]
+
+[project.optional-dependencies]
+# Full YouTube JS-challenge support on Linux/macOS, or on Windows if the
+# user has C++ Build Tools installed: pip install "fluxmedia[js]"
+js = ["quickjs>=1.19.2"]
 
 [project.urls]
 Homepage = "https://github.com/pdev-labs/FluxMedia"
