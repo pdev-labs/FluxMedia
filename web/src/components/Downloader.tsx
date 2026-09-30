@@ -8,6 +8,15 @@ import {
   formatEta,
 } from "../lib/api.ts";
 import type { MediaMeta } from "../lib/api.ts";
+import {
+  newSid,
+  saveSession,
+  loadSession,
+  lastSid,
+  clearSession,
+  sessionUrl,
+  tabUrl,
+} from "../lib/session.ts";
 
 type Phase = "idle" | "analyzing" | "ready" | "downloading" | "done";
 
@@ -22,7 +31,13 @@ const PLACEHOLDERS: Record<string, { hint: string; example: string }> = {
   },
 };
 
-export function Downloader({ source }: { source: string }): React.JSX.Element {
+export function Downloader({
+  source,
+  initialSid,
+}: {
+  source: string;
+  initialSid?: string | null;
+}): React.JSX.Element {
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [meta, setMeta] = useState<MediaMeta | null>(null);
@@ -39,13 +54,41 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
   const termRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState("");
   const pollRef = useRef<number | null>(null);
+  // Session id for this paste. Resolved once on mount so later prop
+  // changes (from our own hash updates) don't disturb the flow.
+  const sidRef = useRef<string | null>(initialSid ?? lastSid(source));
+  const restoredRef = useRef(false);
 
   const copy = PLACEHOLDERS[source] ?? PLACEHOLDERS.youtube;
 
+  function persist(patch: {
+    url?: string;
+    quality?: string;
+    browser?: boolean;
+    jobId?: string | null;
+  }): string | null {
+    const sid = sidRef.current;
+    if (!sid) return null;
+    const prev = loadSession(sid);
+    saveSession(sid, {
+      source,
+      url: patch.url ?? prev?.url ?? url,
+      quality: patch.quality ?? prev?.quality ?? quality,
+      browser: patch.browser ?? prev?.browser ?? viaBrowser,
+      jobId: patch.jobId !== undefined ? patch.jobId : (prev?.jobId ?? null),
+    });
+    return sid;
+  }
+
+  function stopPolling(): void {
+    if (pollRef.current !== null) {
+      window.clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+
   useEffect(() => {
-    return () => {
-      if (pollRef.current !== null) window.clearInterval(pollRef.current);
-    };
+    return () => stopPolling();
   }, []);
 
   // Auto-scroll the terminal view as new lines arrive.
@@ -54,39 +97,93 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     if (el && showTerm) el.scrollTop = el.scrollHeight;
   }, [termLogs, showTerm]);
 
-  // Reset the flow when switching source tab.
-  useEffect(() => {
-    if (pollRef.current !== null) window.clearInterval(pollRef.current);
-    setUrl("");
-    setPhase("idle");
-    setMeta(null);
-    setQuality("720p");
-    setViaBrowser(false);
-    setDownloadUrl("");
-    setDownloadName("");
-    setProgress(0);
-    setError("");
-    setStatus("");
-    setTermLogs([]);
-    setShowTerm(false);
-  }, [source]);
+  function attachPoll(jobId: string, wantBrowser: boolean): void {
+    stopPolling();
+    pollRef.current = window.setInterval(async () => {
+      try {
+        const job = await getJob(jobId);
+        setProgress(job.progress ?? 0);
+        setSpeed(job.speed ?? 0);
+        setEta(job.eta ?? 0);
+        const last = job.logs?.[job.logs.length - 1] ?? "";
+        if (last)
+          setStatus(last.replace(/^\[(info|debug|warning|error|success)\]\s*/, ""));
+        if (job.logs) setTermLogs([...job.logs]);
+        if (job.status === "completed") {
+          stopPolling();
+          setProgress(100);
+          if (wantBrowser && job.file_url) {
+            setDownloadUrl(job.file_url);
+            setDownloadName(job.file ?? "download");
+            // Trigger the browser's own download manager.
+            const a = document.createElement("a");
+            a.href = job.file_url;
+            a.download = job.file ?? "";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
+          setPhase("done");
+        } else if (job.status === "failed") {
+          stopPolling();
+          const tail = job.logs?.filter((l) => l.startsWith("[error]")).pop();
+          setError(tail ? tail.replace(/^\[error\]\s*/, "") : "Download failed.");
+          persist({ jobId: null });
+          setPhase("ready");
+        }
+      } catch {
+        /* keep polling on transient errors */
+      }
+    }, 800);
+  }
 
-  async function handleAnalyze(e: React.FormEvent): Promise<void> {
-    e.preventDefault();
-    const clean = url.trim();
-    if (!clean || phase === "analyzing" || phase === "downloading") return;
+  async function runAnalyze(clean: string): Promise<void> {
     setError("");
     setPhase("analyzing");
     try {
       const data = await analyze(clean);
       setMeta(data);
       const ids = (data.qualities ?? []).map((q) => q.id);
-      setQuality(ids.includes("720p") ? "720p" : (ids[0] ?? "720p"));
+      const q = ids.includes("720p") ? "720p" : (ids[0] ?? "720p");
+      setQuality(q);
+      // Mint the temporary URL for this paste.
+      if (!sidRef.current) sidRef.current = newSid();
+      persist({ url: clean, quality: q, jobId: null });
+      window.location.hash = sessionUrl(source, sidRef.current);
       setPhase("ready");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed.");
       setPhase("idle");
     }
+  }
+
+  // Restore a session on mount (refresh, shared link, or last session).
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    const sid = sidRef.current;
+    if (!sid) return;
+    const sess = loadSession(sid);
+    if (!sess?.url) return;
+    setUrl(sess.url);
+    setQuality(sess.quality || "720p");
+    setViaBrowser(sess.browser);
+    void runAnalyze(sess.url).then(() => {
+      if (sess.jobId) {
+        setStatus("Reconnected — resuming progress…");
+        setShowTerm(true);
+        setPhase("downloading");
+        attachPoll(sess.jobId, sess.browser);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleAnalyze(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    const clean = url.trim();
+    if (!clean || phase === "analyzing" || phase === "downloading") return;
+    await runAnalyze(clean);
   }
 
   async function handleDownload(): Promise<void> {
@@ -103,49 +200,31 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setPhase("downloading");
     try {
       const jobId = await startDownload(url.trim(), quality, viaBrowser);
-      const wantBrowser = viaBrowser;
-      pollRef.current = window.setInterval(async () => {
-        try {
-          const job = await getJob(jobId);
-          setProgress(job.progress ?? 0);
-          setSpeed(job.speed ?? 0);
-          setEta(job.eta ?? 0);
-          const last = job.logs?.[job.logs.length - 1] ?? "";
-          if (last) setStatus(last.replace(/^\[(info|debug|warning|error|success)\]\s*/, ""));
-          if (job.logs) setTermLogs([...job.logs]);
-          if (job.status === "completed") {
-            if (pollRef.current !== null) window.clearInterval(pollRef.current);
-            setProgress(100);
-            if (wantBrowser && job.file_url) {
-              setDownloadUrl(job.file_url);
-              setDownloadName(job.file ?? "download");
-              // Trigger the browser's own download manager.
-              const a = document.createElement("a");
-              a.href = job.file_url;
-              a.download = job.file ?? "";
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-            }
-            setPhase("done");
-          } else if (job.status === "failed") {
-            if (pollRef.current !== null) window.clearInterval(pollRef.current);
-            const tail = job.logs?.filter((l) => l.startsWith("[error]")).pop();
-            setError(tail ? tail.replace(/^\[error\]\s*/, "") : "Download failed.");
-            setPhase("ready");
-          }
-        } catch {
-          /* keep polling on transient errors */
-        }
-      }, 800);
+      persist({ jobId });
+      attachPoll(jobId, viaBrowser);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start download.");
       setPhase("ready");
     }
   }
 
+  function pickQuality(id: string): void {
+    setQuality(id);
+    persist({ quality: id });
+  }
+
+  function toggleBrowser(v: boolean): void {
+    setViaBrowser(v);
+    persist({ browser: v });
+  }
+
   function reset(): void {
-    if (pollRef.current !== null) window.clearInterval(pollRef.current);
+    stopPolling();
+    if (sidRef.current) {
+      clearSession(sidRef.current, source);
+      sidRef.current = null;
+    }
+    window.location.hash = tabUrl(source);
     setUrl("");
     setMeta(null);
     setPhase("idle");
@@ -215,7 +294,7 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
                   key={q.id}
                   type="button"
                   className={quality === q.id ? "quality-row selected" : "quality-row"}
-                  onClick={() => phase === "ready" && setQuality(q.id)}
+                  onClick={() => phase === "ready" && pickQuality(q.id)}
                   disabled={phase !== "ready"}
                 >
                   <span className="quality-check">✓</span>
@@ -235,7 +314,7 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
                     <input
                       type="checkbox"
                       checked={viaBrowser}
-                      onChange={(e) => setViaBrowser(e.target.checked)}
+                      onChange={(e) => toggleBrowser(e.target.checked)}
                     />
                     <span>
                       Download via browser
