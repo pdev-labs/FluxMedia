@@ -640,6 +640,102 @@ body {
   background: var(--surface);
 }
 
+/* ---------- console logs page ---------- */
+
+.log-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.log-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: #fff;
+}
+
+.log-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mini-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.mini-check input {
+  accent-color: var(--accent);
+}
+
+.log-tall {
+  max-height: 480px;
+}
+
+.log-line {
+  padding: 1px 0;
+}
+
+.log-ts {
+  color: #6e7681;
+}
+
+.log-sev {
+  font-weight: 700;
+}
+
+.log-comp {
+  color: #79c0ff;
+}
+
+.sev-error .log-sev {
+  color: #ff7b72;
+}
+
+.sev-warning .log-sev {
+  color: #d29922;
+}
+
+.sev-info .log-sev {
+  color: #a5d6ff;
+}
+
+.sev-debug .log-sev {
+  color: #8b949e;
+}
+
 .site-footer-inner {
   max-width: 760px;
   margin: 0 auto;

@@ -4,6 +4,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "youtube", label: "Youtube" },
   { id: "tiktok", label: "Tiktok" },
   { id: "files", label: "Files" },
+  { id: "logs", label: "Logs" },
   { id: "about", label: "About" },
 ];
 

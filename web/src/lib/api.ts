@@ -134,6 +134,20 @@ export async function deleteFile(path: string): Promise<void> {
   }
 }
 
+export interface LogLine {
+  timestamp: string;
+  severity: string;
+  component: string;
+  message: string;
+}
+
+export async function getLogs(lines = 300): Promise<LogLine[]> {
+  const data = await getJson<{ status: string; logs: LogLine[] }>(
+    `/api/logs?lines=${lines}`,
+  );
+  return data.logs ?? [];
+}
+
 export async function getDiagnostics(): Promise<{
   score: number;
   checks: DiagCheck[];
