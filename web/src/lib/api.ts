@@ -24,6 +24,8 @@ export interface JobState {
   speed: number;
   eta: number;
   logs: string[];
+  file?: string;
+  file_url?: string;
 }
 
 export interface FileEntry {
@@ -84,6 +86,7 @@ export async function analyze(url: string): Promise<MediaMeta> {
 export async function startDownload(
   url: string,
   qualityId: string,
+  viaBrowser = false,
 ): Promise<string> {
   const data = await postJson<{ status: string; job_id: string }>(
     "/api/download",
@@ -91,6 +94,7 @@ export async function startDownload(
       url,
       type: qualityId === "audio" ? "audio" : "video",
       quality: qualityId,
+      browser: viaBrowser,
     },
   );
   if (data.status !== "success" || !data.job_id) {

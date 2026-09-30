@@ -343,6 +343,37 @@ body {
   margin-top: 18px;
 }
 
+/* ---------- save-location toggle ---------- */
+
+.save-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f7f8f9;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-row input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.save-row small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
 .reset-link {
   border: 0;
   background: none;

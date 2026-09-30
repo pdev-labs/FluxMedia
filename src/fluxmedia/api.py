@@ -96,17 +96,48 @@ async def send_sync_command(req: SyncCommandRequest):
         await sync_manager.send_command(cid, payload)
     return {"status": "success"}
 
-@app.get("/api/media/{file_path:path}")
-async def serve_media(file_path: str):
-    # Ensure it's inside the downloads directory to prevent path traversal
+# Staging area for "Download via browser" jobs: files land here instead of
+# the FluxMedia library folder, are served once via /api/media, and are
+# cleaned up after 24h so they don't pile up as duplicates.
+BROWSER_STAGING_DIR = os.path.join(DATA_DIR, "browser")
+STAGING_TTL_SECONDS = 24 * 3600
+
+
+def _served_roots() -> List[str]:
     config = load_config()
     download_dir = os.path.abspath(config.get("download_dir", os.path.join(DATA_DIR, "downloads")))
-    target_path = os.path.abspath(os.path.join(download_dir, file_path))
-    if not target_path.startswith(download_dir):
-        raise HTTPException(status_code=403, detail="Access denied")
-    if not os.path.isfile(target_path):
+    return [download_dir, os.path.abspath(BROWSER_STAGING_DIR)]
+
+
+def _prune_staging_dir() -> None:
+    try:
+        if not os.path.isdir(BROWSER_STAGING_DIR):
+            return
+        now = datetime.datetime.now().timestamp()
+        for fname in os.listdir(BROWSER_STAGING_DIR):
+            fpath = os.path.join(BROWSER_STAGING_DIR, fname)
+            try:
+                if os.path.isfile(fpath) and now - os.stat(fpath).st_mtime > STAGING_TTL_SECONDS:
+                    os.remove(fpath)
+            except OSError:
+                pass
+    except Exception:
+        pass
+
+
+@app.get("/api/media/{file_path:path}")
+async def serve_media(file_path: str):
+    # Ensure it's inside an allowed directory to prevent path traversal
+    target_path = None
+    for root in _served_roots():
+        candidate = os.path.abspath(os.path.join(root, file_path))
+        if candidate.startswith(root + os.sep) and os.path.isfile(candidate):
+            target_path = candidate
+            break
+    if target_path is None:
+        # Distinguish "outside allowed dirs" from "not found" for clarity
         raise HTTPException(status_code=404, detail="File not found")
-    
+
     return FileResponse(target_path)
 
 
@@ -242,13 +273,17 @@ class DownloadRequest(BaseModel):
     type: str  # 'video', 'audio'
     quality: Optional[str] = None
     format: Optional[str] = None
+    browser: Optional[bool] = False  # True → stage file for browser download
 
 def run_download_job(job_id: str, req: DownloadRequest):
+    finished_files: List[str] = []  # download hook candidates
+    final_files: List[str] = []     # postprocessor (merged/converted) results
+
     def progress_hook(d):
         with JOBS_LOCK:
             job = DOWNLOAD_JOBS.get(job_id)
             if not job: return
-            
+
             if d['status'] == 'downloading':
                 downloaded = d.get('downloaded_bytes', 0)
                 total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
@@ -256,11 +291,26 @@ def run_download_job(job_id: str, req: DownloadRequest):
                     job["progress"] = int((downloaded / total) * 100)
                 job["speed"] = d.get('speed', 0)
                 job["eta"] = d.get('eta', 0)
-                
+
             elif d['status'] == 'finished':
                 job["progress"] = 100
                 job["status"] = "processing"
                 job["logs"].append("[info] Download finished, running post-processors...")
+                name = d.get('filename')
+                if name:
+                    finished_files.append(name)
+
+    def pp_hook(d):
+        # Fires after merge/extract steps — info_dict['filepath'] is the
+        # actual final file on disk.
+        try:
+            if d.get('status') == 'finished':
+                info = d.get('info_dict') or {}
+                path = info.get('filepath')
+                if path:
+                    final_files.append(path)
+        except Exception:
+            pass
 
     class MyLogger:
         def debug(self, msg):
@@ -281,12 +331,19 @@ def run_download_job(job_id: str, req: DownloadRequest):
                     DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] {msg}")
 
     config = load_config()
-    dest_dir = config.get("download_dir", os.path.join(os.path.expanduser("~"), "Downloads"))
+    if req.browser:
+        # Browser mode: stage outside the library folder so the file
+        # doesn't linger as a duplicate; pruned after 24h.
+        dest_dir = os.path.abspath(BROWSER_STAGING_DIR)
+        _prune_staging_dir()
+    else:
+        dest_dir = config.get("download_dir", os.path.join(os.path.expanduser("~"), "Downloads"))
     os.makedirs(dest_dir, exist_ok=True)
-    
+
     ydl_opts = {
         'logger': MyLogger(),
         'progress_hooks': [progress_hook],
+        'postprocessor_hooks': [pp_hook],
         'outtmpl': os.path.join(dest_dir, config.get("filename_format", "%(title)s.%(ext)s")),
     }
     
@@ -320,6 +377,24 @@ def run_download_job(job_id: str, req: DownloadRequest):
         with JOBS_LOCK:
             DOWNLOAD_JOBS[job_id]["status"] = "completed"
             DOWNLOAD_JOBS[job_id]["logs"].append("[success] Job completed successfully.")
+            # Expose the final file so the web UI can offer a browser
+            # download (via /api/media). Prefer the postprocessor result
+            # (merged/converted path), fall back to the raw download.
+            candidates = final_files + finished_files
+            for candidate in reversed(candidates):
+                try:
+                    abs_candidate = os.path.abspath(candidate)
+                    if os.path.isfile(abs_candidate):
+                        for root in _served_roots():
+                            if abs_candidate.startswith(root + os.sep):
+                                rel = os.path.relpath(abs_candidate, root)
+                                DOWNLOAD_JOBS[job_id]["file"] = rel
+                                DOWNLOAD_JOBS[job_id]["file_url"] = f"/api/media/{rel}"
+                                break
+                        if DOWNLOAD_JOBS[job_id].get("file_url"):
+                            break
+                except Exception:
+                    continue
     except Exception as e:
         with JOBS_LOCK:
             DOWNLOAD_JOBS[job_id]["status"] = "failed"

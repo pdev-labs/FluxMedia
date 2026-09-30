@@ -27,6 +27,9 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
   const [phase, setPhase] = useState<Phase>("idle");
   const [meta, setMeta] = useState<MediaMeta | null>(null);
   const [quality, setQuality] = useState("720p");
+  const [viaBrowser, setViaBrowser] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [downloadName, setDownloadName] = useState("");
   const [progress, setProgress] = useState(0);
   const [speed, setSpeed] = useState(0);
   const [eta, setEta] = useState(0);
@@ -49,6 +52,9 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setPhase("idle");
     setMeta(null);
     setQuality("720p");
+    setViaBrowser(false);
+    setDownloadUrl("");
+    setDownloadName("");
     setProgress(0);
     setError("");
     setStatus("");
@@ -78,10 +84,13 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
     setProgress(0);
     setSpeed(0);
     setEta(0);
+    setDownloadUrl("");
+    setDownloadName("");
     setStatus("Starting download…");
     setPhase("downloading");
     try {
-      const jobId = await startDownload(url.trim(), quality);
+      const jobId = await startDownload(url.trim(), quality, viaBrowser);
+      const wantBrowser = viaBrowser;
       pollRef.current = window.setInterval(async () => {
         try {
           const job = await getJob(jobId);
@@ -93,6 +102,17 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
           if (job.status === "completed") {
             if (pollRef.current !== null) window.clearInterval(pollRef.current);
             setProgress(100);
+            if (wantBrowser && job.file_url) {
+              setDownloadUrl(job.file_url);
+              setDownloadName(job.file ?? "download");
+              // Trigger the browser's own download manager.
+              const a = document.createElement("a");
+              a.href = job.file_url;
+              a.download = job.file ?? "";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+            }
             setPhase("done");
           } else if (job.status === "failed") {
             if (pollRef.current !== null) window.clearInterval(pollRef.current);
@@ -194,6 +214,19 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
 
             {(phase === "ready" || phase === "downloading") && (
               <div className="progress">
+                {phase === "ready" && (
+                  <label className="save-row">
+                    <input
+                      type="checkbox"
+                      checked={viaBrowser}
+                      onChange={(e) => setViaBrowser(e.target.checked)}
+                    />
+                    <span>
+                      Download via browser
+                      <small>Save to this device's download folder</small>
+                    </span>
+                  </label>
+                )}
                 {phase === "downloading" && (
                   <>
                     <div className="progress-track">
@@ -226,7 +259,16 @@ export function Downloader({ source }: { source: string }): React.JSX.Element {
 
             {phase === "done" && (
               <div className="success-note">
-                Download complete — check your downloads folder.
+                {downloadUrl ? (
+                  <>
+                    Download complete — saved via your browser.{" "}
+                    <a href={downloadUrl} download={downloadName}>
+                      Download again
+                    </a>
+                  </>
+                ) : (
+                  <>Download complete — check your FluxMedia folder.</>
+                )}
               </div>
             )}
           </div>
