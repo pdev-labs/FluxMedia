@@ -476,39 +476,10 @@ def print_qr_code(share_url: str, message: str = "Scan this QR code:") -> bool:
     return True
 
 def start_share_server(config: Dict[str, Any], headless: bool = False):
-    if not headless:
-        print_header()
-        console.print('\n[bold cyan]=== SHARE DOWNLOADS VIA QR-CODE ===[/bold cyan]\n')
-    
-    dest_dir = config.get('download_dir', get_default_download_dir())
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir, exist_ok=True)
-        
-    local_ip = get_local_ip()
-    port = config.get('web_port', 8000)
-    share_url = f'http://{local_ip}:{port}'
-    
-    from fluxmedia.server.app import set_config, app
-    from fastapi.staticfiles import StaticFiles
-    import uvicorn
-    
-    token = set_config(config, dest_dir)
-    
-    if not headless:
-        console.print(f'📁 Sharing Folder: [bold white]{dest_dir}[/bold white]')
-        console.print(f'🔗 LAN Link: [bold green]{share_url}?token={token}[/bold green]\n')
-        if not print_qr_code(share_url + '?token=' + token, 'Scan this QR code to access download folder on your phone/tablet:'):
-            Prompt.ask('\nPress Enter to return...')
-            return
-        console.print('\n[bold yellow]FastAPI Server running. Press Ctrl+C to stop sharing...[/bold yellow]')
-    
-    # Mount static files (Range-supported streaming + downloads)
-    app.mount('/api/static', StaticFiles(directory=dest_dir), name='static')
-    
-    try:
-        uvicorn.run(app, host='0.0.0.0', port=port, log_level='error')  # nosec
-    except KeyboardInterrupt:
-        pass
+    # Classic v1.6.x portal: self-contained stdlib server with QR code,
+    # password auth, thumbnails and Range streaming (see server/classic_portal.py).
+    from fluxmedia.server.classic_portal import start_classic_share_server
+    start_classic_share_server(config, headless=headless)
 
 
 def configure_share_settings(config: Dict[str, Any]):
