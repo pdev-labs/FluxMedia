@@ -9,12 +9,20 @@ sharing portal shipped in the 1.6.x series.
 import os
 import sys
 import json
+import shutil
+import subprocess
+import datetime
+import urllib.parse
 from typing import Any, Dict
 
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
 console = Console()
+
+# Former module-global from the 1.6.x codebase: silences per-request stdlib
+# server logging. Mirrors the old default (True); refreshed from config below.
+CLEAN_LOGS_ENABLED = True
 
 # --- Embedded SPA Webpage Resources (fluxmedia_lan_web) ---
 def _decode_resource(data_b64: str) -> str:
@@ -32,6 +40,8 @@ PORTAL_JS = _decode_resource(PORTAL_JS_COMPRESSED)
 
 
 def start_classic_share_server(config: Dict[str, Any], headless: bool = False):
+    global CLEAN_LOGS_ENABLED
+    CLEAN_LOGS_ENABLED = config.get("clean_logs_enabled", True)
     from fluxmedia.core import print_header, get_default_download_dir
     from fluxmedia.utils import install_python_package, get_local_ip, register_interrupt
     """Starts a local HTTP server in the downloads directory and prints a QR code for mobile connection."""
