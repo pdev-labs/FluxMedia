@@ -124,7 +124,17 @@ def run_ydl_download(ydl_opts: Dict[str, Any], urls: List[str], downloaded_files
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.add_post_processor(InteractiveRenamePP(), when='pre_process')
                     return_code = ydl.download(urls)
-                return return_code == 0
+                ok = return_code == 0
+                try:
+                    from fluxmedia.plugins import get_manager
+                    if ok:
+                        get_manager().emit("download_complete", urls=list(urls),
+                                           filepaths=list(downloaded_files or []))
+                    else:
+                        get_manager().emit("download_failed", urls=list(urls), error="non-zero exit")
+                except Exception:
+                    pass
+                return ok
             except yt_dlp.utils.DownloadCancelled:
                 logger.info("Download cancelled by user via skip.")
                 console.print("[bold yellow]Download skipped by user.[/bold yellow]")
@@ -157,6 +167,11 @@ def run_ydl_download(ydl_opts: Dict[str, Any], urls: List[str], downloaded_files
                 
                 logger.error(f'yt-dlp download execution encountered an error: {e}', exc_info=True)
                 console.print(f'\n[bold red]Download Error: {e}[/bold red]')
+                try:
+                    from fluxmedia.plugins import get_manager
+                    get_manager().emit("download_failed", urls=list(urls), error=str(e))
+                except Exception:
+                    pass
                 if ydl_opts.get('cookiesfrombrowser'):
                     console.print("[cyan]💡 Tip: If you get browser cookie access errors, try changing 'Cookies Browser' to 'none' in Settings.[/cyan]")
                 return False

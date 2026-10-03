@@ -206,7 +206,8 @@ DEFAULT_CONFIG = {
     "ffmpeg_path": "",
     "watch_party_name": "",
     "watch_party_sync_mode": "strict",
-    "clean_logs_enabled": True
+    "clean_logs_enabled": True,
+    "plugins_disabled": []
 }
 
 def load_config() -> Dict[str, Any]:

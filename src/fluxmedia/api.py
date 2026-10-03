@@ -436,11 +436,22 @@ def run_download_job(job_id: str, req: DownloadRequest):
                 except Exception:
                     continue
         _api_logger.info(f"[job {job_id}] completed: {req.url}")
+        try:
+            from fluxmedia.plugins import get_manager
+            get_manager().emit("download_complete", url=req.url,
+                               filepath=DOWNLOAD_JOBS[job_id].get("file"))
+        except Exception:
+            pass
     except Exception as e:
         with JOBS_LOCK:
             DOWNLOAD_JOBS[job_id]["status"] = "failed"
             DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] Download failed: {str(e)}")
         _api_logger.error(f"[job {job_id}] failed: {req.url} — {e}")
+        try:
+            from fluxmedia.plugins import get_manager
+            get_manager().emit("download_failed", url=req.url, error=str(e))
+        except Exception:
+            pass
 
 @app.post("/api/download")
 def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
@@ -925,6 +936,13 @@ if os.path.isdir(WEB_BUILD_DIR):
 
 def run_server(port: int = 8000, host: str = "0.0.0.0"):  # nosec
     print(f"Starting FluxMedia Web server on {host}:{port}...")
+    try:
+        from fluxmedia.plugins import get_manager
+        _pm = get_manager(load_config())
+        _pm.mount_api(app)
+        _pm.emit("startup", config=load_config())
+    except Exception as e:
+        print(f"Plugin initialization skipped: {e}")
     uvicorn.run(app, host=host, port=port, log_level="info")
 
 if __name__ == "__main__":

@@ -1,0 +1,283 @@
+"""FluxMedia plugin system.
+
+Users extend FluxMedia by dropping a ``.py`` file (or package) into the
+plugins directory, or by installing a package that exposes the
+``fluxmedia.plugins`` entry-point group.
+
+A plugin is any importable module that optionally defines::
+
+    PLUGIN = {
+        "name": "my-plugin",        # required (defaults to module name)
+        "version": "1.0.0",
+        "description": "What it does.",
+        "author": "Your name",
+    }
+
+    def register(hooks):            # optional
+        hooks.on("startup", lambda config: ...)
+        hooks.on("download_complete", lambda url=None, filepath=None: ...)
+        hooks.on("download_failed", lambda url=None, error=None: ...)
+        hooks.menu_item("Do a thing", lambda config: ...)
+        hooks.on_api(lambda app: app.get("/api/hello")(...))
+
+All hooks are optional. A plugin that only listens to events needs no
+``register`` function at all — it is still loaded (and listed).
+
+Trust model: plugins execute arbitrary code with full user privileges.
+Only install plugins you trust. Individual plugins can be disabled via the
+``plugins_disabled`` config list (names) without uninstalling them.
+"""
+
+import importlib.metadata
+import importlib.util
+import logging
+import os
+import sys
+import traceback
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+ENTRYPOINT_GROUP = "fluxmedia.plugins"
+
+
+def get_plugins_dir() -> str:
+    from fluxmedia.core import DATA_DIR
+    path = os.path.join(DATA_DIR, "plugins")
+    os.makedirs(path, exist_ok=True)
+    # A pointer file so users discover the feature by browsing the folder.
+    readme = os.path.join(path, "README.txt")
+    if not os.path.isfile(readme):
+        try:
+            with open(readme, "w", encoding="utf-8") as f:
+                f.write(
+                    "FluxMedia plugins live here.\n"
+                    "Drop in a .py file (or a package folder with __init__.py)\n"
+                    "that optionally defines PLUGIN metadata and register(hooks).\n"
+                    "See docs/plugins.md and examples/hello-world for a template.\n"
+                )
+        except OSError:
+            pass
+    return path
+
+
+@dataclass
+class Plugin:
+    name: str
+    version: str = "0.0.0"
+    description: str = ""
+    author: str = ""
+    origin: str = "dir"  # "dir" | "entrypoint"
+    module: Any = None
+    enabled: bool = True
+    error: str = ""
+
+
+class Hooks:
+    """Registry a plugin fills inside ``register(hooks)``."""
+
+    def __init__(self, manager: "PluginManager"):
+        self._manager = manager
+        self.menu_items: List[Dict[str, Any]] = []
+        self.api_mounts: List[Callable] = []
+
+    def on(self, event: str, fn: Callable) -> None:
+        """Subscribe to an event: startup | download_complete | download_failed."""
+        if event not in ("startup", "download_complete", "download_failed"):
+            raise ValueError(f"Unknown event: {event}")
+        self._manager._listeners[event].append(fn)
+
+    def menu_item(self, label: str, handler: Callable) -> None:
+        """Add an entry to the CLI Plugins submenu. handler(config) is called."""
+        self.menu_items.append({"label": label, "handler": handler})
+
+    def on_api(self, fn: Callable) -> None:
+        """Register fn(app) — called with the FastAPI app on web startup."""
+        self.api_mounts.append(fn)
+
+
+class PluginManager:
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
+        self.config = config if config is not None else {}
+        self.plugins: List[Plugin] = []
+        self._listeners: Dict[str, List[Callable]] = {
+            "startup": [],
+            "download_complete": [],
+            "download_failed": [],
+        }
+        self.menu_items: List[Dict[str, Any]] = []
+        self.api_mounts: List[Callable] = []
+
+    # ── discovery ──────────────────────────────────────────────
+
+    def _disabled_names(self) -> List[str]:
+        disabled = self.config.get("plugins_disabled", [])
+        return disabled if isinstance(disabled, list) else []
+
+    def discover(self) -> List[Plugin]:
+        """Find + import plugins. Faulty ones are recorded, never raised."""
+        found: List[Plugin] = []
+        disabled = set(self._disabled_names())
+
+        # 1. Drop-in directory.
+        try:
+            plug_dir = get_plugins_dir()
+            for entry in sorted(os.listdir(plug_dir)):
+                full = os.path.join(plug_dir, entry)
+                mod_name, is_pkg = None, False
+                if entry.endswith(".py") and entry != "__init__.py" and os.path.isfile(full):
+                    mod_name = f"fluxmedia_user_plugin_{entry[:-3]}"
+                elif os.path.isdir(full) and os.path.isfile(os.path.join(full, "__init__.py")):
+                    mod_name = f"fluxmedia_user_plugin_{entry}"
+                    full = os.path.join(full, "__init__.py")
+                    is_pkg = True
+                if mod_name is None:
+                    continue
+                plugin = self._import_module(mod_name, full, origin="dir")
+                if plugin is not None:
+                    found.append(plugin)
+        except Exception as e:
+            logger.error(f"Plugin directory scan failed: {e}")
+
+        # 2. Installed entry points.
+        try:
+            eps = importlib.metadata.entry_points()
+            group = eps.select(group=ENTRYPOINT_GROUP) if hasattr(eps, "select") else eps.get(ENTRYPOINT_GROUP, [])
+            for ep in group:
+                try:
+                    module = ep.load()
+                    plugin = self._wrap_module(
+                        getattr(ep, "name", "unknown"), module, origin="entrypoint"
+                    )
+                    found.append(plugin)
+                except Exception:
+                    logger.error(f"Plugin entry point '{ep}' failed to load.", exc_info=True)
+                    found.append(Plugin(name=str(getattr(ep, "name", ep)), origin="entrypoint",
+                                        enabled=False, error=traceback.format_exc(limit=3)))
+        except Exception as e:
+            logger.error(f"Plugin entry-point scan failed: {e}")
+
+        for p in found:
+            p.enabled = p.name not in disabled and not p.error
+        self.plugins = found
+        return found
+
+    def _import_module(self, mod_name: str, path: str, origin: str) -> Optional[Plugin]:
+        try:
+            spec = importlib.util.spec_from_file_location(mod_name, path)
+            if spec is None or spec.loader is None:
+                return None
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[mod_name] = module
+            spec.loader.exec_module(module)
+            return self._wrap_module(getattr(module, "__name__", mod_name), module, origin)
+        except Exception:
+            logger.error(f"Plugin file '{path}' failed to load.", exc_info=True)
+            return Plugin(name=os.path.basename(path), origin=origin,
+                          enabled=False, error=traceback.format_exc(limit=3))
+
+    def _wrap_module(self, default_name: str, module: Any, origin: str) -> Plugin:
+        meta = getattr(module, "PLUGIN", {}) or {}
+        if not isinstance(meta, dict):
+            meta = {}
+        return Plugin(
+            name=str(meta.get("name") or default_name),
+            version=str(meta.get("version") or "0.0.0"),
+            description=str(meta.get("description") or ""),
+            author=str(meta.get("author") or ""),
+            origin=origin,
+            module=module,
+        )
+
+    # ── activation ─────────────────────────────────────────────
+
+    def register_all(self) -> None:
+        """Call register(hooks) on every enabled plugin. Errors isolated."""
+        for plugin in self.plugins:
+            if not plugin.enabled or plugin.module is None:
+                continue
+            register = getattr(plugin.module, "register", None)
+            if not callable(register):
+                continue
+            hooks = Hooks(self)
+            try:
+                register(hooks)
+            except Exception:
+                plugin.error = traceback.format_exc(limit=5)
+                plugin.enabled = False
+                logger.error(f"Plugin '{plugin.name}' register() failed.", exc_info=True)
+                continue
+            self.menu_items.extend(
+                {**item, "plugin": plugin.name} for item in hooks.menu_items
+            )
+            self.api_mounts.extend(hooks.api_mounts)
+
+    def load(self) -> "PluginManager":
+        """discover() + register_all(), the single entry point for hosts."""
+        self.discover()
+        self.register_all()
+        return self
+
+    # ── runtime ────────────────────────────────────────────────
+
+    def emit(self, event: str, **payload) -> None:
+        """Fire an event. One bad listener never breaks the host or others."""
+        for fn in self._listeners.get(event, []):
+            try:
+                fn(**payload)
+            except TypeError:
+                # Be lenient with listeners declaring fewer kwargs.
+                try:
+                    fn()
+                except Exception:
+                    logger.error(f"Plugin listener for '{event}' failed.", exc_info=True)
+            except Exception:
+                logger.error(f"Plugin listener for '{event}' failed.", exc_info=True)
+
+    def mount_api(self, app: Any) -> None:
+        """Give every plugin's on_api callback the FastAPI app."""
+        for fn in self.api_mounts:
+            try:
+                fn(app)
+            except Exception:
+                logger.error("Plugin on_api() failed.", exc_info=True)
+
+    def set_enabled(self, name: str, enabled: bool) -> bool:
+        """Persistently enable/disable a plugin by name. Returns found."""
+        found = False
+        for p in self.plugins:
+            if p.name == name:
+                p.enabled = enabled
+                found = True
+        disabled = set(self._disabled_names())
+        if enabled:
+            disabled.discard(name)
+        else:
+            disabled.add(name)
+        self.config["plugins_disabled"] = sorted(disabled)
+        try:
+            from fluxmedia.core import save_config
+            save_config(self.config)
+        except Exception:
+            logger.error("Could not persist plugin enable/disable state.")
+        return found
+
+
+_manager: Optional[PluginManager] = None
+
+
+def get_manager(config: Optional[Dict[str, Any]] = None) -> PluginManager:
+    """Process-wide singleton (hosts should load once at startup)."""
+    global _manager
+    if _manager is None:
+        _manager = PluginManager(config or {}).load()
+    elif config is not None:
+        _manager.config = config
+    return _manager
+
+
+def reset_manager() -> None:
+    """Forget the singleton (used by tests)."""
+    global _manager
+    _manager = None

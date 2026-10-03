@@ -2196,6 +2196,66 @@ def operation_updates_manager(config: Dict[str, Any]):
         elif choice == "4":
             break
 
+def operation_plugins_menu(config: Dict[str, Any]):
+    """Lists installed plugins, toggles them, and runs plugin menu items."""
+    from fluxmedia.plugins import get_manager, get_plugins_dir
+    manager = get_manager(config)
+    while True:
+        clear_screen()
+        print_header()
+        table = Table(title="🔌 Plugins", box=box.ROUNDED, border_style="magenta")
+        table.add_column("#", style="bold cyan")
+        table.add_column("Plugin", style="white")
+        table.add_column("Version", style="dim")
+        table.add_column("Status", style="bold")
+        table.add_column("Origin", style="dim")
+        if not manager.plugins:
+            console.print("[yellow]No plugins installed.[/yellow]")
+        for i, p in enumerate(manager.plugins, 1):
+            status = "[green]enabled[/green]" if p.enabled else "[red]disabled[/red]"
+            if p.error:
+                status = "[red]error[/red]"
+            table.add_row(str(i), p.name, p.version, status, p.origin)
+        console.print(table)
+        console.print(f"[dim]Plugins folder: {get_plugins_dir()}[/dim]")
+
+        items = [it for it in manager.menu_items
+                 if not any(p.name == it.get("plugin") and not p.enabled for p in manager.plugins)]
+        actions = ["Back"]
+        if manager.plugins:
+            actions.append("Enable/Disable")
+        for it in items:
+            actions.append(f"Run: {it['label']}")
+        for idx, a in enumerate(actions, 1):
+            console.print(f"[bold cyan]{idx}.[/bold cyan] {a}")
+        choice = Prompt.ask("Choose an option",
+                            choices=[str(i) for i in range(1, len(actions) + 1)],
+                            default="1")
+        picked = actions[int(choice) - 1]
+        if picked == "Back":
+            return config
+        elif picked == "Enable/Disable":
+            target = Prompt.ask("Plugin name (or number)",
+                                choices=[p.name for p in manager.plugins] +
+                                        [str(i) for i in range(1, len(manager.plugins) + 1)],
+                                show_choices=False)
+            if target.isdigit():
+                target = manager.plugins[int(target) - 1].name
+            current = next((p.enabled for p in manager.plugins if p.name == target), True)
+            manager.set_enabled(target, not current)
+            console.print(f"[green]{target} {'enabled' if not current else 'disabled'}.[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif picked.startswith("Run: "):
+            item = items[[f"Run: {it['label']}" for it in items].index(picked)]
+            clear_screen()
+            try:
+                item["handler"](config)
+            except Exception as e:
+                console.print(f"[bold red]Plugin action failed: {e}[/bold red]")
+            Prompt.ask("\nPress Enter to continue...")
+    return config
+
+
 def main():
     """Primary routing flow block."""
     import argparse
@@ -2327,6 +2387,7 @@ def main():
             info_table.add_row("[bold magenta]16.[/bold magenta] Troubleshooting [dim](FAQ)[/dim]")
             info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
             info_table.add_row("[bold magenta]18.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
+            info_table.add_row("[bold magenta]P.[/bold magenta] Plugins [dim](Extensions)[/dim]")
             info_table.add_row("[bold red]19.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
@@ -2353,7 +2414,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option (0-19, W)", choices=[str(i) for i in range(0, 20)] + ["W", "w"], show_choices=False, default="19")
+            choice = Prompt.ask("Choose an option (0-19, W, P)", choices=[str(i) for i in range(0, 20)] + ["W", "w", "P", "p"], show_choices=False, default="19")
             clear_screen()
             
             if choice.upper() == "W":
@@ -2406,6 +2467,8 @@ def main():
                 operation_about_creator()
             elif choice == "18":
                 operation_report_bug_feedback()
+            elif choice.upper() == "P":
+                config = operation_plugins_menu(config)
             elif choice == "19":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break
