@@ -33,7 +33,9 @@ SHELL = """<!DOCTYPE html>
 
 
 def pack(text: str) -> str:
-    return base64.b64encode(gzip.compress(text.encode("utf-8"))).decode("ascii")
+    # mtime=0 keeps blobs reproducible: same source always yields same blob,
+    # so reviewers can verify embedded output matches portal/dist.
+    return base64.b64encode(gzip.compress(text.encode("utf-8"), mtime=0)).decode("ascii")
 
 
 def main() -> None:
