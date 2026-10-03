@@ -3,101 +3,141 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FluxMedia Share</title>
+<title>LAN Sharing Gateway</title>
 <style>
+/* Previous-version dashboard theme: dark surface, purple primary. */
 :root {
-  --bg: #f6f6f7; --surface: #fff; --text: #16181d; --muted: #6b7280;
-  --faint: #9ca3af; --border: #e5e7eb; --accent: #d90429; --accent-dark: #b40322;
+  --background: #09090e;
+  --card: #101016;
+  --border: #23232e;
+  --foreground: #fafafa;
+  --muted: #a1a1b3;
+  --faint: #63636e;
+  --primary: #7c3aed;
+  --primary-dim: rgba(124, 58, 237, 0.14);
+  --accent: #d90429;
+  --green: #22c55e;
 }
 * { box-sizing: border-box; }
 body {
-  margin: 0; background: var(--bg); color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0; background: var(--background); color: var(--foreground);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 header {
   position: sticky; top: 0; z-index: 10;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
+  background: rgba(9, 9, 14, 0.92);
+  border-bottom: 1px solid var(--border);
+  padding: 16px;
+  backdrop-filter: blur(8px);
 }
-.brand { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
-.brand span { color: var(--accent); }
-.sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-main { max-width: 720px; margin: 0 auto; padding: 16px 12px 64px; }
-.toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.brand { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.brand span { color: var(--primary); }
+.status { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+main { max-width: 720px; margin: 0 auto; padding: 20px 14px 64px; }
+.hero h1 { font-size: 26px; margin: 4px 0 6px; letter-spacing: -0.02em; }
+.hero p { color: var(--muted); font-size: 13.5px; margin: 0 0 18px; line-height: 1.5; }
+.panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 14px; overflow: hidden;
+}
+.panel-head { padding: 14px 16px 10px; }
+.panel-title { font-size: 14px; font-weight: 700; }
+.panel-desc { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.toolbar { display: flex; gap: 8px; padding: 4px 14px 12px; flex-wrap: wrap; }
 .search {
-  flex: 1; min-width: 140px; border: 1px solid var(--border); border-radius: 999px;
-  padding: 10px 16px; font: inherit; font-size: 14px; background: var(--surface);
-  outline: none;
+  flex: 1; min-width: 130px; background: var(--background); color: var(--foreground);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+  font: inherit; font-size: 13.5px; outline: none;
 }
-.chips { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.search:focus { border-color: var(--primary); }
+.chips { display: flex; gap: 6px; padding: 0 14px 12px; flex-wrap: wrap; }
 .chip {
-  border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; border-radius: 999px;
   font: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
   padding: 7px 13px; cursor: pointer; text-transform: capitalize;
 }
-.chip.active { background: var(--text); border-color: var(--text); color: #fff; }
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; margin-bottom: 10px; overflow: hidden;
-}
-.row {
+.chip.active { background: var(--primary-dim); border-color: var(--primary); color: #fff; }
+.frow {
   display: flex; align-items: center; gap: 12px; width: 100%;
-  border: 0; background: none; font: inherit; text-align: left;
-  padding: 13px 14px; cursor: pointer; color: var(--text);
+  border: 0; border-top: 1px solid var(--border); background: none;
+  font: inherit; text-align: left; padding: 13px 16px; cursor: pointer; color: var(--foreground);
 }
-.badge {
+.ficon {
   width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px; font-weight: 700; color: #fff;
+  font-size: 16px; font-weight: 700; color: #fff; background: var(--primary);
 }
-.badge.video { background: var(--accent); }
-.badge.audio { background: #1e3a5f; }
-.badge.image { background: #16a34a; }
-.badge.other { background: #6b7280; }
-.info { flex: 1; min-width: 0; }
-.name {
-  font-weight: 600; font-size: 14px; overflow: hidden;
-  text-overflow: ellipsis; white-space: nowrap;
-}
-.meta { font-size: 12px; color: var(--faint); margin-top: 2px; }
+.ficon.audio { background: #1e3a5f; }
+.ficon.image { background: #166534; }
+.ficon.other { background: #3f3f46; }
+.finfo { flex: 1; min-width: 0; }
+.fname { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fmeta { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
 .player { display: none; padding: 0 14px 14px; }
-.card.open .player { display: block; }
+.card-open { background: rgba(124, 58, 237, 0.05); }
+.card-open .player { display: block; }
 video, audio { width: 100%; border-radius: 10px; background: #000; }
 video { max-height: 60vh; }
-audio { margin-top: 4px; }
 img.preview { width: 100%; border-radius: 10px; display: block; }
 .actions { display: flex; gap: 8px; margin-top: 10px; }
 .btn {
   flex: 1; text-align: center; border-radius: 10px; padding: 11px;
-  font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
-  text-decoration: none;
+  font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
 }
-.btn-dl { background: var(--accent); color: #fff; border: 0; }
-.btn-dl:active { background: var(--accent-dark); }
+.btn-dl { background: var(--primary); color: #fff; border: 0; }
 .btn-del { background: none; border: 1px solid var(--border); color: var(--muted); }
+.kv { display: flex; justify-content: space-between; gap: 10px; padding: 9px 16px; font-size: 12.5px; border-top: 1px solid var(--border); }
+.kv:first-of-type { border-top: 0; }
+.kv .k { color: var(--muted); }
+.kv .v { font-weight: 600; text-align: right; word-break: break-all; }
 .notice {
-  background: var(--surface); border: 1px dashed var(--border); border-radius: 14px;
-  padding: 32px 20px; text-align: center; color: var(--muted); font-size: 14px;
+  border: 1px dashed var(--border); border-radius: 14px; margin: 0 14px 14px;
+  padding: 28px 18px; text-align: center; color: var(--muted); font-size: 13.5px;
 }
 .error {
-  background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
-  border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 12px;
+  background: rgba(217, 4, 41, 0.1); border: 1px solid rgba(217, 4, 41, 0.4);
+  color: #fda4af; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; margin-bottom: 14px;
 }
+footer { text-align: center; color: var(--faint); font-size: 11.5px; padding: 8px 0 0; }
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">Flux <span>Media</span> Share</div>
-  <div class="sub" id="count">Connecting…</div>
+  <div class="brand">Flux<span>Media</span> · LAN Sharing Gateway</div>
+  <div class="status"><span class="dot"></span><span id="count">Connecting…</span></div>
 </header>
 <main>
-  <div id="err"></div>
-  <div class="toolbar">
-    <input class="search" id="q" type="search" placeholder="Search files…" autocomplete="off" />
+  <div class="hero">
+    <h1>Shared media files</h1>
+    <p>Broadcasting this device's download folder to the local network. Tap any file to stream it directly in your browser.</p>
   </div>
-  <div class="chips" id="chips"></div>
-  <div id="list"></div>
+  <div id="err"></div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">File broadcast</div>
+      <div class="panel-desc">All files below are reachable by any device on this Wi-Fi via your QR link.</div>
+    </div>
+    <div class="toolbar">
+      <input class="search" id="q" type="search" placeholder="Search files…" autocomplete="off" />
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="list"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Connection</div>
+      <div class="panel-desc">Keep this page open — closing it revokes access.</div>
+    </div>
+    <div class="kv"><span class="k">Network</span><span class="v">Same Wi-Fi required</span></div>
+    <div class="kv"><span class="k">Access</span><span class="v">Token-protected link</span></div>
+    <div class="kv"><span class="k">Streaming</span><span class="v">In-browser, no app needed</span></div>
+  </section>
+
+  <footer>FluxMedia Share Portal · files never leave your network</footer>
 </main>
 <script>
 const token = new URLSearchParams(location.search).get("token") || "";
@@ -117,7 +157,7 @@ async function load() {
     const d = await (await api("/api/files")).json();
     files = d.files || [];
     document.getElementById("count").textContent =
-      files.length + (files.length === 1 ? " file" : " files") + " available · tap to stream";
+      "HTTP share server · " + files.length + (files.length === 1 ? " file" : " files") + " online";
     render();
   } catch (e) {
     document.getElementById("err").innerHTML = '<div class="error">' + e.message + "</div>";
@@ -147,20 +187,21 @@ function render() {
   }
   vis.forEach(f => {
     const url = "/api/static/" + encodeURIComponent(f.name) + "?token=" + encodeURIComponent(token);
-    const card = document.createElement("div");
-    card.className = "card" + (openName === f.name ? " open" : "");
+    const wrap = document.createElement("div");
+    if (openName === f.name) wrap.className = "card-open";
 
     const row = document.createElement("button");
-    row.className = "row";
-    row.innerHTML = '<span class="badge ' + f.type + '">' + icon(f.type) + "</span>" +
-      '<span class="info"><span class="name">' + escapeHtml(f.name) + "</span>" +
-      '<div class="meta">' + fmtSize(f.size) + " · " + fmtDate(f.mtime) + "</div></span>";
+    row.className = "frow";
+    row.innerHTML = '<span class="ficon ' + f.type + '">' + icon(f.type) + "</span>" +
+      '<span class="finfo"><span class="fname">' + escapeHtml(f.name) + "</span>" +
+      '<div class="fmeta">' + fmtSize(f.size) + " · " + fmtDate(f.mtime) + "</div></span>";
     row.onclick = () => { openName = openName === f.name ? null : f.name; render(); };
-    card.appendChild(row);
+    wrap.appendChild(row);
 
     if (openName === f.name) {
       const p = document.createElement("div");
       p.className = "player";
+      p.style.display = "block";
       if (f.type === "video")
         p.innerHTML = '<video controls playsinline preload="metadata" src="' + url + '"></video>';
       else if (f.type === "audio")
@@ -181,9 +222,9 @@ function render() {
       };
       acts.appendChild(del);
       p.appendChild(acts);
-      card.appendChild(p);
+      wrap.appendChild(p);
     }
-    list.appendChild(card);
+    list.appendChild(wrap);
   });
 }
 
