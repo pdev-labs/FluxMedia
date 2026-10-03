@@ -7,8 +7,10 @@ import {
   CircularProgress,
   Container,
   IconButton,
+  ListItemText,
   Menu,
   MenuItem,
+  TextField,
   Toolbar,
   Tooltip,
   Typography,
@@ -33,19 +35,92 @@ import { loadPrefs, savePrefs } from "./prefs.ts";
 import { PasswordGate } from "./components/PasswordGate.tsx";
 import { FileBrowser } from "./components/FileBrowser.tsx";
 
-function ModeToggle(): React.JSX.Element {
-  const { mode, setMode } = useColorScheme();
-  if (!mode) return <></>;
+function CustomColorRow({
+  active,
+  initial,
+  onPick,
+}: {
+  active: boolean;
+  initial: string;
+  onPick: (hex: string) => void;
+}): React.JSX.Element {
+  const [hex, setHex] = useState(initial);
+  const valid = /^#[0-9a-fA-F]{6}$/.test(hex);
   return (
-    <Tooltip title={mode === "dark" ? "Light mode" : "Dark mode"}>
-      <IconButton
-        color="inherit"
-        onClick={() => setMode(mode === "dark" ? "light" : "dark")}
-        aria-label="Toggle color mode"
+    <Box sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box
+        component="label"
+        sx={{
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          bgcolor: valid ? hex : "action.disabledBackground",
+          border: 1,
+          borderColor: "divider",
+          cursor: "pointer",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
       >
-        {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
-      </IconButton>
-    </Tooltip>
+        <Box
+          component="input"
+          type="color"
+          value={valid ? hex : "#d90429"}
+          onChange={(e) => {
+            setHex(e.target.value);
+            onPick(e.target.value);
+          }}
+          sx={{ opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
+          aria-label="Pick custom color"
+        />
+      </Box>
+      <TextField
+        size="small"
+        label="Custom hex"
+        value={hex}
+        onChange={(e) => {
+          const v = e.target.value.startsWith("#") ? e.target.value : `#${e.target.value}`;
+          setHex(v);
+          if (/^#[0-9a-fA-F]{6}$/.test(v)) onPick(v);
+        }}
+        error={!valid}
+        sx={{ width: 110 }}
+      />
+      {active && <CheckIcon fontSize="small" color="primary" />}
+    </Box>
+  );
+}
+
+function ModeToggle(): React.JSX.Element {  const { mode, setMode } = useColorScheme();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const current = mode ?? "system";
+  return (
+    <>
+      <Tooltip title="Appearance">
+        <IconButton
+          color="inherit"
+          onClick={(e) => setAnchor(e.currentTarget)}
+          aria-label="Appearance"
+        >
+          {current === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+        </IconButton>
+      </Tooltip>
+      <Menu anchorEl={anchor} open={anchor !== null} onClose={() => setAnchor(null)}>
+        {(["light", "system", "dark"] as const).map((m) => (
+          <MenuItem
+            key={m}
+            selected={current === m}
+            onClick={() => {
+              setMode(m);
+              setAnchor(null);
+            }}
+          >
+            <ListItemText sx={{ textTransform: "capitalize" }}>{m}</ListItemText>
+            {current === m && <CheckIcon fontSize="small" />}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
 
@@ -127,8 +202,8 @@ function Shell(): React.JSX.Element {
   }
 
   return (
-    <ThemeProvider theme={theme} defaultMode="system">
-      <CssBaseline />
+    <ThemeProvider theme={theme} defaultMode="light">
+      <CssBaseline enableColorScheme />
       {phase === "loading" && (
         <Box
           sx={{
@@ -205,6 +280,11 @@ function Shell(): React.JSX.Element {
                     {accent === hex && <CheckIcon fontSize="small" sx={{ ml: "auto", pl: 1 }} />}
                   </MenuItem>
                 ))}
+                <CustomColorRow
+                  active={accent !== null && !Object.values(ACCENT_PRESETS).includes(accent)}
+                  initial={accent ?? "#d90429"}
+                  onPick={pickAccent}
+                />
               </Menu>
               {meta?.password_protected && (
                 <Tooltip title="Lock">
