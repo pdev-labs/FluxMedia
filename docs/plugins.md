@@ -117,6 +117,28 @@ plugins/
 Both are discovered; packages let you organize larger plugins and keep
 third-party imports vendored inside the folder.
 
+### Plugin dependencies
+
+Three ways, depending on what the dependency is:
+
+1. **Third-party packages** (`requests`, `plyer`, …) must be installed
+   into FluxMedia's Python environment — not into the plugins folder:
+   - pipx installs: `pipx inject fluxmedia <package>`
+   - venv installs: activate it, then `pip install <package>`
+   - `import <package>` then works in every plugin.
+2. **Vendored helper code** (your own `.py` file or folder sitting beside
+   the plugin) is importable as-is — the plugins folder is added to
+   `sys.path` at load time. Example: `plugins/my_lib/utils.py` next to
+   `plugins/my-plugin.py` → `import my_lib.utils` just works.
+3. **Entry-point (pip) plugins** declare dependencies in their own
+   `pyproject.toml` — pip resolves them automatically.
+
+Deliberately absent: FluxMedia will never `pip install` anything on a
+plugin's behalf. Silent installs would let any dropped file pull
+arbitrary code, break offline machines, and make installs
+unreproducible. If a plugin needs something missing, it fails fast with
+an `ImportError` in `fluxmedia.log` telling you exactly what to install.
+
 ## 5. Hooks reference
 
 The `hooks` object passed to `register()`:

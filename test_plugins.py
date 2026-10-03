@@ -96,6 +96,16 @@ def register(hooks):
         with self.assertRaises(ValueError):
             P.Hooks(m).on("nope", lambda: None)
 
+    def test_vendored_dependency_importable(self):
+        # A helper folder/file sitting beside the plugin (not a plugin
+        # itself) must be importable without the plugin hacking sys.path.
+        with open(os.path.join(self.tmp, "vendored_helper.py"), "w", encoding="utf-8") as f:
+            f.write('VALUE = 42\n')
+        self._write("p.py", 'PLUGIN = {"name": "p"}\nimport vendored_helper\nRESULT = vendored_helper.VALUE\n')
+        m = P.PluginManager(self.config).load()
+        self.assertTrue(m.plugins[0].enabled)
+        self.assertEqual(sys.modules["fluxmedia_user_plugin_p"].RESULT, 42)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -123,6 +123,12 @@ class PluginManager:
         # 1. Drop-in directory.
         try:
             plug_dir = get_plugins_dir()
+            # Vendored dependencies: any folder/file placed beside plugins
+            # becomes importable (e.g. `import my_lib` where
+            # plugins/my-lib/... lives). Third-party packages still belong
+            # in the environment (pip / pipx inject) — see docs.
+            if plug_dir not in sys.path:
+                sys.path.insert(0, plug_dir)
             for entry in sorted(os.listdir(plug_dir)):
                 full = os.path.join(plug_dir, entry)
                 mod_name, is_pkg = None, False
