@@ -72,7 +72,12 @@ export async function getMeta(): Promise<PortalMeta> {
 }
 
 export async function getFiles(token: string): Promise<PortalFile[]> {
-  const res = await fetch(withToken("/api/files", token));
+  // FIND-03: fetch() calls use the Authorization header so the token
+  // stays out of URLs/logs. Media tags (<video>/<audio>/<img>/<track>)
+  // cannot set headers, so withToken() query auth remains for those.
+  const res = await fetch("/api/files", {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (res.status === 401) throw new Error("unauthorized");
   if (!res.ok) throw new Error("Could not load files.");
   return (await res.json()) as PortalFile[];
