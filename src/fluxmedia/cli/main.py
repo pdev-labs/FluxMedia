@@ -475,41 +475,6 @@ def print_qr_code(share_url: str, message: str = "Scan this QR code:") -> bool:
         qr.print_ascii(invert=True)
     return True
 
-def sync_share_portal_ui():
-    """Copies the packaged web UI into the data dir for the LAN share portal.
-
-    The portal mounts DATA_DIR/web_build, but nothing ever created that copy,
-    so sharing crashed with 'Directory ... does not exist'. Re-syncs whenever
-    the installed package version changes so updates propagate.
-    """
-    try:
-        from fluxmedia import api as _api
-        src = _api.WEB_BUILD_DIR
-        if not os.path.isdir(src):
-            return False
-        try:
-            from importlib.metadata import version as _pkg_version
-            current = _pkg_version("fluxmedia")
-        except Exception:
-            current = "dev"
-        dest = os.path.join(get_data_dir(), "web_build")
-        stamp = os.path.join(dest, ".fluxmedia_version")
-        stale = True
-        try:
-            with open(stamp, "r", encoding="utf-8") as f:
-                stale = f.read().strip() != current
-        except OSError:
-            stale = True
-        if stale or not os.path.isfile(os.path.join(dest, "index.html")):
-            shutil.rmtree(dest, ignore_errors=True)
-            shutil.copytree(src, dest)
-            with open(stamp, "w", encoding="utf-8") as f:
-                f.write(current)
-        return True
-    except Exception as e:
-        console.print(f"[yellow]Warning: could not stage share portal UI: {e}[/yellow]")
-        return False
-
 def start_share_server(config: Dict[str, Any], headless: bool = False):
     if not headless:
         print_header()
@@ -537,13 +502,8 @@ def start_share_server(config: Dict[str, Any], headless: bool = False):
             return
         console.print('\n[bold yellow]FastAPI Server running. Press Ctrl+C to stop sharing...[/bold yellow]')
     
-    # Mount static files
+    # Mount static files (Range-supported streaming + downloads)
     app.mount('/api/static', StaticFiles(directory=dest_dir), name='static')
-    if not sync_share_portal_ui():
-        console.print("[bold red]Share portal UI is unavailable (web_build missing).[/bold red]")
-        Prompt.ask("\nPress Enter to return...")
-        return
-    app.mount('/', StaticFiles(directory=get_data_dir() + '/web_build', html=True), name='web')
     
     try:
         uvicorn.run(app, host='0.0.0.0', port=port, log_level='error')  # nosec

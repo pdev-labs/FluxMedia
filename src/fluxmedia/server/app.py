@@ -4,6 +4,7 @@ import secrets
 from typing import Dict, Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 app = FastAPI(title="FluxMedia Share Portal")
 
@@ -81,5 +82,12 @@ async def delete_file(filename: str, token: str = Query(None)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
         
-# A proper Range-supported file response would go here, 
-# but StaticFiles handles it beautifully for downloads/streams.
+PORTAL_HTML = os.path.join(os.path.dirname(__file__), "portal.html")
+
+@app.get("/")
+async def serve_portal():
+    # Standalone streaming portal (no build step, no token needed for the
+    # shell itself — the page appends ?token= to every API call).
+    if os.path.isfile(PORTAL_HTML):
+        return FileResponse(PORTAL_HTML, media_type="text/html")
+    raise HTTPException(status_code=500, detail="Portal UI missing")

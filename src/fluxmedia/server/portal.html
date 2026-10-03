@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FluxMedia Share</title>
+<style>
+:root {
+  --bg: #f6f6f7; --surface: #fff; --text: #16181d; --muted: #6b7280;
+  --faint: #9ca3af; --border: #e5e7eb; --accent: #d90429; --accent-dark: #b40322;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+header {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.brand { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.brand span { color: var(--accent); }
+.sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+main { max-width: 720px; margin: 0 auto; padding: 16px 12px 64px; }
+.toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.search {
+  flex: 1; min-width: 140px; border: 1px solid var(--border); border-radius: 999px;
+  padding: 10px 16px; font: inherit; font-size: 14px; background: var(--surface);
+  outline: none;
+}
+.chips { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--border); background: var(--surface); border-radius: 999px;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--muted);
+  padding: 7px 13px; cursor: pointer; text-transform: capitalize;
+}
+.chip.active { background: var(--text); border-color: var(--text); color: #fff; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; margin-bottom: 10px; overflow: hidden;
+}
+.row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  border: 0; background: none; font: inherit; text-align: left;
+  padding: 13px 14px; cursor: pointer; color: var(--text);
+}
+.badge {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700; color: #fff;
+}
+.badge.video { background: var(--accent); }
+.badge.audio { background: #1e3a5f; }
+.badge.image { background: #16a34a; }
+.badge.other { background: #6b7280; }
+.info { flex: 1; min-width: 0; }
+.name {
+  font-weight: 600; font-size: 14px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.meta { font-size: 12px; color: var(--faint); margin-top: 2px; }
+.player { display: none; padding: 0 14px 14px; }
+.card.open .player { display: block; }
+video, audio { width: 100%; border-radius: 10px; background: #000; }
+video { max-height: 60vh; }
+audio { margin-top: 4px; }
+img.preview { width: 100%; border-radius: 10px; display: block; }
+.actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  flex: 1; text-align: center; border-radius: 10px; padding: 11px;
+  font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  text-decoration: none;
+}
+.btn-dl { background: var(--accent); color: #fff; border: 0; }
+.btn-dl:active { background: var(--accent-dark); }
+.btn-del { background: none; border: 1px solid var(--border); color: var(--muted); }
+.notice {
+  background: var(--surface); border: 1px dashed var(--border); border-radius: 14px;
+  padding: 32px 20px; text-align: center; color: var(--muted); font-size: 14px;
+}
+.error {
+  background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+  border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 12px;
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Flux <span>Media</span> Share</div>
+  <div class="sub" id="count">Connecting…</div>
+</header>
+<main>
+  <div id="err"></div>
+  <div class="toolbar">
+    <input class="search" id="q" type="search" placeholder="Search files…" autocomplete="off" />
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="list"></div>
+</main>
+<script>
+const token = new URLSearchParams(location.search).get("token") || "";
+const api = (p, o) => fetch(p + (p.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token), o);
+const fmtSize = b => b < 1024 ? b + " B" : b < 1048576 ? (b/1024).toFixed(1) + " KB"
+  : b < 1073741824 ? (b/1048576).toFixed(1) + " MB" : (b/1073741824).toFixed(2) + " GB";
+const fmtDate = t => new Date(t * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+const icon = t => ({ video: "▶", audio: "♪", image: "▦", other: "⤓" }[t] || "⤓");
+
+let files = [], filter = "all", query = "", openName = null;
+const FILTERS = ["all", "video", "audio", "image", "other"];
+
+async function load() {
+  try {
+    const r = await api("/api/verify");
+    if (!r.ok) throw new Error("Invalid or missing token. Open this page via the QR link.");
+    const d = await (await api("/api/files")).json();
+    files = d.files || [];
+    document.getElementById("count").textContent =
+      files.length + (files.length === 1 ? " file" : " files") + " available · tap to stream";
+    render();
+  } catch (e) {
+    document.getElementById("err").innerHTML = '<div class="error">' + e.message + "</div>";
+    document.getElementById("count").textContent = "Not connected";
+  }
+}
+
+function render() {
+  const chips = document.getElementById("chips");
+  chips.innerHTML = "";
+  FILTERS.forEach(f => {
+    const b = document.createElement("button");
+    b.className = "chip" + (filter === f ? " active" : "");
+    b.textContent = f;
+    b.onclick = () => { filter = f; render(); };
+    chips.appendChild(b);
+  });
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  const vis = files.filter(f =>
+    (filter === "all" || f.type === filter) &&
+    f.name.toLowerCase().includes(query.toLowerCase()));
+  if (!vis.length) {
+    list.innerHTML = '<div class="notice">No files match.</div>';
+    return;
+  }
+  vis.forEach(f => {
+    const url = "/api/static/" + encodeURIComponent(f.name) + "?token=" + encodeURIComponent(token);
+    const card = document.createElement("div");
+    card.className = "card" + (openName === f.name ? " open" : "");
+
+    const row = document.createElement("button");
+    row.className = "row";
+    row.innerHTML = '<span class="badge ' + f.type + '">' + icon(f.type) + "</span>" +
+      '<span class="info"><span class="name">' + escapeHtml(f.name) + "</span>" +
+      '<div class="meta">' + fmtSize(f.size) + " · " + fmtDate(f.mtime) + "</div></span>";
+    row.onclick = () => { openName = openName === f.name ? null : f.name; render(); };
+    card.appendChild(row);
+
+    if (openName === f.name) {
+      const p = document.createElement("div");
+      p.className = "player";
+      if (f.type === "video")
+        p.innerHTML = '<video controls playsinline preload="metadata" src="' + url + '"></video>';
+      else if (f.type === "audio")
+        p.innerHTML = '<audio controls preload="metadata" src="' + url + '"></audio>';
+      else if (f.type === "image")
+        p.innerHTML = '<img class="preview" loading="lazy" src="' + url + '" alt="" />';
+      const acts = document.createElement("div");
+      acts.className = "actions";
+      acts.innerHTML = '<a class="btn btn-dl" href="' + url + '" download>Download</a>';
+      const del = document.createElement("button");
+      del.className = "btn btn-del";
+      del.textContent = "Delete";
+      del.onclick = async () => {
+        if (!confirm('Delete "' + f.name + '"?')) return;
+        const r = await api("/api/delete?filename=" + encodeURIComponent(f.name), { method: "DELETE" });
+        if (r.ok) { files = files.filter(x => x.name !== f.name); openName = null; load(); }
+        else alert("Delete failed.");
+      };
+      acts.appendChild(del);
+      p.appendChild(acts);
+      card.appendChild(p);
+    }
+    list.appendChild(card);
+  });
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+document.getElementById("q").addEventListener("input", e => { query = e.target.value; render(); });
+load();
+</script>
+</body>
+</html>
