@@ -50,12 +50,14 @@ function Shell(): React.JSX.Element {
   const [token, setToken] = useState("");
   const [meta, setMeta] = useState<PortalMeta | null>(null);
   const [files, setFiles] = useState<PortalFile[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
   const [error, setError] = useState("");
   const [current, setCurrent] = useState<PortalFile | null>(null);
 
   const enter = useCallback(async (tok: string, m: PortalMeta) => {
     setToken(tok);
     setMeta(m);
+    setLoadingFiles(true);
     try {
       setFiles(await getFiles(tok));
       setPhase("ready");
@@ -67,6 +69,8 @@ function Shell(): React.JSX.Element {
         setError(err instanceof Error ? err.message : "Could not load files.");
         setPhase("ready");
       }
+    } finally {
+      setLoadingFiles(false);
     }
   }, []);
 
@@ -147,10 +151,10 @@ function Shell(): React.JSX.Element {
                 </Avatar>
               )}
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+                <Typography variant="h6" noWrap>
                   {meta?.profile_name ?? "FluxMedia"} Share
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="body2" color="text.secondary">
                   {files.length} {files.length === 1 ? "file" : "files"} · tap to stream
                 </Typography>
               </Box>
@@ -170,7 +174,7 @@ function Shell(): React.JSX.Element {
                 {error}
               </Alert>
             )}
-            <FileBrowser files={files} token={token} onOpen={setCurrent} />
+            <FileBrowser files={files} token={token} loading={loadingFiles} onOpen={setCurrent} />
           </Container>
           <PlayerDialog
             file={current}

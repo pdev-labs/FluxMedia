@@ -1,19 +1,40 @@
+import { forwardRef } from "react";
 import {
-  AppBar,
+  Avatar,
   Box,
   Button,
   Dialog,
   DialogContent,
   IconButton,
+  Slide,
   Toolbar,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import type { TransitionProps } from "@mui/material/transitions";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import AudioFileIcon from "@mui/icons-material/AudioFile";
+import ImageIcon from "@mui/icons-material/Image";
+import DescriptionIcon from "@mui/icons-material/Description";
 import { fileUrl, formatSize, subtitlesUrl } from "../api.ts";
-import type { PortalFile } from "../api.ts";
+import type { FileType, PortalFile } from "../api.ts";
+
+const SlideUp = forwardRef(function SlideUp(
+  props: TransitionProps & { children: React.ReactElement },
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
+function TypeIcon({ type }: { type: FileType }): React.JSX.Element {
+  if (type === "video") return <VideocamIcon fontSize="small" />;
+  if (type === "audio") return <AudioFileIcon fontSize="small" />;
+  if (type === "image") return <ImageIcon fontSize="small" />;
+  return <DescriptionIcon fontSize="small" />;
+}
 
 export function PlayerDialog({
   file,
@@ -26,27 +47,35 @@ export function PlayerDialog({
 }): React.JSX.Element {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
-  const open = file !== null;
 
   return (
     <Dialog
-      open={open}
+      open={file !== null}
       onClose={onClose}
       fullScreen={fullScreen}
       maxWidth="md"
       fullWidth
+      slots={{ transition: SlideUp }}
     >
-      <AppBar position="relative" color="default" elevation={0}>
-        <Toolbar>
-          <Typography variant="subtitle1" noWrap sx={{ flex: 1 }}>
+      <Toolbar sx={{ gap: 1.5, py: 0.5 }}>
+        {file && (
+          <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36 }}>
+            <TypeIcon type={file.type} />
+          </Avatar>
+        )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle2" noWrap>
             {file?.name ?? ""}
           </Typography>
-          <IconButton edge="end" onClick={onClose} aria-label="Close">
-            <CloseIcon />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <DialogContent sx={{ p: file?.type === "audio" ? 3 : 0 }}>
+          <Typography variant="body2" color="text.secondary">
+            {file ? formatSize(file.size) : ""}
+          </Typography>
+        </Box>
+        <IconButton edge="end" onClick={onClose} aria-label="Close">
+          <CloseIcon />
+        </IconButton>
+      </Toolbar>
+      <DialogContent sx={{ p: file?.type === "audio" ? 3 : 0, pt: "0 !important" }}>
         {file?.type === "video" && (
           <Box
             component="video"
@@ -54,7 +83,7 @@ export function PlayerDialog({
             playsInline
             autoPlay
             src={fileUrl(file.id, token)}
-            sx={{ width: "100%", maxHeight: "70vh", background: "#000" }}
+            sx={{ width: "100%", maxHeight: "70vh", background: "#000", display: "block" }}
           >
             <track
               kind="subtitles"
@@ -81,19 +110,20 @@ export function PlayerDialog({
             sx={{ width: "100%", display: "block" }}
           />
         )}
-        {file && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              p: file.type === "audio" || file.type === "image" ? 0 : 2,
-              pt: file.type === "video" || file.type === "document" || file.type === "other" ? 2 : 0,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-              {formatSize(file.size)}
-            </Typography>
+        {file && (file.type === "video" || file.type === "document" || file.type === "other") && (
+          <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              href={fileUrl(file.id, token)}
+              download={file.name}
+            >
+              Download
+            </Button>
+          </Box>
+        )}
+        {file && (file.type === "audio" || file.type === "image") && (
+          <Box sx={{ pt: 2, display: "flex", justifyContent: "flex-end" }}>
             <Button
               variant="contained"
               startIcon={<DownloadIcon />}

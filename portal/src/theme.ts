@@ -1,4 +1,4 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
 /** Server theme_tone values mapped to primary hues. */
 const TONES: Record<string, string> = {
@@ -21,7 +21,7 @@ export function toneMain(tone: string | undefined): string {
  * no top-level palette so it cannot shadow the schemes.
  */
 export function buildTheme(primaryMain: string) {
-  return createTheme({
+  const base = createTheme({
     cssVariables: true,
     colorSchemes: {
       light: {
@@ -40,6 +40,9 @@ export function buildTheme(primaryMain: string) {
     typography: {
       fontFamily:
         'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      h5: { fontWeight: 700, letterSpacing: "-0.01em" },
+      h6: { fontWeight: 700, letterSpacing: "-0.01em" },
+      subtitle2: { fontWeight: 600, lineHeight: 1.35 },
     },
     shape: { borderRadius: 12 },
     components: {
@@ -48,9 +51,25 @@ export function buildTheme(primaryMain: string) {
         styleOverrides: {
           root: ({ theme }) => ({
             border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 16,
           }),
         },
       },
+      MuiChip: {
+        styleOverrides: {
+          root: { borderRadius: 10, fontWeight: 600 },
+        },
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: { borderRadius: 20 },
+        },
+      },
+      MuiTextField: {
+        defaultProps: { size: "small" },
+      },
     },
   });
+  // Fluid headline sizes per Material guidance (enhancer, applied last).
+  return responsiveFontSizes(base);
 }

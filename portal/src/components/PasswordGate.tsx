@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
@@ -50,14 +51,19 @@ export function PasswordGate({
       }}
     >
       <Card sx={{ width: "100%", maxWidth: 380 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-            <LockOutlinedIcon color="primary" />
-            <Typography variant="h6" component="h1">
-              FluxMedia Share
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48, mb: 1.5 }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography variant="h5" component="h1">
+            FluxMedia Share
+          </Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            align="center"
+            sx={{ mt: 0.5, mb: 2.5 }}
+          >
             {profileName}'s library is password protected.
           </Typography>
           {error && (
@@ -65,7 +71,7 @@ export function PasswordGate({
               {error}
             </Alert>
           )}
-          <Box component="form" onSubmit={submit}>
+          <Box component="form" onSubmit={submit} sx={{ width: "100%" }}>
             <TextField
               fullWidth
               type="password"
