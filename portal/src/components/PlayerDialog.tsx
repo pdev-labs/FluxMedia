@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import {
   Avatar,
   Box,
@@ -15,11 +15,14 @@ import {
 import type { TransitionProps } from "@mui/material/transitions";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
+import SkipPreviousIcon from "@mui/icons-material/SkipPrevious";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import AudioFileIcon from "@mui/icons-material/AudioFile";
 import ImageIcon from "@mui/icons-material/Image";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { fileUrl, formatSize, subtitlesUrl } from "../api.ts";
+import { clearPosition, loadPosition, savePosition } from "../prefs.ts";
 import type { FileType, PortalFile } from "../api.ts";
 
 const SlideUp = forwardRef(function SlideUp(
@@ -39,14 +42,47 @@ function TypeIcon({ type }: { type: FileType }): React.JSX.Element {
 export function PlayerDialog({
   file,
   token,
+  hasPrev,
+  hasNext,
+  onPrev,
+  onNext,
   onClose,
 }: {
   file: PortalFile | null;
   token: string;
+  hasPrev: boolean;
+  hasNext: boolean;
+  onPrev: () => void;
+  onNext: () => void;
   onClose: () => void;
 }): React.JSX.Element {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const lastSave = useRef(0);
+
+  function restore(el: HTMLVideoElement | null): void {
+    if (!el || !file) return;
+    const pos = loadPosition(file.name, file.size);
+    if (pos <= 5) return;
+    const apply = (): void => {
+      if (el.duration && pos < el.duration - 10) el.currentTime = pos;
+    };
+    if (el.readyState >= 1) apply();
+    else el.onloadedmetadata = apply;
+  }
+
+  function track(el: HTMLVideoElement | null): void {
+    if (!el || !file) return;
+    const now = Date.now();
+    if (now - lastSave.current < 5000) return;
+    lastSave.current = now;
+    savePosition(file.name, file.size, el.currentTime);
+  }
+
+  function finish(): void {
+    if (file) clearPosition(file.name, file.size);
+  }
 
   return (
     <Dialog
@@ -79,9 +115,17 @@ export function PlayerDialog({
         {file?.type === "video" && (
           <Box
             component="video"
+            key={file.id}
+            ref={(el: HTMLVideoElement | null) => {
+              videoRef.current = el;
+              restore(el);
+            }}
             controls
             playsInline
             autoPlay
+            onTimeUpdate={(e) => track(e.currentTarget)}
+            onPause={(e) => track(e.currentTarget)}
+            onEnded={finish}
             src={fileUrl(file.id, token)}
             sx={{ width: "100%", maxHeight: "70vh", background: "#000", display: "block" }}
           >
@@ -111,7 +155,14 @@ export function PlayerDialog({
           />
         )}
         {file && (file.type === "video" || file.type === "document" || file.type === "other") && (
-          <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 0.5 }}>
+            <IconButton onClick={onPrev} disabled={!hasPrev} aria-label="Previous file">
+              <SkipPreviousIcon />
+            </IconButton>
+            <IconButton onClick={onNext} disabled={!hasNext} aria-label="Next file">
+              <SkipNextIcon />
+            </IconButton>
+            <Box sx={{ flex: 1 }} />
             <Button
               variant="contained"
               startIcon={<DownloadIcon />}
@@ -123,7 +174,14 @@ export function PlayerDialog({
           </Box>
         )}
         {file && (file.type === "audio" || file.type === "image") && (
-          <Box sx={{ pt: 2, display: "flex", justifyContent: "flex-end" }}>
+          <Box sx={{ pt: 2, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 0.5 }}>
+            <IconButton onClick={onPrev} disabled={!hasPrev} aria-label="Previous file">
+              <SkipPreviousIcon />
+            </IconButton>
+            <IconButton onClick={onNext} disabled={!hasNext} aria-label="Next file">
+              <SkipNextIcon />
+            </IconButton>
+            <Box sx={{ flex: 1 }} />
             <Button
               variant="contained"
               startIcon={<DownloadIcon />}

@@ -7,6 +7,8 @@ import {
   CircularProgress,
   Container,
   IconButton,
+  Menu,
+  MenuItem,
   Toolbar,
   Tooltip,
   Typography,
@@ -17,7 +19,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { buildTheme, toneMain } from "./theme.ts";
+import PaletteIcon from "@mui/icons-material/Palette";
+import CheckIcon from "@mui/icons-material/Check";
+import { ACCENT_PRESETS, buildTheme, toneMain } from "./theme.ts";
 import {
   clearToken,
   getFiles,
@@ -25,9 +29,9 @@ import {
   getStoredToken,
 } from "./api.ts";
 import type { PortalFile, PortalMeta } from "./api.ts";
+import { loadPrefs, savePrefs } from "./prefs.ts";
 import { PasswordGate } from "./components/PasswordGate.tsx";
 import { FileBrowser } from "./components/FileBrowser.tsx";
-import { PlayerDialog } from "./components/PlayerDialog.tsx";
 
 function ModeToggle(): React.JSX.Element {
   const { mode, setMode } = useColorScheme();
@@ -51,8 +55,9 @@ function Shell(): React.JSX.Element {
   const [meta, setMeta] = useState<PortalMeta | null>(null);
   const [files, setFiles] = useState<PortalFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [accent, setAccent] = useState<string | null>(() => loadPrefs().accent);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [error, setError] = useState("");
-  const [current, setCurrent] = useState<PortalFile | null>(null);
 
   const enter = useCallback(async (tok: string, m: PortalMeta) => {
     setToken(tok);
@@ -104,15 +109,20 @@ function Shell(): React.JSX.Element {
   }, [enter]);
 
   const theme = useMemo(
-    () => buildTheme(toneMain(meta?.theme_tone)),
-    [meta?.theme_tone],
+    () => buildTheme(accent ?? toneMain(meta?.theme_tone)),
+    [accent, meta?.theme_tone],
   );
+
+  function pickAccent(hex: string | null): void {
+    setAccent(hex);
+    savePrefs({ ...loadPrefs(), accent: hex });
+    setMenuAnchor(null);
+  }
 
   function logout(): void {
     clearToken();
     setToken("");
     setFiles([]);
-    setCurrent(null);
     setPhase("gate");
   }
 
@@ -159,6 +169,43 @@ function Shell(): React.JSX.Element {
                 </Typography>
               </Box>
               <ModeToggle />
+              <Tooltip title="Customize accent">
+                <IconButton
+                  color="inherit"
+                  onClick={(e) => setMenuAnchor(e.currentTarget)}
+                  aria-label="Customize accent"
+                >
+                  <PaletteIcon />
+                </IconButton>
+              </Tooltip>
+              <Menu
+                anchorEl={menuAnchor}
+                open={menuAnchor !== null}
+                onClose={() => setMenuAnchor(null)}
+              >
+                <MenuItem onClick={() => pickAccent(null)}>
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      mr: 1.5,
+                      bgcolor: toneMain(meta?.theme_tone),
+                    }}
+                  />
+                  Server default
+                  {accent === null && <CheckIcon fontSize="small" sx={{ ml: "auto", pl: 1 }} />}
+                </MenuItem>
+                {Object.entries(ACCENT_PRESETS).map(([name, hex]) => (
+                  <MenuItem key={name} onClick={() => pickAccent(hex)}>
+                    <Box
+                      sx={{ width: 20, height: 20, borderRadius: "50%", mr: 1.5, bgcolor: hex }}
+                    />
+                    {name}
+                    {accent === hex && <CheckIcon fontSize="small" sx={{ ml: "auto", pl: 1 }} />}
+                  </MenuItem>
+                ))}
+              </Menu>
               {meta?.password_protected && (
                 <Tooltip title="Lock">
                   <IconButton color="inherit" onClick={logout} aria-label="Lock">
@@ -174,13 +221,8 @@ function Shell(): React.JSX.Element {
                 {error}
               </Alert>
             )}
-            <FileBrowser files={files} token={token} loading={loadingFiles} onOpen={setCurrent} />
+            <FileBrowser files={files} token={token} loading={loadingFiles} />
           </Container>
-          <PlayerDialog
-            file={current}
-            token={token}
-            onClose={() => setCurrent(null)}
-          />
         </Box>
       )}
     </ThemeProvider>

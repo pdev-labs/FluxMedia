@@ -1,7 +1,7 @@
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
 /** Server theme_tone values mapped to primary hues. */
-const TONES: Record<string, string> = {
+export const ACCENT_PRESETS: Record<string, string> = {
   "Sunset Orange": "#e8590c",
   "Royal Purple": "#7c3aed",
   "Ocean Blue": "#1971c2",
@@ -12,7 +12,7 @@ const TONES: Record<string, string> = {
 
 export function toneMain(tone: string | undefined): string {
   if (!tone) return "#d90429";
-  return TONES[tone] ?? "#d90429";
+  return ACCENT_PRESETS[tone] ?? "#d90429";
 }
 
 /**
