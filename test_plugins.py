@@ -47,7 +47,17 @@ def register(hooks):
         m.menu_items[0]["handler"](self.config)
         self.assertIn("menu", sys.modules["fluxmedia_user_plugin_demo"].seen)
         # api mount
-        app = type("FakeApp", (), {})()
+        class FakeApp:
+            def __init__(self):
+                self.routes = []
+                self.demo_mounted = False
+
+            def get(self, path):
+                def deco(fn):
+                    self.routes.append(path)
+                    return fn
+                return deco
+        app = FakeApp()
         m.mount_api(app)
         self.assertTrue(app.demo_mounted)
 

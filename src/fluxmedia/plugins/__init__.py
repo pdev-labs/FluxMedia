@@ -236,10 +236,30 @@ class PluginManager:
                 logger.error(f"Plugin listener for '{event}' failed.", exc_info=True)
 
     def mount_api(self, app: Any) -> None:
-        """Give every plugin's on_api callback the FastAPI app."""
+        """Give every plugin's on_api callback the FastAPI app.
+
+        Plugin routes are inserted *ahead of* the host's SPA fallback
+        (``/{full_path:path}``): Starlette matches in registration order and
+        the fallback is registered at import time, so routes appended after
+        it would otherwise never match (the classic silent-200-index.html).
+        Existing host routes keep precedence over plugin routes.
+        """
         for fn in self.api_mounts:
             try:
+                before = list(app.routes)
                 fn(app)
+                added = [r for r in app.routes if not any(r is old for old in before)]
+                if not added:
+                    continue
+                for r in added:
+                    app.routes.remove(r)
+                idx = next(
+                    (i for i, r in enumerate(app.routes)
+                     if getattr(r, "path", "") == "/{full_path:path}"),
+                    len(app.routes),
+                )
+                for j, r in enumerate(added):
+                    app.routes.insert(idx + j, r)
             except Exception:
                 logger.error("Plugin on_api() failed.", exc_info=True)
 
