@@ -35,9 +35,6 @@
 
 ## 💻 Visual Preview
 
-<details>
-<summary><b>📸 Click here to view the FluxMedia screenshots!</b></summary>
-<br>
 <div align="center">
 <img src="website/cli_main_menu.png" alt="FluxMedia CLI Dashboard" width="800" style="border-radius: 8px;" />
 <p><i>FluxMedia CLI Main Dashboard</i></p>
@@ -48,7 +45,6 @@
 <img src="website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
 <p><i>FluxMedia Web Dashboard</i></p>
 </div>
-</details>
 
 ---
 
@@ -61,13 +57,9 @@ Ensure Python 3 is installed, then you can install directly via `pip`:
 ```powershell
 pip install fluxmedia
 ```
-<details>
-<summary><b>View Installation Screenshot</b></summary>
-<br>
 <div align="center">
 <img src="website/cli_install.png" alt="Pip Install FluxMedia" width="700" style="border-radius: 8px;" />
 </div>
-</details>
 
 Alternatively, download and run the installer:
 ```bash
