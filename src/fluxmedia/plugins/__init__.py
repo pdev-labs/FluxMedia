@@ -290,6 +290,17 @@ class PluginManager:
         return found
 
 
+def filter_plugins(plugins: List[Plugin], query: str) -> List[Plugin]:
+    """Case-insensitive substring match over name, description and author."""
+    q = (query or "").strip().lower()
+    if not q:
+        return list(plugins)
+    return [p for p in plugins
+            if q in p.name.lower()
+            or q in (p.description or "").lower()
+            or q in (p.author or "").lower()]
+
+
 _manager: Optional[PluginManager] = None
 
 

@@ -96,6 +96,21 @@ def register(hooks):
         with self.assertRaises(ValueError):
             P.Hooks(m).on("nope", lambda: None)
 
+    def test_filter_plugins(self):
+        from fluxmedia.plugins import Plugin, filter_plugins
+        ps = [
+            Plugin(name="csv-logger", description="Logs downloads", author="Flux"),
+            Plugin(name="doc-bridge", description="Routes via engine", author="Pdev"),
+            Plugin(name="hello-world", description="Greets", author="Flux"),
+        ]
+        self.assertEqual(len(filter_plugins(ps, "")), 3)
+        self.assertEqual(len(filter_plugins(ps, "  ")), 3)
+        self.assertEqual([p.name for p in filter_plugins(ps, "csv")], ["csv-logger"])
+        self.assertEqual([p.name for p in filter_plugins(ps, "FLUX")], ["csv-logger", "hello-world"])
+        self.assertEqual([p.name for p in filter_plugins(ps, "engine")], ["doc-bridge"])
+        self.assertEqual([p.name for p in filter_plugins(ps, "pdev")], ["doc-bridge"])
+        self.assertEqual(filter_plugins(ps, "zzz"), [])
+
     def test_vendored_dependency_importable(self):
         # A helper folder/file sitting beside the plugin (not a plugin
         # itself) must be importable without the plugin hacking sys.path.

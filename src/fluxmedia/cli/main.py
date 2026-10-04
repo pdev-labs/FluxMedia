@@ -2266,61 +2266,100 @@ def operation_updates_manager(config: Dict[str, Any]):
             break
 
 def operation_plugins_menu(config: Dict[str, Any]):
-    """Lists installed plugins, toggles them, and runs plugin menu items."""
-    from fluxmedia.plugins import get_manager, get_plugins_dir
+    """Plugin manager: table-driven enable/disable, run actions, search, bulk toggles."""
+    from fluxmedia.plugins import get_manager, get_plugins_dir, filter_plugins
     manager = get_manager(config)
-    while True:
-        clear_screen()
-        print_header()
+
+    def print_table(plugins):
         table = Table(title="🔌 Plugins", box=box.ROUNDED, border_style="magenta")
         table.add_column("#", style="bold cyan")
         table.add_column("Plugin", style="white")
         table.add_column("Version", style="dim")
         table.add_column("Status", style="bold")
         table.add_column("Origin", style="dim")
-        if not manager.plugins:
-            console.print("[yellow]No plugins installed.[/yellow]")
-        for i, p in enumerate(manager.plugins, 1):
+        if not plugins:
+            console.print("[yellow]No plugins match.[/yellow]")
+            return
+        for i, p in enumerate(plugins, 1):
             status = "[green]enabled[/green]" if p.enabled else "[red]disabled[/red]"
             if p.error:
                 status = "[red]error[/red]"
             table.add_row(str(i), p.name, p.version, status, p.origin)
         console.print(table)
-        console.print(f"[dim]Plugins folder: {get_plugins_dir()}[/dim]")
 
-        items = [it for it in manager.menu_items
-                 if not any(p.name == it.get("plugin") and not p.enabled for p in manager.plugins)]
-        actions = ["Back"]
-        if manager.plugins:
-            actions.append("Enable/Disable")
-        for it in items:
-            actions.append(f"Run: {it['label']}")
-        for idx, a in enumerate(actions, 1):
-            console.print(f"[bold cyan]{idx}.[/bold cyan] {a}")
+    def pick_from_table(plugins, prompt="Plugin number"):
+        """Shows the table, then asks for a row number. Returns plugin or None."""
+        if not plugins:
+            console.print("[yellow]Nothing to pick from.[/yellow]")
+            return None
+        print_table(plugins)
+        target = Prompt.ask(prompt, choices=[str(i) for i in range(1, len(plugins) + 1)],
+                            show_choices=False)
+        return plugins[int(target) - 1]
+
+    while True:
+        clear_screen()
+        print_header()
+        print_table(manager.plugins)
+        console.print(f"[dim]Plugins folder: {get_plugins_dir()}[/dim]\n")
+
+        console.print("[bold cyan]1.[/bold cyan] Back")
+        console.print("[bold cyan]2.[/bold cyan] Enable/Disable a plugin")
+        console.print("[bold cyan]3.[/bold cyan] Run a plugin action")
+        console.print("[bold cyan]4.[/bold cyan] Enable all")
+        console.print("[bold cyan]5.[/bold cyan] Disable all")
+        console.print("[bold cyan]6.[/bold cyan] Search plugins")
         choice = Prompt.ask("Choose an option",
-                            choices=[str(i) for i in range(1, len(actions) + 1)],
-                            default="1")
-        picked = actions[int(choice) - 1]
-        if picked == "Back":
+                            choices=["1", "2", "3", "4", "5", "6"], default="1")
+        if choice == "1":
             return config
-        elif picked == "Enable/Disable":
-            target = Prompt.ask("Plugin name (or number)",
-                                choices=[p.name for p in manager.plugins] +
-                                        [str(i) for i in range(1, len(manager.plugins) + 1)],
-                                show_choices=False)
-            if target.isdigit():
-                target = manager.plugins[int(target) - 1].name
-            current = next((p.enabled for p in manager.plugins if p.name == target), True)
-            manager.set_enabled(target, not current)
-            console.print(f"[green]{target} {'enabled' if not current else 'disabled'}.[/green]")
+        elif choice == "2":
+            plugin = pick_from_table(manager.plugins, "Plugin number to toggle")
+            if plugin is None:
+                Prompt.ask("\nPress Enter to continue...")
+                continue
+            manager.set_enabled(plugin.name, not plugin.enabled)
+            console.print(f"[green]{plugin.name} {'enabled' if plugin.enabled else 'disabled'}.[/green]")
             Prompt.ask("\nPress Enter to continue...")
-        elif picked.startswith("Run: "):
-            item = items[[f"Run: {it['label']}" for it in items].index(picked)]
+        elif choice == "3":
+            runnable = [p for p in manager.plugins
+                        if p.enabled and not p.error and
+                        any(it.get("plugin") == p.name for it in manager.menu_items)]
+            plugin = pick_from_table(runnable, "Plugin number to run")
+            if plugin is None:
+                Prompt.ask("\nPress Enter to continue...")
+                continue
+            items = [it for it in manager.menu_items if it.get("plugin") == plugin.name]
+            if len(items) == 1:
+                picked_item = items[0]
+            else:
+                for idx, it in enumerate(items, 1):
+                    console.print(f"[bold cyan]{idx}.[/bold cyan] {it['label']}")
+                sel = Prompt.ask("Choose an action",
+                                 choices=[str(i) for i in range(1, len(items) + 1)],
+                                 show_choices=False)
+                picked_item = items[int(sel) - 1]
             clear_screen()
             try:
-                item["handler"](config)
+                picked_item["handler"](config)
             except Exception as e:
                 console.print(f"[bold red]Plugin action failed: {e}[/bold red]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice in ("4", "5"):
+            enable = choice == "4"
+            for p in manager.plugins:
+                if p.error:
+                    continue
+                manager.set_enabled(p.name, enable)
+            console.print(f"[green]{'Enabled' if enable else 'Disabled'} all plugins.[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice == "6":
+            query = Prompt.ask("Search text (empty clears)", default="").strip()
+            matches = filter_plugins(manager.plugins, query)
+            clear_screen()
+            print_header()
+            console.print(f"[dim]Results for '{query}':[/dim]" if query else "[dim]All plugins:[/dim]")
+            print_table(matches)
             Prompt.ask("\nPress Enter to continue...")
     return config
 
