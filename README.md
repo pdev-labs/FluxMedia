@@ -42,8 +42,8 @@
 <img src="website/cli_disclaimer.png" alt="FluxMedia CLI Disclaimer" width="800" style="border-radius: 8px;" />
 <p><i>Initial Setup & Disclaimer</i></p>
 <br>
-<img src="website/web_dashboard.png" alt="FluxMedia Web Dashboard" width="800" style="border-radius: 8px;" />
-<p><i>FluxMedia Web Dashboard</i></p>
+<img src="website/web_downloader.png" alt="FluxMedia Web Downloader" width="800" style="border-radius: 8px;" />
+<p><i>FluxMedia Web Downloader</i></p>
 </div>
 
 ---
