@@ -10,7 +10,6 @@ import {
   ListItemText,
   Menu,
   MenuItem,
-  TextField,
   Toolbar,
   Tooltip,
   Typography,
@@ -23,7 +22,7 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PaletteIcon from "@mui/icons-material/Palette";
 import CheckIcon from "@mui/icons-material/Check";
-import { ACCENT_PRESETS, buildTheme, toneMain } from "./theme.ts";
+import { buildTheme, toneMain } from "./theme.ts";
 import {
   clearToken,
   getFiles,
@@ -34,62 +33,7 @@ import type { PortalFile, PortalMeta } from "./api.ts";
 import { loadPrefs, savePrefs } from "./prefs.ts";
 import { PasswordGate } from "./components/PasswordGate.tsx";
 import { FileBrowser } from "./components/FileBrowser.tsx";
-
-function CustomColorRow({
-  active,
-  initial,
-  onPick,
-}: {
-  active: boolean;
-  initial: string;
-  onPick: (hex: string) => void;
-}): React.JSX.Element {
-  const [hex, setHex] = useState(initial);
-  const valid = /^#[0-9a-fA-F]{6}$/.test(hex);
-  return (
-    <Box sx={{ px: 2, py: 1.5, display: "flex", alignItems: "center", gap: 1.5 }}>
-      <Box
-        component="label"
-        sx={{
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          bgcolor: valid ? hex : "action.disabledBackground",
-          border: 1,
-          borderColor: "divider",
-          cursor: "pointer",
-          overflow: "hidden",
-          flexShrink: 0,
-        }}
-      >
-        <Box
-          component="input"
-          type="color"
-          value={valid ? hex : "#d90429"}
-          onChange={(e) => {
-            setHex(e.target.value);
-            onPick(e.target.value);
-          }}
-          sx={{ opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
-          aria-label="Pick custom color"
-        />
-      </Box>
-      <TextField
-        size="small"
-        label="Custom hex"
-        value={hex}
-        onChange={(e) => {
-          const v = e.target.value.startsWith("#") ? e.target.value : `#${e.target.value}`;
-          setHex(v);
-          if (/^#[0-9a-fA-F]{6}$/.test(v)) onPick(v);
-        }}
-        error={!valid}
-        sx={{ width: 110 }}
-      />
-      {active && <CheckIcon fontSize="small" color="primary" />}
-    </Box>
-  );
-}
+import { AccentDialog } from "./components/AccentDialog.tsx";
 
 function ModeToggle(): React.JSX.Element {  const { mode, setMode } = useColorScheme();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -131,7 +75,7 @@ function Shell(): React.JSX.Element {
   const [files, setFiles] = useState<PortalFile[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [accent, setAccent] = useState<string | null>(() => loadPrefs().accent);
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [accentOpen, setAccentOpen] = useState(false);
   const [error, setError] = useState("");
 
   const enter = useCallback(async (tok: string, m: PortalMeta) => {
@@ -191,7 +135,6 @@ function Shell(): React.JSX.Element {
   function pickAccent(hex: string | null): void {
     setAccent(hex);
     savePrefs({ ...loadPrefs(), accent: hex });
-    setMenuAnchor(null);
   }
 
   function logout(): void {
@@ -247,45 +190,19 @@ function Shell(): React.JSX.Element {
               <Tooltip title="Customize accent">
                 <IconButton
                   color="inherit"
-                  onClick={(e) => setMenuAnchor(e.currentTarget)}
+                  onClick={() => setAccentOpen(true)}
                   aria-label="Customize accent"
                 >
                   <PaletteIcon />
                 </IconButton>
               </Tooltip>
-              <Menu
-                anchorEl={menuAnchor}
-                open={menuAnchor !== null}
-                onClose={() => setMenuAnchor(null)}
-              >
-                <MenuItem onClick={() => pickAccent(null)}>
-                  <Box
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: "50%",
-                      mr: 1.5,
-                      bgcolor: toneMain(meta?.theme_tone),
-                    }}
-                  />
-                  Server default
-                  {accent === null && <CheckIcon fontSize="small" sx={{ ml: "auto", pl: 1 }} />}
-                </MenuItem>
-                {Object.entries(ACCENT_PRESETS).map(([name, hex]) => (
-                  <MenuItem key={name} onClick={() => pickAccent(hex)}>
-                    <Box
-                      sx={{ width: 20, height: 20, borderRadius: "50%", mr: 1.5, bgcolor: hex }}
-                    />
-                    {name}
-                    {accent === hex && <CheckIcon fontSize="small" sx={{ ml: "auto", pl: 1 }} />}
-                  </MenuItem>
-                ))}
-                <CustomColorRow
-                  active={accent !== null && !Object.values(ACCENT_PRESETS).includes(accent)}
-                  initial={accent ?? "#d90429"}
-                  onPick={pickAccent}
-                />
-              </Menu>
+              <AccentDialog
+                open={accentOpen}
+                serverTone={meta?.theme_tone}
+                current={accent}
+                onPick={pickAccent}
+                onClose={() => setAccentOpen(false)}
+              />
               {meta?.password_protected && (
                 <Tooltip title="Lock">
                   <IconButton color="inherit" onClick={logout} aria-label="Lock">
