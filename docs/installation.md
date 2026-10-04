@@ -114,4 +114,5 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 > Seeing `No module named 'pydantic_core'` on `--web` means step 4 was
 > skipped: a too-new `pydantic` was installed whose core has no Android
 > wheel. Fix: `pip install` the pinned version above, then reinstall
-> FluxMedia.
+> FluxMedia. (FluxMedia ≥1.13 also repairs this itself on first `--web`
+> launch by downloading the correct builds automatically.)

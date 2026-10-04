@@ -2286,6 +2286,11 @@ def main():
     if args.web:
         verify_and_install_requirements()
         try:
+            from fluxmedia.utils import ensure_web_deps
+            if not ensure_web_deps():
+                print("Web dependencies could not be installed automatically.")
+                print_web_dep_hint()
+                sys.exit(1)
             from fluxmedia.api import run_server
             run_server()
         except ImportError as e:
@@ -2440,8 +2445,17 @@ def main():
             
             if choice.upper() == "W":
                 try:
-                    from fluxmedia.api import run_server
-                    run_server()
+                    from fluxmedia.utils import ensure_web_deps
+                    if not ensure_web_deps():
+                        console.print("[bold red]Web dependencies could not be installed automatically.[/bold red]")
+                        try:
+                            print_web_dep_hint()
+                        except Exception:
+                            pass
+                        Prompt.ask("\nPress Enter to continue...")
+                    else:
+                        from fluxmedia.api import run_server
+                        run_server()
                 except ImportError as e:
                     console.print(f"[bold red]Failed to load Web UI. Ensure dependencies are installed: {e}[/bold red]")
                     try:

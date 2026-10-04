@@ -154,6 +154,120 @@ def install_python_package(pkg_name: str) -> bool:
         print(f"Error installing package '{pkg_name}': {e}")
         return False
 
+# --- Self-healing web dependencies -------------------------------------
+# Plain `pip install fluxmedia` cannot cover every platform: PyPI ships no
+# Android wheels for pydantic-core, and pip cannot learn about community
+# indexes from package metadata. So the first `--web` launch verifies the
+# web stack imports and, if not, installs the correct builds itself
+# (Termux-aware: pinned pydantic + community indexes).
+
+TERMUX_EXTRA_INDEXES = [
+    "https://termux-user-repository.github.io/pypi/",
+    "https://eutalix.github.io/android-pydantic-core/",
+]
+
+# Verified (pydantic -> pydantic-core with Android wheels) per Python minor.
+# Newer pydantic floats past what the community index built -> the classic
+# `No module named 'pydantic_core'` at runtime.
+TERMUX_PYDANTIC_PINS = {
+    11: "pydantic==2.11.7",  # core 2.33.2
+    12: "pydantic==2.11.7",  # core 2.33.2
+    13: "pydantic==2.12.4",  # core 2.41.5
+    14: "pydantic==2.12.4",  # core 2.41.5
+}
+
+
+def is_termux() -> bool:
+    return ("com.termux" in os.environ.get("PREFIX", "")
+            or "ANDROID_ROOT" in os.environ
+            or "TERMUX_VERSION" in os.environ)
+
+
+def termux_pydantic_pin(major: int = sys.version_info[0],
+                        minor: int = sys.version_info[1]) -> Optional[str]:
+    """Pinned pydantic for Termux Pythons, else None (let pip resolve)."""
+    if major != 3:
+        return None
+    return TERMUX_PYDANTIC_PINS.get(minor)
+
+
+def _pip_install_quiet(packages: List[str], extra_indexes: Optional[List[str]] = None) -> bool:
+    """pip install with a PEP 668 (--break-system-packages) retry. No prompts."""
+    cmd = [sys.executable, "-m", "pip", "install", "-q"] + list(packages)
+    for index in extra_indexes or []:
+        cmd += ["--extra-index-url", index]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        return True
+    if "externally-managed-environment" in (result.stderr or ""):
+        retry = subprocess.run(cmd + ["--break-system-packages"], capture_output=True, text=True)
+        return retry.returncode == 0
+    logger.error(f"pip install failed for {packages}: {(result.stderr or '')[-2000:]}")
+    return False
+
+
+def ensure_web_deps() -> bool:
+    """Guarantees `import fastapi, uvicorn, pydantic_core` works.
+
+    Called before the web server starts. First launch on a bare
+    `pip install fluxmedia` downloads any missing web components
+    automatically (Termux gets pinned Android-compatible builds).
+    Returns True when the web stack is importable.
+    """
+    try:
+        import pydantic_core  # noqa: F401
+        import fastapi  # noqa: F401
+        import uvicorn  # noqa: F401
+        return True
+    except ImportError as e:
+        missing = getattr(e, "name", None) or "web dependencies"
+
+    broken_core = False
+    try:
+        import pydantic  # noqa: F401
+        try:
+            import pydantic_core  # noqa: F401
+        except ImportError:
+            broken_core = True  # pydantic present but its Rust core unusable
+    except ImportError:
+        pass
+
+    try:
+        console.print(f"[yellow]First web launch: installing missing web components ({missing})...[/yellow]")
+    except Exception:
+        print(f"First web launch: installing missing web components ({missing})...")
+
+    if is_termux():
+        pin = termux_pydantic_pin()
+        if pin is not None:
+            try:
+                console.print(f"[dim]Termux detected: pinning {pin} (Android wheels).[/dim]")
+            except Exception:
+                pass
+            # Pinned pydantic drags its exact core along; also repairs the
+            # common broken state (new pydantic installed, core missing).
+            if not _pip_install_quiet([pin], extra_indexes=TERMUX_EXTRA_INDEXES):
+                return False
+        elif broken_core:
+            if not _pip_install_quiet(["pydantic"], extra_indexes=TERMUX_EXTRA_INDEXES):
+                return False
+        if not _pip_install_quiet(["fastapi", "uvicorn"], extra_indexes=TERMUX_EXTRA_INDEXES):
+            return False
+    else:
+        wanted = ["fastapi", "uvicorn"]
+        if broken_core:
+            wanted.append("pydantic")
+        if not _pip_install_quiet(wanted):
+            return False
+
+    try:
+        import pydantic_core  # noqa: F401
+        import fastapi  # noqa: F401
+        import uvicorn  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
 def install_ffmpeg_termux() -> bool:
     """Installs FFmpeg on Android/Termux environment using pkg install."""
     try:
