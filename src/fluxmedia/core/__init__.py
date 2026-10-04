@@ -124,8 +124,48 @@ def start_version_check():
     thread = threading.Thread(target=check_pypi_version_async, daemon=True)
     thread.start()
 
-def check_fluxmedia_update_sync():
-    """Checks PyPI synchronously for the latest FluxMedia version on start and prompts for update."""
+# Update-check intervals in seconds (None = never check).
+UPDATE_INTERVALS = {
+    "daily": 24 * 3600,
+    "weekly": 7 * 24 * 3600,
+    "monthly": 30 * 24 * 3600,
+    "never": None,
+}
+
+
+def should_check_for_updates(config: Dict[str, Any]) -> bool:
+    """True when a PyPI version check is due under the configured interval.
+
+    Honors the (previously unused) auto_update master switch: False means
+    never check. Unknown interval values fall back to weekly.
+    """
+    if not config.get("auto_update", True):
+        return False
+    interval = UPDATE_INTERVALS.get(str(config.get("update_interval", "weekly")), UPDATE_INTERVALS["weekly"])
+    if interval is None:
+        return False
+    try:
+        last = float(config.get("last_update_check", 0) or 0)
+    except (TypeError, ValueError):
+        last = 0
+    import time as _time
+    return (_time.time() - last) >= interval
+
+def check_fluxmedia_update_sync(config: Dict[str, Any]):
+    """Checks PyPI synchronously for the latest FluxMedia version on start and prompts for update.
+
+    Skips silently when the configured update interval has not elapsed;
+    stamps last_update_check on every attempt so offline machines are not
+    hammered on each launch.
+    """
+    if not should_check_for_updates(config):
+        return
+    import time as _time
+    config["last_update_check"] = _time.time()
+    try:
+        save_config(config)
+    except Exception:
+        pass
     global LATEST_VERSION
     console.print("[cyan]Checking for updates...[/cyan]")
     try:
@@ -207,7 +247,9 @@ DEFAULT_CONFIG = {
     "watch_party_name": "",
     "watch_party_sync_mode": "strict",
     "clean_logs_enabled": True,
-    "plugins_disabled": []
+    "plugins_disabled": [],
+    "update_interval": "weekly",
+    "last_update_check": 0.0
 }
 
 def load_config() -> Dict[str, Any]:

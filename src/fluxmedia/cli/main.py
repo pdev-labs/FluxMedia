@@ -1235,7 +1235,11 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
         table.add_row("[bold]12. Embed Thumbnail:[/bold]", "Enabled" if config.get("embed_thumbnail", True) else "Disabled")
         table.add_row("[bold]13. Educational Notice:[/bold]", "Enabled" if config.get("show_educational_notice", True) else "Disabled")
         table.add_row("[bold]14. Website Password Settings:[/bold]", "Password Protected" if config.get("web_auth_enabled", True) else "Public (No Password)")
-        table.add_row("[bold]15. Back to Main Menu[/bold]", "")
+        interval_display = config.get("update_interval", "weekly")
+        if not config.get("auto_update", True):
+            interval_display = "disabled"
+        table.add_row("[bold]15. Update Check Interval:[/bold]", interval_display)
+        table.add_row("[bold]16. Back to Main Menu[/bold]", "")
         
         console.print(Panel(
             table, 
@@ -1243,7 +1247,7 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             border_style="cyan",
             subtitle="[italic yellow]ℹ️  Tip: Use VLC Media Player for best compatibility with various media formats.[/italic yellow]"
         ))
-        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 16)], default="15")
+        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 17)], default="16")
         clear_screen()
         
         if choice == "1":
@@ -1492,6 +1496,24 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
                     break
                     
         elif choice == "15":
+            console.print("\n[bold]Select Update Check Interval:[/bold]")
+            console.print("1. Every day")
+            console.print("2. Every week (recommended)")
+            console.print("3. Every month")
+            console.print("4. Never check for updates")
+            iu_choice = Prompt.ask("Choose option", choices=["1", "2", "3", "4"], default="2")
+            iu_map = {"1": "daily", "2": "weekly", "3": "monthly", "4": "never"}
+            config["update_interval"] = iu_map[iu_choice]
+            config["auto_update"] = iu_choice != "4"
+            if iu_choice != "4":
+                # Reset the timer so the next launch checks promptly.
+                config["last_update_check"] = 0.0
+            save_config(config)
+            status_str = "disabled" if iu_choice == "4" else config["update_interval"]
+            console.print(f"[green]✓ Update check interval set to: {status_str}[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+
+        elif choice == "16":
             break
             
     return config
@@ -2351,10 +2373,11 @@ def main():
 
     verify_and_install_requirements()
     init_dependencies()
-    
-    check_fluxmedia_update_sync()
-    start_version_check()
+
     config = load_config()
+    if should_check_for_updates(config):
+        check_fluxmedia_update_sync(config)
+        start_version_check()
     CLEAN_LOGS_ENABLED = config.get("clean_logs_enabled", True)
     apply_theme_colors(config.get("theme", "dark"))
     
