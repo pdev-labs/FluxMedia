@@ -403,9 +403,12 @@ def run_download_job(job_id: str, req: DownloadRequest):
         }
         max_h = height_map.get((req.quality or "").strip().lower())
         if max_h:
+            # Trailing unfiltered fallback: buckets are advisory (a video
+            # may have no streams at that height), so never fail hard —
+            # degrade to best instead of erroring out.
             ydl_opts['format'] = (
                 f"bestvideo[height<={max_h}]+bestaudio/"
-                f"best[height<={max_h}]/best"
+                f"best[height<={max_h}]/bestvideo+bestaudio/best"
             )
         else:
             ydl_opts['format'] = 'bestvideo+bestaudio/best'
