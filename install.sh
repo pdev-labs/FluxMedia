@@ -143,7 +143,10 @@ is_termux() {
 install_dependencies() {
     local cmd=""
     if is_termux; then
-        cmd="pkg install python python-pip ffmpeg termux-api rust binutils -y"
+        # nodejs: yt-dlp JS runtime (quickjs has no Android wheels).
+        # clang/rust/binutils/libffi/openssl: fallback C/Rust toolchain so
+        # any package without an Android wheel can still build from source.
+        cmd="pkg install python python-pip ffmpeg termux-api nodejs clang rust binutils libffi openssl -y"
     elif [ "$OS" = "Darwin" ]; then
         if ! command -v brew &> /dev/null; then
             echo -e "\n${RED}Homebrew is required on macOS. Please install it first.${NC}"
@@ -177,7 +180,29 @@ install_dependencies() {
 install_fluxmedia() {
     local cmd=""
     if is_termux; then
-        cmd="pip install --upgrade pip -q && pip install pydantic-core --extra-index-url https://termux-user-repository.github.io/pypi/ --extra-index-url https://eutalix.github.io/android-pydantic-core/ -q && pip install -U fluxmedia -q"
+        # Termux: PyPI has no Android wheels for pydantic-core, and the
+        # community index only covers certain versions per Python. Pin
+        # pydantic to a release whose exact core has Android wheels, install
+        # it FIRST so the fluxmedia install below cannot float past it.
+        # Verified pairs (pydantic -> core with Android wheels):
+        #   py3.11/3.12 -> pydantic==2.11.7 (core 2.33.2)
+        #   py3.13/3.14 -> pydantic==2.12.4 (core 2.41.5)
+        local py_minor
+        py_minor=$(python3 -c 'import sys; print(sys.version_info[1])' 2>/dev/null || echo 0)
+        local pyd_pin=""
+        if [ "$py_minor" -eq 11 ] || [ "$py_minor" -eq 12 ]; then
+            pyd_pin="pydantic==2.11.7"
+        elif [ "$py_minor" -eq 13 ] || [ "$py_minor" -eq 14 ]; then
+            pyd_pin="pydantic==2.12.4"
+        fi
+        local extra="--extra-index-url https://termux-user-repository.github.io/pypi/ --extra-index-url https://eutalix.github.io/android-pydantic-core/"
+        local pindl=""
+        if [ -n "$pyd_pin" ]; then
+            # shellcheck disable=SC2086
+            pindl="pip install $pyd_pin $extra -q &&"
+        fi
+        # shellcheck disable=SC2086
+        cmd="pip install --upgrade pip -q && $pindl pip install -U fluxmedia -q"
     elif [ "$OS" = "Darwin" ]; then
         cmd="pip install --upgrade pip -q && pip install -U fluxmedia -q"
     else

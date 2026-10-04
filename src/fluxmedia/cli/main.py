@@ -2256,6 +2256,23 @@ def operation_plugins_menu(config: Dict[str, Any]):
     return config
 
 
+def print_web_dep_hint():
+    """Prints how to fix missing web dependencies, tailored to the platform."""
+    import platform as _platform
+    is_termux = "com.termux" in os.environ.get("PREFIX", "")
+    if is_termux:
+        console.print("[yellow]Termux fix (pydantic-core has no official Android wheels):[/yellow]")
+        console.print("  [bold cyan]pip install 'pydantic==2.11.7' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.11/3.12)")
+        console.print("  [bold cyan]pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.13/3.14)")
+        console.print("  Then re-run FluxMedia. Or run the Termux installer: [bold cyan]install.sh[/bold cyan]")
+    elif _platform.system() == "Windows":
+        console.print("[yellow]Windows fix:[/yellow]")
+        console.print("  [bold cyan]pip install -U fluxmedia[/bold cyan] (quickjs/curl_cffi are optional since 1.12 — no Build Tools needed)")
+    else:
+        console.print("[yellow]Fix:[/yellow]")
+        console.print("  [bold cyan]pip install -U fluxmedia fastapi uvicorn[/bold cyan]")
+
+
 def main():
     """Primary routing flow block."""
     import argparse
@@ -2273,6 +2290,10 @@ def main():
             run_server()
         except ImportError as e:
             print(f"Error starting web server: {e}")
+            try:
+                print_web_dep_hint()
+            except Exception:
+                print("Fix: pip install -U fluxmedia fastapi uvicorn")
             sys.exit(1)
         return
         
@@ -2423,6 +2444,10 @@ def main():
                     run_server()
                 except ImportError as e:
                     console.print(f"[bold red]Failed to load Web UI. Ensure dependencies are installed: {e}[/bold red]")
+                    try:
+                        print_web_dep_hint()
+                    except Exception:
+                        pass
                     Prompt.ask("\nPress Enter to continue...")
             elif choice == "0":
                 try:

@@ -86,17 +86,32 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 ### 4. Android (Termux)
 
 1. Install [Termux](https://termux.dev/) (F-Droid version is recommended).
-2. Open Termux and install package dependencies:
+2. Open Termux and install system dependencies (Node.js is yt-dlp's JS
+   engine; the compilers are a fallback for packages without Android wheels):
    ```bash
    pkg update
-   pkg install python ffmpeg
+   pkg install python python-pip ffmpeg termux-api nodejs clang rust binutils libffi openssl
    ```
 3. Request Android storage access to allow saving downloads to `/sdcard/Download`:
    ```bash
    termux-setup-storage
    ```
-4. Install FluxMedia (requires pre-compiled `pydantic-core` wheels for Android):
+4. Install FluxMedia. PyPI has **no official Android wheels** for
+   `pydantic-core`, so pin `pydantic` to a release whose exact core has
+   community Android wheels — install it **before** FluxMedia:
    ```bash
-   pip install pydantic-core --extra-index-url https://eutalix.github.io/android-pydantic-core/
+   # Python 3.11 / 3.12:
+   pip install 'pydantic==2.11.7' --extra-index-url https://termux-user-repository.github.io/pypi/
+   # Python 3.13 / 3.14:
+   pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/
+   # Then:
    pip install fluxmedia
    ```
+   (Check yours with `python --version`.) The automated `install.sh`
+   does all of the above for you.
+
+> [!NOTE]
+> Seeing `No module named 'pydantic_core'` on `--web` means step 4 was
+> skipped: a too-new `pydantic` was installed whose core has no Android
+> wheel. Fix: `pip install` the pinned version above, then reinstall
+> FluxMedia.

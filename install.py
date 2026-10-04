@@ -62,7 +62,10 @@ def install_system_dependencies():
     print_color("\nInstalling System Dependencies (FFmpeg & Node.js)...", CYAN)
     
     if os_name == 'Termux':
-        run_command(['pkg', 'install', 'ffmpeg', 'nodejs', '-y'])
+        # nodejs: yt-dlp JS runtime. clang/rust/libffi/openssl: fallback
+        # toolchain so packages without Android wheels can build from source.
+        run_command(['pkg', 'install', 'ffmpeg', 'nodejs', 'termux-api', 'clang',
+                     'rust', 'binutils', 'libffi', 'openssl', 'python-pip', '-y'])
     elif os_name == 'Darwin':
         run_command(['brew', 'install', 'ffmpeg', 'node'])
     elif os_name == 'Windows':
@@ -118,7 +121,24 @@ def install_fluxmedia():
     pip_cmd = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia"]
     
     if os_name == 'Termux':
-        pip_cmd.extend(["--extra-index-url", "https://eutalix.github.io/android-pydantic-core/"])
+        # Android has no official pydantic-core wheels; the community index
+        # only covers certain versions per Python. Pin pydantic to a release
+        # whose exact core has Android wheels, installed FIRST so fluxmedia
+        # cannot float past it. Verified pairs:
+        #   py3.11/3.12 -> pydantic==2.11.7 (core 2.33.2)
+        #   py3.13/3.14 -> pydantic==2.12.4 (core 2.41.5)
+        minor = sys.version_info[1]
+        pin = None
+        if minor in (11, 12):
+            pin = "pydantic==2.11.7"
+        elif minor in (13, 14):
+            pin = "pydantic==2.12.4"
+        extra = ["--extra-index-url", "https://termux-user-repository.github.io/pypi/",
+                 "--extra-index-url", "https://eutalix.github.io/android-pydantic-core/"]
+        if pin is not None:
+            print_color(f"Termux Python 3.{minor}: pinning {pin} (Android wheels).", YELLOW)
+            run_command([sys.executable, "-m", "pip", "install", pin] + extra)
+        pip_cmd.extend(extra)
     
     # Attempt install normally, if fails, retry with --break-system-packages
     success = run_command(pip_cmd)

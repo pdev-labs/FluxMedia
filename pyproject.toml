@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxmedia"
-version = "1.11.0"
+version = "1.12.0"
 description = "A powerful, cross-platform media portal and processing toolkit."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -24,22 +24,18 @@ dependencies = [
     "instaloader>=4.11.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.23.0",
-    "curl_cffi>=0.7.4",
-    # NOTE: quickjs intentionally NOT a hard dependency.
-    # The `quickjs` PyPI package ships no Windows wheels and requires
-    # "Microsoft Visual C++ 14.0 or greater" to build from source, which
-    # breaks `pip install fluxmedia` on Windows.
-    # yt-dlp does not import quickjs directly — it auto-detects any available
-    # JS runtime (Deno / Node / Bun / QuickJS) for YouTube signature/n-token
-    # challenges. Node.js (installed by install.ps1/install.sh/install.py)
-    # already covers Windows, so keep quickjs optional.
-    "quickjs>=1.19.2; sys_platform!='win32'",
+    # NOTE: quickjs and curl_cffi are intentionally NOT hard dependencies.
+    # Both are pure optimizations for yt-dlp (JS challenges, TLS
+    # impersonation) with no Windows/Termux wheels, and neither is imported
+    # by FluxMedia itself. yt-dlp falls back to Node.js (installed by our
+    # installers on every platform). Opt in via extras below.
 ]
 
 [project.optional-dependencies]
-# Full YouTube JS-challenge support on Linux/macOS, or on Windows if the
-# user has C++ Build Tools installed: pip install "fluxmedia[js]"
+# YouTube JS-challenge support without Node.js: pip install "fluxmedia[js]"
 js = ["quickjs>=1.19.2"]
+# TLS impersonation for anti-bot protection: pip install "fluxmedia[impersonate]"
+impersonate = ["curl_cffi>=0.7.4"]
 
 [project.urls]
 Homepage = "https://github.com/pdev-labs/FluxMedia"
