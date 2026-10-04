@@ -176,6 +176,12 @@ def print_header():
     warning = CURRENT_THEME_COLORS["warning"]
     error = CURRENT_THEME_COLORS["error"]
     border = CURRENT_THEME_COLORS["border"]
+
+    # Never nag about a version the user explicitly ignored.
+    try:
+        _update_dismissed = is_version_ignored(LATEST_VERSION, load_config())
+    except Exception:
+        _update_dismissed = False
     
     # logo header and metadata layout are responsive based on console width
     if console.width >= 85:
@@ -210,7 +216,7 @@ def print_header():
             right_text.append("Inactive", style=f"bold {warning}")
             right_text.append(f" (Run '{inst_cmd}')\n", style="dim")
             
-        if is_new_version_available(CURRENT_VERSION, LATEST_VERSION):
+        if is_new_version_available(CURRENT_VERSION, LATEST_VERSION) and not _update_dismissed:
             right_text.append("Update: ", style="dim")
             right_text.append("Available!", style=f"bold {warning}")
         else:
@@ -239,7 +245,7 @@ def print_header():
         mid_text.append("  |  ", style="bold gray30")
         
         mid_text.append("🔄 Update: ", style="dim")
-        if is_new_version_available(CURRENT_VERSION, LATEST_VERSION):
+        if is_new_version_available(CURRENT_VERSION, LATEST_VERSION) and not _update_dismissed:
             mid_text.append("Available!", style="bold yellow")
         else:
             mid_text.append("Up to date", style="bold green")
@@ -2105,6 +2111,29 @@ def operation_update_fluxmedia():
             if not Confirm.ask("Do you want to force reinstall/update anyway?", default=False):
                 Prompt.ask("\nPress Enter to return to menu...")
                 return
+        else:
+            console.print("\n[bold]Options:[/bold]")
+            console.print("1. Update Now")
+            console.print("2. Ignore This Version (don't ask again)")
+            console.print("3. Back")
+            up_choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="1")
+            if up_choice == "2":
+                try:
+                    _cfg = load_config()
+                    _ignored = _cfg.get("ignored_versions", [])
+                    if not isinstance(_ignored, list):
+                        _ignored = []
+                    if latest_version not in _ignored:
+                        _ignored.append(latest_version)
+                    _cfg["ignored_versions"] = _ignored
+                    save_config(_cfg)
+                    console.print(f"[yellow]Version {latest_version} will no longer be offered.[/yellow]")
+                except Exception as e:
+                    console.print(f"[red]Could not save ignore list: {e}[/red]")
+                Prompt.ask("\nPress Enter to return to menu...")
+                return
+            elif up_choice == "3":
+                return
     else:
         console.print("[yellow]Could not retrieve PyPI version details. Proceeding with update...[/yellow]")
 
@@ -2204,18 +2233,36 @@ def operation_updates_manager(config: Dict[str, Any]):
         console.print("1. Update yt-dlp (Media Download Engine)")
         console.print("2. Update FluxMedia (This Application)")
         console.print("3. Upgrade All Dependencies (rich, requests, etc.)")
-        console.print("4. Back to Main Menu")
-        
-        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
+        _ignored_list = []
+        try:
+            _ignored_list = config.get("ignored_versions", []) or []
+        except Exception:
+            pass
+        if _ignored_list:
+            console.print(f"4. Stop Ignoring Versions ({len(_ignored_list)} ignored)")
+            console.print("5. Back to Main Menu")
+            _back = "5"
+            _choices = ["1", "2", "3", "4", "5"]
+        else:
+            console.print("4. Back to Main Menu")
+            _back = "4"
+            _choices = ["1", "2", "3", "4"]
+
+        choice = Prompt.ask("Choose an option", choices=_choices, default=_back)
         clear_screen()
-        
+
         if choice == "1":
             operation_update_ytdlp()
         elif choice == "2":
             operation_update_fluxmedia()
         elif choice == "3":
             operation_upgrade_dependencies()
-        elif choice == "4":
+        elif choice == "4" and _ignored_list:
+            config["ignored_versions"] = []
+            save_config(config)
+            console.print("[green]✓ Cleared ignored versions — updates will be offered again.[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice == _back:
             break
 
 def operation_plugins_menu(config: Dict[str, Any]):

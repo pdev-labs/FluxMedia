@@ -71,5 +71,65 @@ class UpdateIntervalTest(unittest.TestCase):
         self.assertIsNone(UPDATE_INTERVALS["never"])
 
 
+class IgnoreVersionTest(unittest.TestCase):
+    def base(self, **over):
+        cfg = {"auto_update": True, "update_interval": "daily",
+               "last_update_check": 0.0, "ignored_versions": []}
+        cfg.update(over)
+        return cfg
+
+    def test_is_version_ignored(self):
+        from fluxmedia.core import is_version_ignored
+        self.assertTrue(is_version_ignored("1.2.3", self.base(ignored_versions=["1.2.3"])))
+        self.assertFalse(is_version_ignored("1.2.4", self.base(ignored_versions=["1.2.3"])))
+        self.assertFalse(is_version_ignored("1.2.3", self.base()))
+        self.assertFalse(is_version_ignored(None, self.base(ignored_versions=["1.2.3"])))
+        self.assertFalse(is_version_ignored("1.2.3", {"ignored_versions": "nope"}))
+        self.assertFalse(is_version_ignored("1.2.3", {}))
+
+    def _run_check(self, cfg, fake_version):
+        import fluxmedia.core as core
+
+        class Resp:
+            status_code = 200
+
+            def json(self):
+                return {"info": {"version": fake_version}}
+
+        calls = {"net": 0, "saved": 0, "prompt": 0}
+        orig_get, orig_save, orig_prompt = core.requests.get, core.save_config, core.Prompt
+
+        def fake_get(*a, **k):
+            calls["net"] += 1
+            return Resp()
+
+        def fake_save(c):
+            calls["saved"] += 1
+            return True
+
+        class FakePrompt:
+            @staticmethod
+            def ask(*a, **k):
+                calls["prompt"] += 1
+                return "2"
+
+        core.requests.get, core.save_config, core.Prompt = fake_get, fake_save, FakePrompt
+        try:
+            core.check_fluxmedia_update_sync(cfg)
+        finally:
+            core.requests.get, core.save_config, core.Prompt = orig_get, orig_save, orig_prompt
+        return calls
+
+    def test_ignored_version_skips_prompt_but_stamps(self):
+        calls = self._run_check(self.base(ignored_versions=["9.9.9"]), "9.9.9")
+        self.assertEqual(calls["net"], 1)     # one cheap version fetch to learn the version
+        self.assertEqual(calls["prompt"], 0)  # ...but never shown to the user
+        self.assertEqual(calls["saved"], 1)   # interval timer still stamped
+
+    def test_non_ignored_version_prompts(self):
+        calls = self._run_check(self.base(), "9.9.9")
+        self.assertEqual(calls["prompt"], 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

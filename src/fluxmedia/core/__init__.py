@@ -151,6 +151,13 @@ def should_check_for_updates(config: Dict[str, Any]) -> bool:
     import time as _time
     return (_time.time() - last) >= interval
 
+def is_version_ignored(version: Optional[str], config: Dict[str, Any]) -> bool:
+    """True when the user dismissed this exact version via 'Ignore this version'."""
+    if not version:
+        return False
+    ignored = config.get("ignored_versions", [])
+    return version in ignored if isinstance(ignored, list) else False
+
 def check_fluxmedia_update_sync(config: Dict[str, Any]):
     """Checks PyPI synchronously for the latest FluxMedia version on start and prompts for update.
 
@@ -174,19 +181,34 @@ def check_fluxmedia_update_sync(config: Dict[str, Any]):
         if response.status_code == 200:
             data = response.json()
             LATEST_VERSION = data.get("info", {}).get("version")
+            if is_version_ignored(LATEST_VERSION, config):
+                return
             if is_new_version_available(CURRENT_VERSION, LATEST_VERSION):
                 console.print("\n[bold yellow]🔔 UPDATE AVAILABLE 🔔[/bold yellow]")
                 console.print(f"A new version of FluxMedia is available: [bold green]{LATEST_VERSION}[/bold green] (Current: {CURRENT_VERSION})")
-                
+
                 console.print("\n[bold]Options:[/bold]")
                 console.print("1. Update Now")
                 console.print("2. Continue with Current Version")
-                choice = Prompt.ask("Choose an option", choices=["1", "2"], default="2")
+                console.print("3. Ignore This Version (don't ask again)")
+                choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="2")
                 clear_screen()
-                
+
                 if choice == "1":
                     operation_update_fluxmedia()
                     sys.exit(0)
+                elif choice == "3":
+                    ignored = config.get("ignored_versions", [])
+                    if not isinstance(ignored, list):
+                        ignored = []
+                    if LATEST_VERSION not in ignored:
+                        ignored.append(LATEST_VERSION)
+                    config["ignored_versions"] = ignored
+                    try:
+                        save_config(config)
+                    except Exception:
+                        pass
+                    console.print(f"[yellow]Version {LATEST_VERSION} will no longer be offered.[/yellow]")
                 else:
                     console.print("[yellow]Continuing with current version...[/yellow]")
                     import time
@@ -249,7 +271,8 @@ DEFAULT_CONFIG = {
     "clean_logs_enabled": True,
     "plugins_disabled": [],
     "update_interval": "weekly",
-    "last_update_check": 0.0
+    "last_update_check": 0.0,
+    "ignored_versions": []
 }
 
 def load_config() -> Dict[str, Any]:
