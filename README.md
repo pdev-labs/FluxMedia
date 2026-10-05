@@ -12,11 +12,11 @@
 
 ---
 
-## 📢 Latest Release: v1.8.0
+## 📢 Latest Release: v1.15.1
 
-* **Feature:** Unified cross-platform `install.py` and interactive cookie failure prompts.
-* **Bug Fix:** Resolved YouTube bot protection checks and cookie loading crashes.
-* **Docs:** Updated visual previews with real screenshots.
+* **Feature:** Table-driven plugin manager — numbered pick-from-table enable/disable and run flows, bulk toggles, and search across name/description/author.
+* **Feature:** Configurable update-check interval (daily/weekly/monthly/never) with "Ignore This Version" on every update prompt.
+* **Fix:** Quality-filtered downloads gracefully fall back to best instead of failing when a bucket has no streams.
 
 
 
