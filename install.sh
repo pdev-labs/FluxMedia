@@ -2,8 +2,8 @@
 
 set -e
 
-# --- Request sudo upfront if available ---
-if [ "$EUID" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+# --- Request sudo upfront if available (not needed for read-only --check) ---
+if [ "${1:-}" != "--check" ] && [ "${1:-}" != "--help" ] && [ "${1:-}" != "-h" ] && [ "$EUID" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
     echo "This script may require administrative privileges to install dependencies."
     sudo -v || { echo "Failed to get sudo privileges. Exiting."; exit 1; }
 fi
@@ -141,6 +141,10 @@ is_termux() {
 
 # --- Installation Logic ---
 install_dependencies() {
+    if [ "${FORCE_MODE:-0}" != "1" ] && command -v ffmpeg &> /dev/null && command -v node &> /dev/null; then
+        echo -e "${GREEN}FFmpeg and Node.js already present — skipping system deps.${NC}"
+        return 0
+    fi
     local cmd=""
     if is_termux; then
         # nodejs: yt-dlp JS runtime (quickjs has no Android wheels).
@@ -178,6 +182,10 @@ install_dependencies() {
 }
 
 install_fluxmedia() {
+    if [ "${FORCE_MODE:-0}" != "1" ] && python3 -c "import importlib.metadata as m; m.version('fluxmedia')" 2>/dev/null; then
+        echo -e "${GREEN}FluxMedia already installed — skipping (use --force to reinstall).${NC}"
+        return 0
+    fi
     local cmd=""
     if is_termux; then
         # Termux: PyPI has no Android wheels for pydantic-core, and the
@@ -265,9 +273,37 @@ uninstall_python() {
     fi
 }
 
+# --- Preflight (read-only; same report shape as install.py --check) ---
+cmd_version() { "$1" --version 2>&1 | head -n1 | cut -c1-70; }
+
+preflight() {
+    local py="MISSING" net="OFFLINE" disk="unknown" ff="MISSING" nd="MISSING" fm="MISSING"
+    if command -v python3 &> /dev/null; then py=$(python3 -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}")' 2>/dev/null || echo "present"); fi
+    if (echo > /dev/tcp/8.8.8.8/53) 2>/dev/null; then net="reachable"; fi
+    if command -v ffmpeg &> /dev/null; then ff=$(cmd_version ffmpeg); fi
+    if command -v node &> /dev/null; then nd=$(cmd_version node); fi
+    if python3 -c "import importlib.metadata as m; print(m.version('fluxmedia'))" 2>/dev/null; then fm=$(python3 -c "import importlib.metadata as m; print('v'+m.version('fluxmedia'))" 2>/dev/null); fi
+    if command -v df &> /dev/null; then disk="$(df -h "$HOME" 2>/dev/null | awk 'NR==2{print $4" free"}')"; fi
+    echo -e "\n  ✨ ${CYAN}Preflight check ✨${NC}"
+    echo -e "  [Python]     $py"
+    echo -e "  [Network]    $net"
+    echo -e "  [Disk]       $disk"
+    echo -e "  [FFmpeg]     $ff"
+    echo -e "  [Node.js]    $nd"
+    echo -e "  [FluxMedia]  $fm"
+    [[ "$net" == "OFFLINE" ]] && return 1
+    [[ "$py" == MISSING* ]] && return 1
+    return 0
+}
+
 do_install() {
+    FORCE_MODE="${FORCE_MODE:-0}"
     clear
     print_logo
+    if ! preflight; then
+        echo -e "\n${RED}Preflight failed (Python or network missing). Aborting.${NC}"
+        return 1
+    fi
     print_header "Step 1 & 2: Environment Setup"
     install_dependencies
     
@@ -280,6 +316,10 @@ do_install() {
     echo -e "${CYAN}fluxmedia${NC}"
     echo -e "${DARKGRAY}------------------------------------------------${NC}\n"
     
+    # Interactive launch prompt only for menu-driven installs.
+    if [ -n "$NONINTERACTIVE" ]; then
+        return 0
+    fi
     # Quick Yes/No menu for launching
     local launch_opts=("Yes, launch it now" "No, exit")
     show_menu "Would you like to launch FluxMedia right now?" "${launch_opts[@]}"
@@ -367,5 +407,36 @@ show_main_menu() {
     done
 }
 
-# Start
-show_main_menu
+# Entry point: same flags as install.py (--yes/--force/--check/--uninstall).
+FORCE_MODE=0
+case "${1:-}" in
+    --check)
+        print_logo
+        if preflight; then exit 0; else exit 1; fi
+        ;;
+    --yes)
+        NONINTERACTIVE=1
+        do_install
+        ;;
+    --force)
+        NONINTERACTIVE=1
+        FORCE_MODE=1
+        do_install
+        ;;
+    --uninstall)
+        if [ "${2:-}" != "--yes" ]; then
+            read -p "Uninstall FluxMedia + FFmpeg? [y/N] " confirm < /dev/tty
+            if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then echo "Aborted."; exit 1; fi
+        fi
+        uninstall_fluxmedia
+        uninstall_ffmpeg
+        preflight
+        ;;
+    -h|--help)
+        echo "Usage: install.sh [--yes|--force|--check|--uninstall [--yes]]"
+        echo "  (no flags)  interactive menu"
+        ;;
+    *)
+        show_main_menu
+        ;;
+esac

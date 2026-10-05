@@ -1,11 +1,34 @@
+<#
+.SYNOPSIS
+  FluxMedia professional installer (Windows).
+  Same flags as install.py / install.sh:
+    install.ps1            # interactive menu
+    install.ps1 -Yes       # default setup, no prompts
+    install.ps1 -Force     # reinstall everything, no prompts
+    install.ps1 -Check     # preflight report only (exit 0/1)
+    install.ps1 -Uninstall [-Yes]
+#>
+param(
+    [switch]$Yes,
+    [switch]$Force,
+    [switch]$Check,
+    [switch]$Uninstall
+)
+
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-# Elevate privileges if not running as Administrator
-if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+# Elevate privileges if not running as Administrator (interactive/menu only;
+# -Check is read-only and must not trigger a UAC prompt).
+if (-not $Check -and !([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Elevating privileges to Administrator..." -ForegroundColor Yellow
+    $fwd = @()
+    if ($Yes) { $fwd += "-Yes" }
+    if ($Force) { $fwd += "-Force" }
+    if ($Uninstall) { $fwd += "-Uninstall" }
+    $fwdArg = if ($fwd.Count -gt 0) { " " + ($fwd -join " ") } else { "" }
     if ($PSCommandPath) {
-        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"$fwdArg"
     } else {
         Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"iex (irm https://raw.githubusercontent.com/pdev-labs/FluxMedia/main/install.ps1)`""
     }
@@ -132,6 +155,45 @@ function Show-Menu {
     return $selected
 }
 
+# --- Preflight (read-only; same report shape as install.py --check) ---
+function Get-Preflight {
+    $rows = @()
+    $pyVer = $null
+    try {
+        $pyCmd = Get-RealPython
+        $pyVer = & $pyCmd --version 2>&1
+        if ($pyVer -match "Python (\d+\.\d+\.\d+)") { $pyVer = $Matches[1] }
+    } catch {}
+    $rows += [pscustomobject]@{ Component = "Python"; Ok = ($null -ne $pyVer); Detail = $(if ($pyVer) { "$pyVer" } else { "not found" }) }
+
+    $net = $false
+    try {
+        $tcp = New-Object Net.Sockets.TcpClient
+        $iar = $tcp.BeginConnect("8.8.8.8", 53, $null, $null)
+        $net = $iar.AsyncWaitHandle.WaitOne(3000)
+        $tcp.Close()
+    } catch {}
+    $rows += [pscustomobject]@{ Component = "Network"; Ok = $net; Detail = $(if ($net) { "reachable" } else { "OFFLINE" }) }
+
+    $ff = Get-Command ffmpeg -ErrorAction SilentlyContinue
+    $rows += [pscustomobject]@{ Component = "FFmpeg"; Ok = ($null -ne $ff); Detail = $(if ($ff) { "$($ff.Source)" } else { "not found" }) }
+
+    $flux = Get-Command fluxmedia -ErrorAction SilentlyContinue
+    $rows += [pscustomobject]@{ Component = "FluxMedia"; Ok = ($null -ne $flux); Detail = $(if ($flux) { "$($flux.Source)" } else { "not installed" }) }
+    return $rows
+}
+
+function Show-Preflight([array]$Rows, [string]$Title = "Preflight check") {
+    Write-Host "`n  ✨ " -NoNewline -ForegroundColor Cyan
+    Write-Host $Title -ForegroundColor Cyan
+    foreach ($r in $Rows) {
+        $mark = if ($r.Ok) { "OK  " } else { "MISS" }
+        $color = if ($r.Ok) { "Green" } else { "Yellow" }
+        Write-Host "  [$mark] " -NoNewline -ForegroundColor $color
+        Write-Host "$($r.Component): $($r.Detail)"
+    }
+}
+
 function Install-Python {
     # We leave Invoke-WebRequest as is so it natively displays its own progress bar at the top!
     Write-Host "$e_hour " -NoNewline; Write-Host "Downloading Python..." -ForegroundColor Yellow
@@ -146,12 +208,25 @@ function Install-Python {
 }
 
 function Install-FFmpeg {
+    if (-not $Force -and (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+        Write-Host "✅ " -NoNewline; Write-Host "FFmpeg already present — skipping." -ForegroundColor Green
+        return
+    }
     Run-WithSpinner -Message "Installing FFmpeg via Winget" -FilePath "winget" -ArgumentList @("install", "-e", "--id", "Gyan.FFmpeg", "--accept-package-agreements", "--accept-source-agreements")
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 }
 
 function Install-FluxMedia {
     $pyCmd = Get-RealPython
+    if (-not $Force) {
+        try {
+            $v = & $pyCmd -c "import importlib.metadata as m; print(m.version('fluxmedia'))" 2>$null
+            if ($v) {
+                Write-Host "✅ " -NoNewline; Write-Host "FluxMedia $v already installed — skipping (use -Force to reinstall)." -ForegroundColor Green
+                return
+            }
+        } catch {}
+    }
     Run-WithSpinner -Message "Upgrading Pip" -FilePath $pyCmd -ArgumentList @("-m", "pip", "install", "--upgrade", "pip", "-q")
     Run-WithSpinner -Message "Installing FluxMedia Core" -FilePath $pyCmd -ArgumentList @("-m", "pip", "install", "-U", "fluxmedia", "-q")
 }
@@ -322,7 +397,16 @@ function Do-Install {
     try {
         $pyCmd = Get-RealPython
         $pyVersion = & $pyCmd --version 2>&1
-        if ($pyVersion -match "Python 3") { $pythonExists = $true }
+        if ($pyVersion -match "Python 3") {
+            $pythonExists = $true
+            # Enforce minimum Python 3.8 for the FluxMedia package.
+            if ($pyVersion -match "Python 3\.(\d+)") {
+                if ([int]$Matches[1] -lt 8) {
+                    Write-Color "Python 3.8+ is required (found $pyVersion)." "Red"
+                    return
+                }
+            }
+        }
     } catch {}
 
     if ($pythonExists) {
@@ -349,6 +433,9 @@ function Do-Install {
     Write-Host ""
     
     $launchOpts = @("Yes, launch it now", "No, exit")
+    if ($Yes -or $Force) {
+        return
+    }
     $launchChoice = Show-Menu -Prompt "🎬 Would you like to launch FluxMedia right now?" -Options $launchOpts
     
     if ($launchChoice -eq 0) {
@@ -362,5 +449,23 @@ function Do-Install {
     }
 }
 
-# Start the application
-Show-MainMenu
+# Entry point: same flags as install.py / install.sh.
+if ($Check) {
+    $rows = Get-Preflight
+    Show-Preflight $rows
+    $need = $rows | Where-Object { ($_.Component -eq "Python" -or $_.Component -eq "Network") -and (-not $_.Ok) }
+    if ($need) { exit 1 } else { exit 0 }
+} elseif ($Uninstall) {
+    if (-not $Yes -and -not $Force) {
+        $c = Read-Host "Uninstall FluxMedia + FFmpeg? [y/N]"
+        if ($c -ne "y" -and $c -ne "Y") { Write-Color "Aborted." "Yellow"; exit 1 }
+    }
+    Uninstall-FluxMedia; Uninstall-FFmpeg
+    Show-Preflight (Get-Preflight) "After uninstall"
+    exit 0
+} elseif ($Yes -or $Force) {
+    Do-Install
+} else {
+    # Start the application
+    Show-MainMenu
+}

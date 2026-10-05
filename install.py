@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+"""FluxMedia professional installer (cross-platform).
+
+Interactive menu by default; scriptable with flags (same flags exist in
+install.sh / install.ps1):
+
+    python3 install.py                # interactive menu
+    python3 install.py --yes          # default setup, no prompts
+    python3 install.py --force        # reinstall everything, no prompts
+    python3 install.py --check        # preflight report only (exit 0/1)
+    python3 install.py --uninstall [--yes]
+"""
+import argparse
 import os
 import sys
 import subprocess
@@ -34,9 +46,9 @@ def print_logo():
 def run_command(cmd, shell=False, sudo=False):
     if sudo and sys.platform != 'win32' and 'com.termux' not in os.environ.get('PREFIX', ''):
         cmd = ['sudo'] + cmd
-    
+
     print_color(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}", YELLOW)
-    
+
     try:
         if shell:
             subprocess.run(cmd, shell=True, check=True)
@@ -46,6 +58,104 @@ def run_command(cmd, shell=False, sudo=False):
     except subprocess.CalledProcessError as e:
         print_color(f"Command failed: {e}", RED)
         return False
+
+MIN_PYTHON = (3, 8)
+
+
+def check_network(timeout=3):
+    import socket
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect(("8.8.8.8", 53))
+        return True
+    except Exception:
+        return False
+
+
+def cmd_version(cmd, args=("--version",)):
+    """First line of `<cmd> <args>` output, or None when missing/broken."""
+    try:
+        r = subprocess.run([cmd] + list(args), capture_output=True, text=True, timeout=15)
+        lines = (r.stdout or r.stderr or "").strip().splitlines()
+        return lines[0][:70] if r.returncode == 0 and lines else None
+    except Exception:
+        return None
+
+
+def installed_fluxmedia_version():
+    try:
+        from importlib.metadata import version
+        return version("fluxmedia")
+    except Exception:
+        return None
+
+
+def preflight():
+    """Returns [(component, ok, detail)] without changing anything."""
+    rows = []
+    v = sys.version_info
+    ok = (v.major, v.minor) >= MIN_PYTHON
+    rows.append(("Python", ok, f"{v.major}.{v.minor}.{v.micro}" + ("" if ok else " (requires >= 3.8)")))
+    net = check_network()
+    rows.append(("Network", net, "reachable" if net else "OFFLINE — downloads will fail"))
+    try:
+        free_gb = shutil.disk_usage(os.path.expanduser("~")).free / (1024 ** 3)
+        rows.append(("Disk space", free_gb >= 1.0, f"{free_gb:.1f} GB free"))
+    except Exception:
+        rows.append(("Disk space", True, "unknown"))
+    ff = cmd_version("ffmpeg", ("-version",))
+    rows.append(("FFmpeg", ff is not None, ff or "not found"))
+    nd = cmd_version("node", ("--version",))
+    rows.append(("Node.js", nd is not None, nd or "not found (yt-dlp JS engine)"))
+    fv = installed_fluxmedia_version()
+    rows.append(("FluxMedia", fv is not None, f"v{fv}" if fv else "not installed"))
+    return rows
+
+
+def print_summary(rows, title="Preflight check"):
+    print_color(f"\n=== {title} ===", CYAN)
+    width = max(len(r[0]) for r in rows)
+    for name, ok, detail in rows:
+        mark = "OK  " if ok else "MISS"
+        color = GREEN if ok else YELLOW
+        print_color(f"  [{mark}] {name.ljust(width)}  {detail}", color)
+
+
+def do_install(force=False):
+    """Default setup: preflight, install what's missing, verify, summary."""
+    print_logo()
+    rows = preflight()
+    print_summary(rows)
+    by_name = {r[0]: r for r in rows}
+    if not by_name["Python"][1]:
+        print_color("Python >= 3.8 is required. Aborting.", RED)
+        return False
+    if not by_name["Network"][1]:
+        print_color("No network connection. Aborting.", RED)
+        return False
+    install_system_dependencies(force=force)
+    install_fluxmedia(force=force)
+    final = preflight()
+    ok = all(r[1] for r in final if r[0] in ("FFmpeg", "Node.js", "FluxMedia"))
+    print_summary(final, title="Installation result")
+    if ok:
+        print_color("\nSuccess! FluxMedia is installed.", GREEN)
+        print("Run 'fluxmedia' in your terminal to start.")
+    else:
+        print_color("\nSome components are still missing (see MISS rows above).", YELLOW)
+    return ok
+
+
+def do_uninstall(assume_yes=False):
+    if not assume_yes:
+        answer = input("Uninstall FluxMedia + FFmpeg? [y/N]: ").strip().lower()
+        if answer not in ("y", "yes"):
+            print("Aborted.")
+            return False
+    uninstall_fluxmedia()
+    uninstall_ffmpeg()
+    print_summary(preflight(), title="After uninstall")
+    return True
 
 # --- OS Detection ---
 def get_os_info():
@@ -57,8 +167,15 @@ def get_os_info():
     return system
 
 # --- Actions ---
-def install_system_dependencies():
+def install_system_dependencies(force=False):
     os_name = get_os_info()
+    if not force:
+        ff, nd = cmd_version("ffmpeg", ("-version",)), cmd_version("node", ("--version",))
+        if ff and nd:
+            print_color("FFmpeg and Node.js already present — skipping system deps.", GREEN)
+            return True
+        elif ff or nd:
+            print_color(f"Found {'FFmpeg' if ff else 'Node.js'}; installing the rest...", YELLOW)
     print_color("\nInstalling System Dependencies (FFmpeg & Node.js)...", CYAN)
     
     if os_name == 'Termux':
@@ -114,7 +231,10 @@ def uninstall_ffmpeg():
         elif shutil.which('xbps-remove'):
             run_command(['xbps-remove', '-y', 'ffmpeg'], sudo=True)
 
-def install_fluxmedia():
+def install_fluxmedia(force=False):
+    if not force and installed_fluxmedia_version() is not None:
+        print_color(f"FluxMedia {installed_fluxmedia_version()} already installed — skipping (use --force to reinstall).", GREEN)
+        return True
     print_color("\nInstalling FluxMedia Core...", CYAN)
     
     os_name = get_os_info()
@@ -168,9 +288,32 @@ def show_menu(title, options):
         print_color("Invalid selection. Please try again.", RED)
 
 def main():
+    parser = argparse.ArgumentParser(description="FluxMedia professional installer")
+    parser.add_argument("--yes", action="store_true", help="default setup without prompts")
+    parser.add_argument("--force", action="store_true", help="reinstall everything without prompts")
+    parser.add_argument("--check", action="store_true", help="preflight report only")
+    parser.add_argument("--uninstall", action="store_true", help="uninstall FluxMedia + FFmpeg")
+    args = parser.parse_args()
+
     if sys.platform == 'win32':
-        os.system('') # Enable ANSI colors
-    
+        os.system('')  # Enable ANSI colors
+
+    if args.check:
+        print_logo()
+        rows = preflight()
+        print_summary(rows)
+        sys.exit(0 if all(r[1] for r in rows if r[0] in ("Python", "Network")) else 1)
+
+    if args.uninstall:
+        print_logo()
+        sys.exit(0 if do_uninstall(assume_yes=args.yes or args.force) else 1)
+
+    if args.force:
+        sys.exit(0 if do_install(force=True) else 1)
+
+    if args.yes:
+        sys.exit(0 if do_install(force=False) else 1)
+
     print_logo()
     
     while True:
