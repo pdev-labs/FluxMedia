@@ -301,6 +301,28 @@ def filter_plugins(plugins: List[Plugin], query: str) -> List[Plugin]:
             or q in (p.author or "").lower()]
 
 
+def parse_multi_pick(raw: str, count: int) -> Optional[List[int]]:
+    """Parses space-separated 1-based row numbers (e.g. "1 3 4").
+
+    Returns deduplicated 0-based indexes in first-seen order, or None when
+    the input is empty/invalid. Out-of-range or non-numeric tokens invalidate
+    the whole input so a typo never toggles the wrong plugin.
+    """
+    parts = (raw or "").split()
+    if not parts:
+        return None
+    indexes: List[int] = []
+    for part in parts:
+        if not part.isdigit():
+            return None
+        idx = int(part) - 1
+        if idx < 0 or idx >= count:
+            return None
+        if idx not in indexes:
+            indexes.append(idx)
+    return indexes
+
+
 _manager: Optional[PluginManager] = None
 
 

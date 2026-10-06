@@ -97,7 +97,7 @@ def register(hooks):
             P.Hooks(m).on("nope", lambda: None)
 
     def test_filter_plugins(self):
-        from fluxmedia.plugins import Plugin, filter_plugins
+        from fluxmedia.plugins import Plugin, filter_plugins, parse_multi_pick
         ps = [
             Plugin(name="csv-logger", description="Logs downloads", author="Flux"),
             Plugin(name="doc-bridge", description="Routes via engine", author="Pdev"),
@@ -110,6 +110,19 @@ def register(hooks):
         self.assertEqual([p.name for p in filter_plugins(ps, "engine")], ["doc-bridge"])
         self.assertEqual([p.name for p in filter_plugins(ps, "pdev")], ["doc-bridge"])
         self.assertEqual(filter_plugins(ps, "zzz"), [])
+
+    def test_parse_multi_pick(self):
+        from fluxmedia.plugins import parse_multi_pick
+        self.assertEqual(parse_multi_pick("1 3 4", 5), [0, 2, 3])
+        self.assertEqual(parse_multi_pick("2", 3), [1])
+        self.assertEqual(parse_multi_pick("3 3 1", 3), [2, 0])  # deduped
+        self.assertEqual(parse_multi_pick("  1   2  ", 2), [0, 1])
+        self.assertIsNone(parse_multi_pick("", 3))
+        self.assertIsNone(parse_multi_pick("   ", 3))
+        self.assertIsNone(parse_multi_pick("0", 3))
+        self.assertIsNone(parse_multi_pick("4", 3))   # out of range
+        self.assertIsNone(parse_multi_pick("1 x", 3))  # whole input rejected
+        self.assertIsNone(parse_multi_pick("abc", 3))
 
     def test_vendored_dependency_importable(self):
         # A helper folder/file sitting beside the plugin (not a plugin

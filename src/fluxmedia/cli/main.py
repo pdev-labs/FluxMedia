@@ -2314,12 +2314,23 @@ def operation_plugins_menu(config: Dict[str, Any]):
         if choice == "1":
             return config
         elif choice == "2":
-            plugin = pick_from_table(manager.plugins, "Plugin number to toggle")
-            if plugin is None:
-                Prompt.ask("\nPress Enter to continue...")
-                continue
-            manager.set_enabled(plugin.name, not plugin.enabled)
-            console.print(f"[green]{plugin.name} {'enabled' if plugin.enabled else 'disabled'}.[/green]")
+            from fluxmedia.plugins import parse_multi_pick
+            while True:
+                print_table(manager.plugins)
+                raw = Prompt.ask(
+                    "Plugin number(s) to toggle (space-separated, empty cancels)",
+                    default="").strip()
+                if not raw:
+                    break
+                indexes = parse_multi_pick(raw, len(manager.plugins))
+                if indexes is None:
+                    console.print(f"[red]Invalid selection: use numbers 1-{len(manager.plugins)} separated by spaces.[/red]")
+                    continue
+                for idx in indexes:
+                    plugin = manager.plugins[idx]
+                    manager.set_enabled(plugin.name, not plugin.enabled)
+                    console.print(f"[green]{plugin.name} {'enabled' if plugin.enabled else 'disabled'}.[/green]")
+                break
             Prompt.ask("\nPress Enter to continue...")
         elif choice == "3":
             runnable = [p for p in manager.plugins
