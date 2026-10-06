@@ -56,8 +56,84 @@ CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 QUEUE_FILE = os.path.join(DATA_DIR, "queue.json")
 LOG_FILE = os.path.join(DATA_DIR, "fluxmedia.log")
+LOG_DIR = os.path.join(DATA_DIR, "logs")
 THUMB_CACHE_DIR = os.path.join(DATA_DIR, "thumb_cache")
 os.makedirs(THUMB_CACHE_DIR, exist_ok=True)
+
+# Session log retention: per-launch files fluxmedia-YYYYMMDD-HHMMSS.log.
+KEEP_SESSION_LOGS = 14
+LOG_LINE_FORMAT = "%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+
+
+def get_log_files():
+    """Newest-first list of session logs: [{path, mtime, size}]."""
+    files = []
+    try:
+        names = os.listdir(LOG_DIR)
+    except OSError:
+        return files
+    for name in names:
+        if name.startswith("fluxmedia-") and name.endswith(".log"):
+            path = os.path.join(LOG_DIR, name)
+            try:
+                st = os.stat(path)
+                files.append({"path": path, "mtime": st.st_mtime, "size": st.st_size})
+            except OSError:
+                pass
+    files.sort(key=lambda x: x["mtime"], reverse=True)
+    return files
+
+
+def current_log_file():
+    """Active session log path, else legacy file, else empty string."""
+    files = get_log_files()
+    if files:
+        return files[0]["path"]
+    if os.path.isfile(LOG_FILE):
+        return LOG_FILE
+    return ""
+
+
+def setup_file_logging():
+    """Starts a new timestamped session log and prunes old ones.
+
+    Attaches a single parser-compatible handler to the ROOT logger
+    (guarded against duplicates) and repoints LOG_FILE at the new file.
+    Returns the session log path.
+    """
+    global LOG_FILE
+    os.makedirs(LOG_DIR, exist_ok=True)
+    for old in get_log_files()[KEEP_SESSION_LOGS:]:
+        try:
+            os.remove(old["path"])
+        except OSError:
+            pass
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = os.path.join(LOG_DIR, f"fluxmedia-{stamp}.log")
+    n = 1
+    while os.path.exists(path):
+        n += 1
+        path = os.path.join(LOG_DIR, f"fluxmedia-{stamp}-{n}.log")
+    try:
+        already = [h for h in logging.getLogger().handlers
+                   if isinstance(h, logging.FileHandler)
+                   and os.path.abspath(getattr(h, "baseFilename", "")) == os.path.abspath(path)]
+        if not already:
+            fh = logging.FileHandler(path, encoding="utf-8")
+            fh.setLevel(logging.INFO)
+            fh.setFormatter(logging.Formatter(LOG_LINE_FORMAT))
+            logging.getLogger().addHandler(fh)
+            logging.getLogger().setLevel(logging.INFO)
+        # Keep uvicorn chatter out of our file (it has its own handlers).
+        for noisy in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+            try:
+                logging.getLogger(noisy).propagate = False
+            except Exception:
+                pass
+    except Exception:
+        pass
+    LOG_FILE = path
+    return path
 
 import os
 import sys

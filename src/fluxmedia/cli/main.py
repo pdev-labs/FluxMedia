@@ -135,13 +135,9 @@ CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 LOG_FILE = os.path.join(DATA_DIR, "fluxmedia.log")
 
-# --- Setup Logging ---
-logging.basicConfig(
-    filename=LOG_FILE,
-    filemode="a",
-    format="%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s",
-    level=logging.INFO
-)
+# --- Setup Logging (session files via core; see setup_file_logging) ---
+from fluxmedia.core import setup_file_logging as _setup_file_logging
+LOG_FILE = _setup_file_logging()
 logger = logging.getLogger("FluxMedia")
 
 console = Console()
@@ -2265,6 +2261,74 @@ def operation_updates_manager(config: Dict[str, Any]):
         elif choice == _back:
             break
 
+def operation_view_logs():
+    """Browse per-session log files: tail latest, list, open folder, prune."""
+    from fluxmedia.core import get_log_files, LOG_DIR
+    while True:
+        clear_screen()
+        print_header()
+        console.print("\n[bold cyan]=== SESSION LOGS ===[/bold cyan]\n")
+        files = get_log_files()
+        if files:
+            table = Table(show_header=True, box=box.ROUNDED, border_style="cyan")
+            table.add_column("#", style="bold cyan")
+            table.add_column("Session file", style="white")
+            table.add_column("Size", style="dim")
+            table.add_column("Modified", style="dim")
+            for i, f in enumerate(files, 1):
+                import datetime as _dt
+                table.add_row(
+                    str(i),
+                    os.path.basename(f["path"]) + (" [bold green](current)[/bold green]" if i == 1 else ""),
+                    f"{f['size'] / 1024:.1f} KB",
+                    _dt.datetime.fromtimestamp(f["mtime"]).strftime("%Y-%m-%d %H:%M"),
+                )
+            console.print(table)
+        else:
+            console.print("[yellow]No session logs yet.[/yellow]")
+        console.print("[bold cyan]1.[/bold cyan] Tail latest log (last 40 lines)")
+        console.print("[bold cyan]2.[/bold cyan] Open logs folder")
+        console.print("[bold cyan]3.[/bold cyan] Delete old sessions (keep latest)")
+        console.print("[bold cyan]4.[/bold cyan] Back to Main Menu")
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4"], default="4")
+        if choice == "1":
+            if not files:
+                console.print("[yellow]Nothing to show yet.[/yellow]")
+            else:
+                try:
+                    with open(files[0]["path"], "r", encoding="utf-8", errors="replace") as fh:
+                        lines = fh.readlines()[-40:]
+                    console.print(Panel("".join(lines) or "[dim](empty)[/dim]",
+                                        title=f"[bold white]{os.path.basename(files[0]['path'])}[/bold white]",
+                                        border_style="cyan"))
+                except OSError as e:
+                    console.print(f"[red]Could not read log: {e}[/red]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice == "2":
+            try:
+                if sys.platform.startswith("win"):
+                    os.startfile(LOG_DIR)  # noqa: S606
+                elif sys.platform == "darwin":
+                    subprocess.run(["open", LOG_DIR])
+                else:
+                    subprocess.run(["xdg-open", LOG_DIR])
+            except Exception as e:
+                console.print(f"[red]Could not open folder ({LOG_DIR}): {e}[/red]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice == "3":
+            removed = 0
+            for f in files[1:]:
+                try:
+                    os.remove(f["path"])
+                    removed += 1
+                except OSError:
+                    pass
+            console.print(f"[green]Removed {removed} old session log(s).[/green]")
+            Prompt.ask("\nPress Enter to continue...")
+        elif choice == "4":
+            return
+
+
 def operation_plugins_menu(config: Dict[str, Any]):
     """Plugin manager: table-driven enable/disable, run actions, search, bulk toggles."""
     from fluxmedia.plugins import get_manager, get_plugins_dir, filter_plugins
@@ -2534,6 +2598,7 @@ def main():
             info_table.add_row("[bold magenta]17.[/bold magenta] About Creator [dim](Credit)[/dim]")
             info_table.add_row("[bold magenta]18.[/bold magenta] Send Feedback [dim](Bugs)[/dim]")
             info_table.add_row("[bold magenta]P.[/bold magenta] Plugins [dim](Extensions)[/dim]")
+            info_table.add_row("[bold magenta]L.[/bold magenta] View Logs [dim](Sessions)[/dim]")
             info_table.add_row("[bold red]19.[/bold red] Exit Application [dim](Quit)[/dim]")
             
             menu_grid = Table.grid(expand=True)
@@ -2560,7 +2625,7 @@ def main():
                 padding=(1, 2)
             ))
             
-            choice = Prompt.ask("Choose an option (0-19, W, P)", choices=[str(i) for i in range(0, 20)] + ["W", "w", "P", "p"], show_choices=False, default="19")
+            choice = Prompt.ask("Choose an option (0-19, W, P, L)", choices=[str(i) for i in range(0, 20)] + ["W", "w", "P", "p", "L", "l"], show_choices=False, default="19")
             clear_screen()
             
             if choice.upper() == "W":
@@ -2628,6 +2693,8 @@ def main():
                 operation_report_bug_feedback()
             elif choice.upper() == "P":
                 config = operation_plugins_menu(config)
+            elif choice.upper() == "L":
+                operation_view_logs()
             elif choice == "19":
                 console.print("\n[bold green]Thank you for using FluxMedia! Goodbye.[/bold green]")
                 break

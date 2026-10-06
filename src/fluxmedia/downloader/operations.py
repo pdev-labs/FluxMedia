@@ -127,7 +127,7 @@ def operation_download_video(config: Dict[str, Any]):
                 add_history_entry(url, title, "Success", "Video", dest_dir)
                 logger.info(f"Successfully downloaded Video: {title} ({url}) to {dest_dir}")
             else:
-                console.print(f"[bold red][FAILED] Download failed. See {LOG_FILE} for details.[/bold red]")
+                console.print(f"[bold red][FAILED] Download failed. See {current_log_file()} for details.[/bold red]")
                 add_history_entry(url, title, "Failed", "Video")
                 logger.error(f"Failed to download Video: {title} ({url})")
         send_desktop_notification("FluxMedia - Batch Complete", f"Downloaded {total_urls} video(s) to {dest_dir}.")
@@ -271,7 +271,7 @@ def operation_download_audio(config: Dict[str, Any]):
                 add_history_entry(url, title, "Success", "Audio", dest_dir)
                 logger.info(f"Successfully downloaded Audio: {title} ({url}) to {dest_dir}")
             else:
-                console.print(f"[bold red][FAILED] Download failed. See {LOG_FILE} for details.[/bold red]")
+                console.print(f"[bold red][FAILED] Download failed. See {current_log_file()} for details.[/bold red]")
                 add_history_entry(url, title, "Failed", "Audio")
                 logger.error(f"Failed to download Audio: {title} ({url})")
         send_desktop_notification("FluxMedia - Batch Complete", f"Downloaded {total_urls} audio file(s) to {dest_dir}.")
@@ -364,7 +364,7 @@ def operation_download_playlist(config: Dict[str, Any]):
         add_history_entry(url, playlist_title, "Success", "Playlist", os.path.join(dest_dir, playlist_title))
         logger.info(f"Successfully downloaded Playlist: {playlist_title} ({url})")
     else:
-        console.print(f"\n[bold red][FAILED] Playlist download encountered issues. See {LOG_FILE} for details.[/bold red]")
+        console.print(f"\n[bold red][FAILED] Playlist download encountered issues. See {current_log_file()} for details.[/bold red]")
         add_history_entry(url, playlist_title, "Failed/Partial", "Playlist")
         logger.error(f"Playlist download failed or was interrupted: {playlist_title} ({url})")
         
@@ -461,7 +461,7 @@ def operation_download_channel(config: Dict[str, Any]):
         add_history_entry(url, f"Channel: {channel_name}", "Success", "Channel", os.path.join(dest_dir, channel_name))
         logger.info(f"Successfully downloaded channel videos from: {channel_name} ({url})")
     else:
-        console.print(f"\n[bold red][FAILED] Channel download encountered errors. See {LOG_FILE} for details.[/bold red]")
+        console.print(f"\n[bold red][FAILED] Channel download encountered errors. See {current_log_file()} for details.[/bold red]")
         add_history_entry(url, f"Channel: {channel_name}", "Failed/Partial", "Channel")
         logger.error(f"Channel download failed: {channel_name} ({url})")
         
@@ -822,7 +822,7 @@ def operation_search_and_download_video(config: Dict[str, Any]):
                     add_history_entry(video_url, video_title, "Success", "Video Search", dest_dir)
                     logger.info(f"Successfully searched & downloaded Video: {video_title} ({video_url}) to {dest_dir}")
                 else:
-                    console.print(f"[bold red][FAILED] Download failed. See {LOG_FILE} for details.[/bold red]")
+                    console.print(f"[bold red][FAILED] Download failed. See {current_log_file()} for details.[/bold red]")
                     add_history_entry(video_url, video_title, "Failed", "Video Search")
                     logger.error(f"Failed to download searched Video: {video_title} ({video_url})")
             send_desktop_notification("FluxMedia - Search Download", "Finished searching and downloading video.")

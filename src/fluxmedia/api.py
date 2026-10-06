@@ -18,36 +18,14 @@ import uuid
 import logging
 
 from fluxmedia.core import (
-    load_config, save_config, load_history, DATA_DIR, HISTORY_FILE, LOG_FILE
+    load_config, save_config, load_history, DATA_DIR, HISTORY_FILE
 )
+import fluxmedia.core as _core
 
-# File logging for the web server. The CLI configures this in cli/main.py,
-# but the server module is often loaded directly (uvicorn / run_server),
-# in which case fluxmedia.log stays empty and /api/logs — the nav Logs
-# tab — shows nothing. Same format the log parser expects.
-# propagate=False + duplicate guard: running via the CLI (which also has a
-# root file handler) must not write lines twice.
+# Server logging goes through the shared session-log store (core).
+# Handlers attach at run_server() time; propagation stays on so records
+# reach the single root FileHandler exactly once.
 _api_logger = logging.getLogger("fluxmedia.api")
-_api_logger.propagate = False
-_api_logger.setLevel(logging.INFO)
-if LOG_FILE:
-    try:
-        os.makedirs(os.path.dirname(LOG_FILE) or ".", exist_ok=True)
-        _abs_log = os.path.abspath(LOG_FILE)
-        if not any(
-            isinstance(h, logging.FileHandler)
-            and getattr(h, "baseFilename", "") == _abs_log
-            for h in _api_logger.handlers
-        ):
-            _fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
-            _fh.setLevel(logging.INFO)
-            _fh.setFormatter(logging.Formatter(
-                "%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
-            ))
-            _api_logger.addHandler(_fh)
-    except Exception:
-        pass
-# Child of fluxmedia.api: handled exactly once by the handler above.
 job_logger = logging.getLogger("fluxmedia.api.downloader")
 
 app = FastAPI(title="FluxMedia API")
@@ -536,9 +514,10 @@ def delete_history_item(index: int):
 @app.get("/api/logs")
 def get_logs(lines: int = 200):
     try:
-        if not os.path.exists(LOG_FILE):
+        log_path = _core.current_log_file()
+        if not log_path or not os.path.exists(log_path):
             return {"status": "success", "logs": []}
-        with open(LOG_FILE, "r", encoding="utf-8", errors="replace") as f:
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
             all_lines = f.readlines()
         parsed: List[Dict[str, str]] = []
         for raw in all_lines[-lines:]:
@@ -939,6 +918,11 @@ if os.path.isdir(WEB_BUILD_DIR):
 
 def run_server(port: int = 8000, host: str = "0.0.0.0"):  # nosec
     print(f"Starting FluxMedia Web server on {host}:{port}...")
+    try:
+        session_log = _core.setup_file_logging()
+        print(f"Session log: {session_log}")
+    except Exception as e:
+        print(f"File logging unavailable: {e}")
     try:
         from fluxmedia.plugins import get_manager
         _pm = get_manager(load_config())
