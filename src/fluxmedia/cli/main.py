@@ -2636,6 +2636,8 @@ def main():
     parser.add_argument("-a", "--audio", action="store_true", help="Download audio only")
     parser.add_argument("-o", "--output", type=str, help="Destination directory")
     parser.add_argument("-w", "--web", action="store_true", help="Start the cross-platform Web UI server")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="Web server bind address (default: 127.0.0.1; use 0.0.0.0 for LAN, trusted networks only)")
     parser.add_argument("--doctor", action="store_true", help="Print environment diagnostics and exit")
     parser.add_argument("--safe-mode", action="store_true", help="Run with all plugins disabled (recovery)")
     args, unknown = parser.parse_known_args()
@@ -2658,7 +2660,7 @@ def main():
                 print_web_dep_hint()
                 sys.exit(1)
             from fluxmedia.api import run_server
-            run_server()
+            run_server(host=args.host)
         except ImportError as e:
             print(f"Error starting web server: {e}")
             try:

@@ -70,5 +70,31 @@ class LoggingTest(unittest.TestCase):
         self.assertEqual(C.current_log_file(), path)
 
 
+class ConfigPermsTest(unittest.TestCase):
+    def test_config_writes_are_owner_only(self):
+        import stat as _stat
+        import fluxmedia.core as C
+        orig = C.CONFIG_FILE
+        tmp = os.path.join(tempfile.mkdtemp(), "config.json")
+        C.CONFIG_FILE = tmp
+        try:
+            self.assertTrue(C.save_config({"a": 1}))
+            mode = _stat.S_IMODE(os.stat(tmp).st_mode)
+            self.assertEqual(mode, 0o600, oct(mode))
+        finally:
+            C.CONFIG_FILE = orig
+
+    def test_lan_warning(self):
+        import inspect
+        import fluxmedia.api as A
+        self.assertFalse(A._lan_warning("127.0.0.1"))
+        self.assertFalse(A._lan_warning("localhost"))
+        self.assertFalse(A._lan_warning("::1"))
+        self.assertTrue(A._lan_warning("0.0.0.0"))
+        self.assertTrue(A._lan_warning("192.168.1.5"))
+        sig = inspect.signature(A.run_server)
+        self.assertEqual(sig.parameters["host"].default, "127.0.0.1")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

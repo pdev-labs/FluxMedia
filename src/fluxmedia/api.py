@@ -916,8 +916,17 @@ if os.path.isdir(WEB_BUILD_DIR):
 #  Server entry-point
 # ─────────────────────────────────────────────────────────────
 
-def run_server(port: int = 8000, host: str = "0.0.0.0"):  # nosec
+def _lan_warning(host: str) -> bool:
+    """True when binding beyond loopback (LAN can reach the unauthenticated API)."""
+    h = (host or "").strip().lower()
+    return h not in ("127.0.0.1", "localhost", "::1")
+
+
+def run_server(port: int = 8000, host: str = "127.0.0.1"):  # nosec B104: loopback default
     print(f"Starting FluxMedia Web server on {host}:{port}...")
+    if _lan_warning(host):
+        print("WARNING: listening on a LAN interface — the web API has no "
+              "authentication. Use only on trusted networks.")
     try:
         session_log = _core.setup_file_logging()
         print(f"Session log: {session_log}")

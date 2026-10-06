@@ -411,6 +411,7 @@ def load_config() -> Dict[str, Any]:
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(DEFAULT_CONFIG, f, indent=4, ensure_ascii=False)
+            _lock_down(CONFIG_FILE)
             logger.info("Created default configuration file.")
             return DEFAULT_CONFIG.copy()
         except Exception as e:
@@ -428,22 +429,35 @@ def load_config() -> Dict[str, Any]:
             if updated:
                 with open(CONFIG_FILE, "w", encoding="utf-8") as f_out:
                     json.dump(config, f_out, indent=4, ensure_ascii=False)
+                _lock_down(CONFIG_FILE)
             return config
     except Exception as e:
         logger.error(f"Failed to read config.json, returning defaults. Error: {e}")
         try:
             with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(DEFAULT_CONFIG, f, indent=4, ensure_ascii=False)
+            _lock_down(CONFIG_FILE)
             logger.info("Rewrote config.json with default configuration after loading failure.")
         except Exception as write_err:
             logger.error(f"Failed to self-heal config.json: {write_err}")
         return DEFAULT_CONFIG.copy()
+
+def _lock_down(path: str) -> None:
+    """Restrict a sensitive file to owner-only (FIND-10: config holds the
+    web/share password in plaintext). Best-effort on platforms without
+    POSIX modes (Windows: no-op for ACLs, open() already defaults sane)."""
+    try:
+        os.chmod(path, 0o600)
+    except Exception:
+        pass
+
 
 def save_config(config: Dict[str, Any]) -> bool:
     """Saves settings to config.json."""
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4, ensure_ascii=False)
+        _lock_down(CONFIG_FILE)
         logger.info("Saved configuration successfully.")
         return True
     except Exception as e:
