@@ -1221,49 +1221,66 @@ def operation_troubleshooting_guide():
 
 
 def operation_view_history():
-    """Renders formatted table of the logs list."""
-    print_header()
-    console.print("\n[bold cyan]=== DOWNLOAD HISTORY ===[/bold cyan]\n")
-    
-    history = load_history()
-    if not history:
-        console.print("[yellow]No download history found.[/yellow]")
-        Prompt.ask("\nPress Enter to return to menu...")
-        return
-        
-    table = Table(title="Recent Downloads (Last 20)", border_style="cyan")
-    table.add_column("Timestamp", style="dim")
-    table.add_column("Type", style="magenta")
-    table.add_column("Title", style="bold white", max_width=40)
-    table.add_column("Status", style="green")
-    
-    for entry in history[:20]:
-         status_style = "green" if entry.get("status") == "Success" else "red"
-         if "Failed" in entry.get("status", ""):
-             status_style = "red"
-         elif "Partial" in entry.get("status", ""):
-             status_style = "yellow"
-             
-         table.add_row(
-             entry.get("timestamp", "N/A"),
-             entry.get("type", "N/A"),
-             escape(entry.get("title", "N/A")),
-             f"[{status_style}]{entry.get('status', 'N/A')}[/{status_style}]"
-         )
-        
-    console.print(table)
-    
-    console.print("\n[bold]Options:[/bold]")
-    console.print("1. Back to Main Menu")
-    console.print("2. Clear All History")
-    choice = Prompt.ask("Choose an option", choices=["1", "2"], default="1")
-    clear_screen()
-    
-    if choice == "2":
-        if Confirm.ask("Are you sure you want to clear the entire download history?"):
-            save_history([])
-            console.print("[green]History cleared successfully.[/green]")
-            Prompt.ask("\nPress Enter to continue...")
+    """Renders formatted table of the logs list, with text filtering."""
+    from fluxmedia.core import search_entries as _search
+    current_filter = ""
+    while True:
+        print_header()
+        console.print("\n[bold cyan]=== DOWNLOAD HISTORY ===[/bold cyan]\n")
+
+        history = _search(load_history(), current_filter, ("title", "url", "type", "status"))
+        if current_filter:
+            console.print(f"[dim]Filter: '{current_filter}' ({len(history)} match(es))[/dim]\n")
+        if not history:
+            if current_filter:
+                console.print("[yellow]No matches for this filter.[/yellow]")
+            else:
+                console.print("[yellow]No download history found.[/yellow]")
+                Prompt.ask("\nPress Enter to return to menu...")
+                return
+        else:
+            table = Table(title="Recent Downloads (Last 20)", border_style="cyan")
+            table.add_column("Timestamp", style="dim")
+            table.add_column("Type", style="magenta")
+            table.add_column("Title", style="bold white", max_width=40)
+            table.add_column("Status", style="green")
+
+            for entry in history[:20]:
+                status_style = "green" if entry.get("status") == "Success" else "red"
+                if "Failed" in entry.get("status", ""):
+                    status_style = "red"
+                elif "Partial" in entry.get("status", ""):
+                    status_style = "yellow"
+
+                table.add_row(
+                    entry.get("timestamp", "N/A"),
+                    entry.get("type", "N/A"),
+                    escape(entry.get("title", "N/A")),
+                    f"[{status_style}]{entry.get('status', 'N/A')}[/{status_style}]"
+                )
+
+            console.print(table)
+
+        console.print("\n[bold]Options:[/bold]")
+        console.print("1. Back to Main Menu")
+        console.print("2. Clear All History")
+        console.print("3. Filter by text" + (" (clear filter)" if current_filter else ""))
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3"], default="1")
+        clear_screen()
+
+        if choice == "1":
+            return
+        if choice == "2":
+            if Confirm.ask("Are you sure you want to clear the entire download history?"):
+                save_history([])
+                console.print("[green]History cleared successfully.[/green]")
+                Prompt.ask("\nPress Enter to continue...")
+        elif choice == "3":
+            if current_filter:
+                current_filter = ""
+            else:
+                current_filter = Prompt.ask("Filter text (empty cancels)", default="").strip()
+
 
 def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
     """Allows user configuration edit options."""

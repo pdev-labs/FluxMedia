@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listFiles, deleteFile } from "../lib/api.ts";
 import type { FileEntry } from "../lib/api.ts";
 
@@ -7,24 +7,28 @@ export function FilesPanel(): React.JSX.Element {
   const [dir, setDir] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const firstLoad = useRef(true);
 
-  async function refresh(): Promise<void> {
-    setLoading(true);
+  async function refresh(q: string): Promise<void> {
+    if (firstLoad.current) setLoading(true);
     setError("");
     try {
-      const data = await listFiles();
+      const data = await listFiles(q);
       setFiles(data.files);
       setDir(data.download_dir);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load files.");
     } finally {
+      firstLoad.current = false;
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    void refresh();
-  }, []);
+    void refresh(query);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
   async function remove(path: string, name: string): Promise<void> {
     if (!window.confirm(`Delete "${name}"?`)) return;
@@ -43,10 +47,25 @@ export function FilesPanel(): React.JSX.Element {
 
       {error && <div className="error">{error}</div>}
 
+      <form
+        className="url-form"
+        style={{ margin: "0 0 16px", maxWidth: "none" }}
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search files…"
+          aria-label="Search files"
+        />
+      </form>
+
       {loading ? (
         <div className="empty">Loading files…</div>
       ) : files.length === 0 ? (
-        <div className="empty">No files yet. Download something first.</div>
+        <div className="empty">
+          {query ? `No files match "${query}".` : "No files yet. Download something first."}
+        </div>
       ) : (
         <div className="table-card">
           {files.map((f) => (

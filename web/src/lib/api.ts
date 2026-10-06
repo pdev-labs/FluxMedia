@@ -123,15 +123,17 @@ export async function getJob(jobId: string): Promise<JobState> {
   return data.job;
 }
 
-export async function listFiles(): Promise<{
-  files: FileEntry[];
-  download_dir: string;
-}> {
+export async function listFiles(
+  query = "",
+): Promise<{ files: FileEntry[]; download_dir: string }> {
+  const q = query.trim()
+    ? `&q=${encodeURIComponent(query.trim())}`
+    : "";
   const data = await getJson<{
     status: string;
     files: FileEntry[];
     download_dir: string;
-  }>("/api/files?category=all");
+  }>(`/api/files?category=all${q}`);
   return { files: data.files ?? [], download_dir: data.download_dir ?? "" };
 }
 

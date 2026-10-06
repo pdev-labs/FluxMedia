@@ -302,6 +302,28 @@ def find_duplicate(url: str, history=None, queue=None):
     return None
 
 
+def search_entries(entries, query, fields):
+    """Case-insensitive substring filter over the given dict fields.
+
+    Returns all entries when the query is empty. Never raises.
+    """
+    try:
+        q = (query or "").strip().lower()
+    except Exception:
+        return list(entries or [])
+    if not q:
+        return list(entries or [])
+    out = []
+    for entry in entries or []:
+        try:
+            hay = " ".join(str(entry.get(f, "")) for f in fields).lower()
+        except Exception:
+            continue
+        if q in hay:
+            out.append(entry)
+    return out
+
+
 def is_new_version_available(current: str, latest: Optional[str]) -> bool:
     """Helper to check if a new version is actually available using semver comparison."""
     if not latest:

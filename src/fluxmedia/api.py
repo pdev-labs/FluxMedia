@@ -499,9 +499,10 @@ def get_job_status(job_id: str):
 # ─────────────────────────────────────────────────────────────
 
 @app.get("/api/history")
-def get_history(limit: int = 100):
+def get_history(limit: int = 100, q: str = ""):
     try:
-        history = load_history()
+        from fluxmedia.core import search_entries as _search
+        history = _search(load_history(), q, ("title", "url", "type", "status"))
         return {"status": "success", "history": history[:limit], "total": len(history)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -586,8 +587,9 @@ def classify_file(ext: str) -> str:
     return "other"
 
 @app.get("/api/files")
-def list_files(category: str = "all"):
+def list_files(category: str = "all", q: str = ""):
     try:
+        from fluxmedia.core import search_entries as _search
         config = load_config()
         download_dir = config.get("download_dir", "")
         if not download_dir or not os.path.isdir(download_dir):
@@ -625,6 +627,7 @@ def list_files(category: str = "all"):
                     "size_bytes": size_bytes, "date": mtime,
                 })
         result.sort(key=lambda x: x["size_bytes"], reverse=True)
+        result = _search(result, q, ("name", "type", "ext"))
         return {"status": "success", "files": result, "download_dir": download_dir}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
