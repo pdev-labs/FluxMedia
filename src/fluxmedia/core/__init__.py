@@ -159,6 +159,56 @@ console = Console()
 
 from fluxmedia.utils import *
 
+def get_install_info() -> Dict[str, Any]:
+    """Detects how FluxMedia is installed: pipx | editable | venv | system | source | unknown.
+
+    Used by --doctor and by the updater to run (or suggest) the correct
+    upgrade command instead of blindly pip-installing.
+    """
+    info: Dict[str, Any] = {
+        "method": "unknown",
+        "binary": shutil.which("fluxmedia") or "",
+        "python": sys.version.split()[0],
+        "python_path": sys.executable,
+        "in_venv": sys.prefix != getattr(sys, "base_prefix", sys.prefix),
+    }
+    try:
+        import fluxmedia
+        pkg_file = getattr(fluxmedia, "__file__", "") or ""
+        info["package_path"] = pkg_file
+        # Source checkout (repo with .git above the package)?
+        probe = os.path.dirname(os.path.abspath(pkg_file))
+        for _ in range(4):
+            if os.path.isdir(os.path.join(probe, ".git")):
+                info["method"] = "editable"
+                info["source_dir"] = probe
+                break
+            probe = os.path.dirname(probe)
+        if info["method"] == "unknown":
+            if "pipx" in sys.prefix:
+                info["method"] = "pipx"
+            else:
+                try:
+                    dist = distribution("fluxmedia")
+                    direct = dist.read_text("direct_url.json")
+                    if direct:
+                        import json as _json
+                        parsed = _json.loads(direct)
+                        if parsed.get("dir_info", {}).get("editable"):
+                            info["method"] = "editable"
+                        else:
+                            info["method"] = "pip"
+                    else:
+                        info["method"] = "venv" if info["in_venv"] else "system"
+                except PackageNotFoundError:
+                    info["method"] = "source" if info.get("source_dir") else "unknown"
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return info
+
+
 def is_new_version_available(current: str, latest: Optional[str]) -> bool:
     """Helper to check if a new version is actually available using semver comparison."""
     if not latest:

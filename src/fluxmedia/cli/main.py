@@ -64,6 +64,7 @@ except Exception:
 LATEST_VERSION = None
 LAST_INTERRUPT_TIME = 0.0
 CLEAN_LOGS_ENABLED = True
+_INSTALL_TAG = None  # computed once; see print_header()
 
 CURRENT_THEME_COLORS = {
     "primary": "cyan",
@@ -162,6 +163,16 @@ console = Console()
 def print_header():
     """Renders a modern, professional, and visually stunning dashboard header."""
     clear_screen()
+
+    global _INSTALL_TAG
+    if _INSTALL_TAG is None:
+        try:
+            from fluxmedia.core import get_install_info as _gii
+            _method = _gii().get("method", "")
+            _INSTALL_TAG = f"v{CURRENT_VERSION} ({_method})" if _method and _method != "unknown" else f"v{CURRENT_VERSION}"
+        except Exception:
+            _INSTALL_TAG = f"v{CURRENT_VERSION}"
+    _vtag = _INSTALL_TAG
     
     detected_os = detect_os()
     
@@ -200,7 +211,7 @@ def print_header():
         left_text.append(detected_os, style="bold magenta")
         
         right_text = Text()
-        right_text.append(f"v{CURRENT_VERSION}\n", style="bold white")
+        right_text.append(_vtag + "\n", style="bold white")
         
         ffmpeg_available = shutil.which("ffmpeg") is not None
         if ffmpeg_available:
@@ -227,7 +238,7 @@ def print_header():
         
         mid_text = Text()
         mid_text.append("🌊 FluxMedia Downloader ", style=f"bold {primary}")
-        mid_text.append(f"v{CURRENT_VERSION}\n", style="bold white")
+        mid_text.append(_vtag + "\n", style="bold white")
         mid_text.append("💻 OS: ", style="dim")
         mid_text.append(f"{detected_os}\n", style="bold magenta")
         
@@ -2133,6 +2144,26 @@ def operation_update_fluxmedia():
     else:
         console.print("[yellow]Could not retrieve PyPI version details. Proceeding with update...[/yellow]")
 
+    try:
+        from fluxmedia.core import get_install_info as _gii
+        _info = _gii()
+        _method = _info.get("method", "unknown")
+    except Exception:
+        _method, _info = "unknown", {}
+    if _method == "pipx":
+        console.print("[yellow]This copy was installed via pipx — upgrading in place would break its isolated environment.[/yellow]")
+        console.print("Run this instead: [bold cyan]pipx upgrade fluxmedia[/bold cyan]")
+        Prompt.ask("\nPress Enter to return to menu...")
+        return
+    if _method == "editable":
+        _root = _info.get("source_dir", "") if isinstance(_info, dict) else ""
+        console.print("[yellow]This is a source checkout — not upgraded via pip.[/yellow]")
+        if _root:
+            console.print(f"Update it with: [bold cyan]git -C {_root} pull --ff-only[/bold cyan]")
+        else:
+            console.print("Update it with: [bold cyan]git pull[/bold cyan] in your checkout.")
+        Prompt.ask("\nPress Enter to return to menu...")
+        return
     console.print("\nRunning: [bold cyan]pip install -U fluxmedia[/bold cyan]...")
     try:
         pip_args = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia"]
@@ -2329,6 +2360,42 @@ def operation_view_logs():
             return
 
 
+def print_doctor_report(config: Dict[str, Any]) -> None:
+    """Prints environment diagnostics for bug reports. Read-only."""
+    from fluxmedia.core import get_install_info
+    info = get_install_info()
+    table = Table(show_header=False, box=None)
+    table.add_row("[bold]FluxMedia version:[/bold]", CURRENT_VERSION)
+    table.add_row("[bold]Install method:[/bold]", info.get("method", "unknown"))
+    table.add_row("[bold]Launcher:[/bold]", info.get("binary") or "not on PATH")
+    table.add_row("[bold]Python:[/bold]", f"{info.get('python')} ({info.get('python_path')})")
+    table.add_row("[bold]OS:[/bold]", platform.platform())
+    table.add_row("[bold]Config:[/bold]", CONFIG_FILE)
+    table.add_row("[bold]Data dir:[/bold]", DATA_DIR)
+    table.add_row("[bold]Download dir:[/bold]", f"{config.get('download_dir', '')} "
+                  f"({'writable' if os.access(config.get('download_dir', ''), os.W_OK) else 'NOT writable'})")
+    table.add_row("[bold]FFmpeg:[/bold]", shutil.which("ffmpeg") or "not found")
+    table.add_row("[bold]Node.js:[/bold]", shutil.which("node") or shutil.which("nodejs") or "not found")
+    try:
+        import yt_dlp
+        table.add_row("[bold]yt-dlp:[/bold]", yt_dlp.version.__version__)
+    except Exception:
+        table.add_row("[bold]yt-dlp:[/bold]", "not installed")
+    try:
+        from fluxmedia.plugins import PluginManager
+        names = [f"{p.name} ({'on' if p.enabled else 'off'})"
+                 for p in PluginManager(config).discover()]
+        table.add_row("[bold]Plugins:[/bold]", ", ".join(names) if names else "none")
+    except Exception:
+        table.add_row("[bold]Plugins:[/bold]", "scan failed")
+    table.add_row("[bold]Update interval:[/bold]",
+                  "disabled" if not config.get("auto_update", True)
+                  else config.get("update_interval", "weekly"))
+    ignored = config.get("ignored_versions", []) or []
+    table.add_row("[bold]Ignored versions:[/bold]", ", ".join(ignored) if ignored else "none")
+    console.print(Panel(table, title="[bold white]🩺 FluxMedia Doctor[/bold white]", border_style="cyan"))
+
+
 def operation_plugins_menu(config: Dict[str, Any]):
     """Plugin manager: table-driven enable/disable, run actions, search, bulk toggles."""
     from fluxmedia.plugins import get_manager, get_plugins_dir, filter_plugins
@@ -2464,7 +2531,12 @@ def main():
     parser.add_argument("-a", "--audio", action="store_true", help="Download audio only")
     parser.add_argument("-o", "--output", type=str, help="Destination directory")
     parser.add_argument("-w", "--web", action="store_true", help="Start the cross-platform Web UI server")
+    parser.add_argument("--doctor", action="store_true", help="Print environment diagnostics and exit")
     args, unknown = parser.parse_known_args()
+
+    if args.doctor:
+        print_doctor_report(load_config())
+        sys.exit(0)
     
     if args.web:
         verify_and_install_requirements()

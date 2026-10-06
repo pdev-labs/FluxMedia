@@ -49,6 +49,7 @@ jobs:
           python test_bootstrap.py
           python test_update_interval.py
           python test_logging.py
+          python test_doctor.py
 
   web-build:
     runs-on: ubuntu-latest
