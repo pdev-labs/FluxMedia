@@ -285,6 +285,7 @@ class DownloadRequest(BaseModel):
     format: Optional[str] = None
     browser: Optional[bool] = False  # True → stage file for browser download
     force: Optional[bool] = False  # True → download even if already downloaded
+    subtitle_langs: Optional[str] = None  # e.g. "en,es"; defaults to config
 
 def run_download_job(job_id: str, req: DownloadRequest):
     finished_files: List[str] = []  # download hook candidates
@@ -394,6 +395,16 @@ def run_download_job(job_id: str, req: DownloadRequest):
             ydl_opts['format'] = 'bestvideo+bestaudio/best'
         ydl_opts['merge_output_format'] = 'mp4'
 
+    # Subtitles for web downloads (honors per-request override, else config).
+    if req.type != 'audio' and config.get("embed_subtitles", False) and shutil.which("ffmpeg"):
+        from fluxmedia.core import parse_subtitle_langs as _parse_langs
+        ydl_opts.update({
+            'writesubtitles': True,
+            'writeautomaticsub': True,
+            'subtitleslangs': _parse_langs(req.subtitle_langs or config.get("subtitle_langs", "en")),
+            'embedsubtitles': True,
+        })
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([req.url])
@@ -420,6 +431,12 @@ def run_download_job(job_id: str, req: DownloadRequest):
                     continue
         _api_logger.info(f"[job {job_id}] completed: {req.url}")
         try:
+            from fluxmedia.core import notify_event as _notify_event
+            _notify_event("complete", "FluxMedia download complete",
+                          f"{req.url}", config)
+        except Exception:
+            pass
+        try:
             _done_file = DOWNLOAD_JOBS[job_id].get("file")
             _title = os.path.splitext(os.path.basename(_done_file))[0] if _done_file else req.url
             add_history_entry(req.url, _title, "Success", req.type, _done_file)
@@ -436,6 +453,11 @@ def run_download_job(job_id: str, req: DownloadRequest):
             DOWNLOAD_JOBS[job_id]["status"] = "failed"
             DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] Download failed: {str(e)}")
         _api_logger.error(f"[job {job_id}] failed: {req.url} — {e}")
+        try:
+            from fluxmedia.core import notify_event as _notify_event
+            _notify_event("failed", "FluxMedia download failed", f"{req.url}: {e}", config)
+        except Exception:
+            pass
         try:
             add_history_entry(req.url, req.url, "Failed", req.type)
         except Exception:

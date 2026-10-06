@@ -94,6 +94,7 @@ export async function startDownload(
   qualityId: string,
   viaBrowser = false,
   force = false,
+  subtitleLangs = "",
 ): Promise<DownloadStart> {
   const data = await postJson<{
     status: string;
@@ -106,6 +107,7 @@ export async function startDownload(
     quality: qualityId,
     browser: viaBrowser,
     force,
+    subtitle_langs: subtitleLangs || undefined,
   });
   if (data.status === "duplicate") {
     return { jobId: null, duplicate: data.duplicate, message: data.message };

@@ -1439,6 +1439,11 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             current_val = config.get("embed_subtitles", False)
             new_val = Confirm.ask("Automatically download and embed subtitles inside videos?", default=current_val)
             config["embed_subtitles"] = new_val
+            if new_val:
+                from fluxmedia.core import parse_subtitle_langs as _parse_langs
+                langs = Prompt.ask("Subtitle languages (comma-separated, e.g. en,es)",
+                                   default=str(config.get("subtitle_langs", "en"))).strip()
+                config["subtitle_langs"] = ",".join(_parse_langs(langs))
             save_config(config)
             status_str = "Enabled" if new_val else "Disabled"
             console.print(f"[green]✓ Subtitle embedding is now {status_str}.[/green]")
@@ -2753,7 +2758,14 @@ def main():
                 
         ydl_opts = apply_common_ydl_opts(ydl_opts, config)
         print(f"Downloading {len(valid_urls)} item(s) to {dest_dir}...")
-        run_ydl_download(ydl_opts, valid_urls)
+        _dl_ok = run_ydl_download(ydl_opts, valid_urls)
+        try:
+            from fluxmedia.core import notify_event as _notify_event
+            _notify_event("complete" if _dl_ok else "failed",
+                          "FluxMedia download complete" if _dl_ok else "FluxMedia download failed",
+                          f"{len(valid_urls)} item(s) -> {dest_dir}", config)
+        except Exception:
+            pass
         sys.exit(0)
 
     verify_and_install_requirements()

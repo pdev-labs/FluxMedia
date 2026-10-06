@@ -220,6 +220,26 @@ YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com",
                  "music.youtube.com", "youtu.be", "www.youtu.be"}
 
 
+def parse_subtitle_langs(value) -> list:
+    """Parses 'en, es, pt-BR' style input into ['en', 'es', 'pt-BR'].
+
+    Keeps 2-3 letter codes with optional -XX region; anything else falls
+    back to ['en'] so a typo never silently disables subtitles.
+    """
+    try:
+        parts = str(value or "").replace(";", ",").split(",")
+    except Exception:
+        return ["en"]
+    import re as _re
+    langs = []
+    for part in parts:
+        code = part.strip()
+        if _re.fullmatch(r"[a-z]{2,3}(-[A-Z]{2})?", code) and code not in langs:
+            langs.append(code)
+    return langs or ["en"]
+
+
+
 def normalize_url(url: str) -> str:
     """Canonical form for duplicate comparison.
 
@@ -322,6 +342,46 @@ def search_entries(entries, query, fields):
         if q in hay:
             out.append(entry)
     return out
+
+
+def notify_event(kind: str, title: str, message: str, config=None) -> bool:
+    """User-configured notifications for download outcomes.
+
+    kind: "complete" | "failed". Honors notify_on (both/complete/failed/
+    never) and optionally POSTs to an ntfy.sh-style webhook (ntfy_url).
+    Never raises; returns True if any channel was attempted.
+    """
+    try:
+        cfg = config if isinstance(config, dict) else {}
+        mode = str(cfg.get("notify_on", "both")).lower()
+        if mode == "never":
+            return False
+        if mode == "complete" and kind != "complete":
+            return False
+        if mode == "failed" and kind != "failed":
+            return False
+        attempted = False
+        try:
+            from fluxmedia.utils import send_desktop_notification as _notify
+            _notify(title, message)
+            attempted = True
+        except Exception:
+            pass
+        webhook = str(cfg.get("ntfy_url", "") or "").strip()
+        if webhook:
+            try:
+                import urllib.request as _req
+                data = message.encode("utf-8", "replace")[:4000]
+                r = _req.Request(webhook, data=data, method="POST",
+                                 headers={"Title": title[:200], "Priority": "default"})
+                with _req.urlopen(r, timeout=5):
+                    pass
+                attempted = True
+            except Exception:
+                pass
+        return attempted
+    except Exception:
+        return False
 
 
 def is_new_version_available(current: str, latest: Optional[str]) -> bool:
@@ -517,6 +577,9 @@ DEFAULT_CONFIG = {
     "update_interval": "weekly",
     "last_update_check": 0.0,
     "ignored_versions": [],
+    "subtitle_langs": "en",
+    "notify_on": "both",
+    "ntfy_url": "",
     "onboarded": False
 }
 
@@ -822,7 +885,7 @@ def process_download_queue(config: Dict[str, Any]):
                 ydl_opts.update({
                     'writesubtitles': True,
                     'writeautomaticsub': True,
-                    'subtitleslangs': ['en'],
+                    'subtitleslangs': parse_subtitle_langs(config.get("subtitle_langs", "en")),
                     'embedsubtitles': True,
                 })
                 

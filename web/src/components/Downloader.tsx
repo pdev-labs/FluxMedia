@@ -43,6 +43,7 @@ export function Downloader({
   const [meta, setMeta] = useState<MediaMeta | null>(null);
   const [quality, setQuality] = useState("720p");
   const [viaBrowser, setViaBrowser] = useState(false);
+  const [subLangs, setSubLangs] = useState("en");
   const [downloadUrl, setDownloadUrl] = useState("");
   const [downloadName, setDownloadName] = useState("");
   const [progress, setProgress] = useState(0);
@@ -202,7 +203,7 @@ export function Downloader({
     setStatus("Starting download…");
     setPhase("downloading");
     try {
-      const started = await startDownload(url.trim(), quality, viaBrowser, force);
+      const started = await startDownload(url.trim(), quality, viaBrowser, force, subLangs);
       if (!started.jobId) {
         setPhase("ready");
         setShowTerm(false);
@@ -319,6 +320,23 @@ export function Downloader({
 
             {(phase === "ready" || phase === "downloading" || phase === "done") && (
               <div className="progress">
+                {phase === "ready" && (
+                  <label className="save-row">
+                    <span>
+                      Subtitles
+                      <small>
+                        <input
+                          value={subLangs}
+                          onChange={(e) => setSubLangs(e.target.value)}
+                          placeholder="en"
+                          aria-label="Subtitle languages"
+                          style={{ width: 90 }}
+                        />{" "}
+                        comma-separated, e.g. en,es
+                      </small>
+                    </span>
+                  </label>
+                )}
                 {phase === "ready" && (
                   <label className="save-row">
                     <input
