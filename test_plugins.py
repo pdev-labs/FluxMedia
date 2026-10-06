@@ -16,8 +16,14 @@ class PluginTest(unittest.TestCase):
         # Isolate the plugins dir + config per test.
         P.get_plugins_dir = lambda: self.tmp
         self.config: dict = {}
+        # NEVER touch the real config.json: set_enabled() persists via core.
+        import fluxmedia.core as _core
+        self._orig_save = _core.save_config
+        _core.save_config = lambda *a, **k: True
 
     def tearDown(self):
+        import fluxmedia.core as _core
+        _core.save_config = self._orig_save
         P.reset_manager()
 
     def _write(self, name, body):
