@@ -79,6 +79,10 @@ export async function getFiles(token: string): Promise<PortalFile[]> {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (res.status === 401) throw new Error("unauthorized");
+  if (res.status === 410) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error || "This share link is no longer valid.");
+  }
   if (!res.ok) throw new Error("Could not load files.");
   return (await res.json()) as PortalFile[];
 }

@@ -607,15 +607,53 @@ def configure_share_settings(config: Dict[str, Any]):
                 
                 clean_logs = config.get("clean_logs_enabled", True)
                 console.print(f"1. Toggle Clean Logs (Currently: {'[green]ON[/green]' if clean_logs else '[red]OFF[/red]'})")
-                console.print("2. Back to Settings Menu")
-                
-                sub_choice = Prompt.ask("Choose option", choices=["1", "2"], default="2")
+                console.print(f"2. Share link expiry, minutes, 0 = never (Currently: {config.get('share_link_ttl_minutes', 0)})")
+                console.print(f"3. Share download limit, 0 = unlimited (Currently: {config.get('share_max_downloads', 0)})")
+                pairing = config.get("share_pairing_confirm", False)
+                console.print(f"4. New-device pairing confirmation (Currently: {'[green]ON[/green]' if pairing else '[red]OFF[/red]'})")
+                console.print("5. Back to Settings Menu")
+
+                sub_choice = Prompt.ask("Choose option", choices=["1", "2", "3", "4", "5"], default="5")
                 if sub_choice == "1":
                     config["clean_logs_enabled"] = not clean_logs
                     save_config(config)
                     global CLEAN_LOGS_ENABLED
                     CLEAN_LOGS_ENABLED = config["clean_logs_enabled"]
                     console.print(f"[green]✓ Clean Logs set to {'ON' if config['clean_logs_enabled'] else 'OFF'}[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                elif sub_choice == "2":
+                    try:
+                        ttl = int(Prompt.ask("Link expires after N minutes (0 = never)",
+                                             default=str(config.get("share_link_ttl_minutes", 0))))
+                        if ttl < 0:
+                            raise ValueError
+                    except ValueError:
+                        console.print("[red]Enter 0 or a positive number of minutes.[/red]")
+                        Prompt.ask("\nPress Enter to continue...")
+                        continue
+                    config["share_link_ttl_minutes"] = ttl
+                    save_config(config)
+                    console.print(f"[green]✓ Share links now expire after {ttl} minute(s) (0 = never).[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                elif sub_choice == "3":
+                    try:
+                        cap = int(Prompt.ask("Max downloads per link (0 = unlimited)",
+                                             default=str(config.get("share_max_downloads", 0))))
+                        if cap < 0:
+                            raise ValueError
+                    except ValueError:
+                        console.print("[red]Enter 0 or a positive number.[/red]")
+                        Prompt.ask("\nPress Enter to continue...")
+                        continue
+                    config["share_max_downloads"] = cap
+                    save_config(config)
+                    console.print(f"[green]✓ Share links now allow {cap} download(s) (0 = unlimited).[/green]")
+                    Prompt.ask("\nPress Enter to continue...")
+                elif sub_choice == "4":
+                    config["share_pairing_confirm"] = not pairing
+                    save_config(config)
+                    status = "ON" if config["share_pairing_confirm"] else "OFF"
+                    console.print(f"[green]✓ Pairing confirmation is now {status}. New devices ask the host for approval.[/green]")
                     Prompt.ask("\nPress Enter to continue...")
                 else:
                     break
