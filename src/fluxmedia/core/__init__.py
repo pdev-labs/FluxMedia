@@ -398,7 +398,8 @@ DEFAULT_CONFIG = {
     "plugins_disabled": [],
     "update_interval": "weekly",
     "last_update_check": 0.0,
-    "ignored_versions": []
+    "ignored_versions": [],
+    "onboarded": False
 }
 
 def load_config() -> Dict[str, Any]:
@@ -556,6 +557,30 @@ def add_to_queue_interactive(config: Dict[str, Any], item_type: str):
     console.print(f"\n[bold green]Successfully added to queue (ID: {next_id})![/bold green]")
     Prompt.ask("\nPress Enter to continue...")
 
+def recover_interrupted_queue() -> int:
+    """Crash recovery: tasks stuck in Downloading (killed process, crash,
+    power loss) can never finish on their own — re-queue them as Pending.
+
+    Returns the number of recovered tasks. Safe to call on every startup.
+    """
+    try:
+        queue = load_queue()
+    except Exception:
+        return 0
+    recovered = 0
+    for item in queue:
+        if isinstance(item, dict) and item.get("status") == "Downloading":
+            item["status"] = "Pending"
+            recovered += 1
+    if recovered:
+        try:
+            save_queue(queue)
+        except Exception:
+            pass
+        logger.info(f"Recovered {recovered} interrupted queue task(s) to Pending.")
+    return recovered
+
+
 def process_download_queue(config: Dict[str, Any]):
     """Processes pending items in the download queue sequentially."""
     print_header()
@@ -610,6 +635,8 @@ def process_download_queue(config: Dict[str, Any]):
                 'quiet': True,
                 'no_warnings': True,
                 'noprogress': True,
+                # Resume partial/fragment downloads instead of restarting.
+                'continuedl': True,
             }
             
             if item["type"] == "Video":

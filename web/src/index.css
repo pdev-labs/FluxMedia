@@ -557,6 +557,38 @@ body {
   border-color: var(--accent);
 }
 
+/* ---------- forms (convert + settings panels) ---------- */
+
+.text-input,
+.select-input {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  max-width: 100%;
+}
+
+.file-row .text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.select-input {
+  margin-left: auto;
+  cursor: pointer;
+}
+
+.file-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .empty {
   background: var(--surface);
   border: 1px dashed var(--border);

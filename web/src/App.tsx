@@ -4,11 +4,31 @@ import { Downloader } from "./components/Downloader.tsx";
 import { FilesPanel } from "./components/FilesPanel.tsx";
 import { LogsPanel } from "./components/LogsPanel.tsx";
 import { AboutPanel } from "./components/AboutPanel.tsx";
+import { ConvertPanel } from "./components/ConvertPanel.tsx";
+import { SettingsPanel } from "./components/SettingsPanel.tsx";
+import { DiagnosticsPanel } from "./components/DiagnosticsPanel.tsx";
 import { tabUrl } from "./lib/session.ts";
 
-export type Tab = "youtube" | "tiktok" | "files" | "logs" | "about";
+export type Tab =
+  | "youtube"
+  | "tiktok"
+  | "files"
+  | "logs"
+  | "convert"
+  | "settings"
+  | "diagnostics"
+  | "about";
 
-const TABS: Tab[] = ["youtube", "tiktok", "files", "logs", "about"];
+const TABS: Tab[] = [
+  "youtube",
+  "tiktok",
+  "files",
+  "logs",
+  "convert",
+  "settings",
+  "diagnostics",
+  "about",
+];
 
 interface Route {
   tab: Tab;
@@ -63,6 +83,9 @@ export default function App(): React.JSX.Element {
         </div>
         {tab === "files" && <FilesPanel />}
         {tab === "logs" && <LogsPanel />}
+        {tab === "convert" && <ConvertPanel />}
+        {tab === "settings" && <SettingsPanel />}
+        {tab === "diagnostics" && <DiagnosticsPanel />}
         {tab === "about" && <AboutPanel />}
       </main>
       <footer className="site-footer">

@@ -173,6 +173,50 @@ export async function getStats(): Promise<{
   return data;
 }
 
+export interface FfmpegInfo {
+  available: boolean;
+  version: string | null;
+  path: string | null;
+}
+
+export async function checkFfmpeg(): Promise<FfmpegInfo> {
+  return getJson<FfmpegInfo>("/api/convert/check");
+}
+
+export interface ConvertArgs {
+  input_path: string;
+  output_format: string;
+  quality?: string;
+  resolution?: string | null;
+  audio_bitrate?: string;
+}
+
+export async function startConvert(
+  args: ConvertArgs,
+): Promise<{ job_id: string; message: string; output_path: string }> {
+  return postJson<{ status: string; job_id: string; message: string; output_path: string }>(
+    "/api/convert",
+    args,
+  );
+}
+
+export async function getSettings(): Promise<Record<string, unknown>> {
+  const data = await getJson<{ status: string; settings: Record<string, unknown> }>(
+    "/api/settings",
+  );
+  return data.settings ?? {};
+}
+
+export async function updateSettings(
+  settings: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const data = await postJson<{ status: string; settings: Record<string, unknown> }>(
+    "/api/settings",
+    { settings },
+  );
+  return data.settings ?? {};
+}
+
 export function formatViews(views: number): string {
   if (!views || views <= 0) return "Unknown views";
   if (views >= 1_000_000_000) return `${(views / 1_000_000_000).toFixed(1)}B views`;

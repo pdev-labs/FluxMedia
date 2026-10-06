@@ -1252,7 +1252,8 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
         if not config.get("auto_update", True):
             interval_display = "disabled"
         table.add_row("[bold]15. Update Check Interval:[/bold]", interval_display)
-        table.add_row("[bold]16. Back to Main Menu[/bold]", "")
+        table.add_row("[bold]16. Setup Wizard:[/bold]", "re-run guided setup")
+        table.add_row("[bold]17. Back to Main Menu[/bold]", "")
         
         console.print(Panel(
             table, 
@@ -1260,7 +1261,7 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             border_style="cyan",
             subtitle="[italic yellow]ℹ️  Tip: Use VLC Media Player for best compatibility with various media formats.[/italic yellow]"
         ))
-        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 17)], default="16")
+        choice = Prompt.ask("Select an option to edit", choices=[str(i) for i in range(1, 18)], default="17")
         clear_screen()
         
         if choice == "1":
@@ -1527,6 +1528,9 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
             Prompt.ask("\nPress Enter to continue...")
 
         elif choice == "16":
+            config = operation_onboarding(config)
+
+        elif choice == "17":
             break
             
     return config
@@ -2292,6 +2296,57 @@ def operation_updates_manager(config: Dict[str, Any]):
         elif choice == _back:
             break
 
+def operation_onboarding(config: Dict[str, Any]) -> Dict[str, Any]:
+    """First-run guided setup: folder, cookies, update interval, share password."""
+    print_header()
+    console.print("\n[bold cyan]=== WELCOME TO FLUXMEDIA — QUICK SETUP ===[/bold cyan]\n")
+    console.print("[dim]Answer 4 quick questions (Enter accepts the default shown).[/dim]\n")
+
+    while True:
+        new_dir = Prompt.ask("Download folder", default=config.get("download_dir", ""))
+        new_dir = os.path.abspath(os.path.expanduser(new_dir))
+        try:
+            os.makedirs(new_dir, exist_ok=True)
+            config["download_dir"] = new_dir
+            break
+        except Exception as e:
+            console.print(f"[red]Cannot use that folder: {e}[/red]")
+
+    console.print("\n[yellow]Cookies help with age-restricted / throttled videos.[/yellow]")
+    browsers = ["chrome", "firefox", "edge", "none (skip)"]
+    for i, b in enumerate(browsers, 1):
+        console.print(f"{i}. {b}")
+    cb = Prompt.ask("Cookies browser", choices=["1", "2", "3", "4"], default="4")
+    config["cookies_browser"] = {"1": "chrome", "2": "firefox", "3": "edge", "4": "none"}[cb]
+
+    console.print("\nHow often should FluxMedia check for updates?")
+    for i, label in enumerate(["Every day", "Every week", "Every month", "Never"], 1):
+        console.print(f"{i}. {label}")
+    iu = Prompt.ask("Update check interval", choices=["1", "2", "3", "4"], default="2")
+    iu_map = {"1": "daily", "2": "weekly", "3": "monthly", "4": "never"}
+    config["update_interval"] = iu_map[iu]
+    config["auto_update"] = iu != "4"
+    config["last_update_check"] = 0.0
+
+    if Confirm.ask("\nProtect the web UI and share portal with a password?", default=True):
+        user = Prompt.ask("Username", default=config.get("web_username", "admin")).strip() or "admin"
+        pwd = Prompt.ask("Password", default=config.get("web_password", "admin")).strip() or "admin"
+        config["web_auth_enabled"] = True
+        config["web_username"] = user
+        config["web_password"] = pwd
+    else:
+        config["web_auth_enabled"] = False
+
+    config["onboarded"] = True
+    save_config(config)
+    console.print("\n[green]✓ Setup complete:[/green]")
+    console.print(f"  Downloads → {config['download_dir']}")
+    console.print(f"  Cookies → {config['cookies_browser']} | Updates → {config['update_interval']} | "
+                  f"Web auth → {'on' if config['web_auth_enabled'] else 'off'}")
+    Prompt.ask("\nPress Enter to start...")
+    return config
+
+
 def operation_view_logs():
     """Browse per-session log files: tail latest, list, open folder, prune."""
     from fluxmedia.core import get_log_files, LOG_DIR
@@ -2626,6 +2681,18 @@ def main():
     init_dependencies()
 
     config = load_config()
+    if not config.get("onboarded", False):
+        if Confirm.ask("\n[bold cyan]First launch detected — run the 1-minute quick setup?[/bold cyan]", default=True):
+            config = operation_onboarding(config)
+        else:
+            config["onboarded"] = True
+            save_config(config)
+    try:
+        _recovered = recover_interrupted_queue()
+        if _recovered:
+            console.print(f"[yellow]Resumed {_recovered} interrupted queue task(s) — see option 10.[/yellow]")
+    except Exception:
+        pass
     if should_check_for_updates(config):
         check_fluxmedia_update_sync(config)
         start_version_check()

@@ -5,6 +5,9 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "tiktok", label: "Tiktok" },
   { id: "files", label: "Files" },
   { id: "logs", label: "Logs" },
+  { id: "convert", label: "Convert" },
+  { id: "settings", label: "Settings" },
+  { id: "diagnostics", label: "Diagnostics" },
   { id: "about", label: "About" },
 ];
 

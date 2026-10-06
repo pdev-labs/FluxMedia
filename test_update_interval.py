@@ -1,6 +1,7 @@
 """Unit tests for the update-check interval. Run: python3 test_update_interval.py"""
 import os
 import sys
+import tempfile
 import time
 import unittest
 
@@ -129,6 +130,39 @@ class IgnoreVersionTest(unittest.TestCase):
     def test_non_ignored_version_prompts(self):
         calls = self._run_check(self.base(), "9.9.9")
         self.assertEqual(calls["prompt"], 1)
+
+
+class QueueRecoveryTest(unittest.TestCase):
+    def setUp(self):
+        import fluxmedia.core as C
+        self.C = C
+        self.tmp = tempfile.mkdtemp()
+        self.orig = C.QUEUE_FILE
+        C.QUEUE_FILE = os.path.join(self.tmp, "queue.json")
+
+    def tearDown(self):
+        self.C.QUEUE_FILE = self.orig
+
+    def test_crash_recovery_requeues_downloading(self):
+        import json as _json
+        queue = [
+            {"id": 1, "url": "u1", "status": "Downloading"},
+            {"id": 2, "url": "u2", "status": "Pending"},
+            {"id": 3, "url": "u3", "status": "Completed"},
+            {"id": 4, "url": "u4", "status": "Failed"},
+        ]
+        with open(self.C.QUEUE_FILE, "w", encoding="utf-8") as f:
+            _json.dump(queue, f)
+        self.assertEqual(self.C.recover_interrupted_queue(), 1)
+        reloaded = self.C.load_queue()
+        by_id = {i["id"]: i["status"] for i in reloaded}
+        self.assertEqual(by_id, {1: "Pending", 2: "Pending", 3: "Completed", 4: "Failed"})
+
+    def test_recovery_is_idempotent_and_empty_safe(self):
+        self.assertEqual(self.C.recover_interrupted_queue(), 0)
+        with open(self.C.QUEUE_FILE, "w", encoding="utf-8") as f:
+            f.write("[]")
+        self.assertEqual(self.C.recover_interrupted_queue(), 0)
 
 
 if __name__ == "__main__":
