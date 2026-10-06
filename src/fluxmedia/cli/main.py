@@ -2689,6 +2689,28 @@ def main():
         if not valid_urls:
             print("No valid URLs provided.")
             sys.exit(1)
+
+        # Duplicate detection: skip URLs already downloaded or queued,
+        # unless the user confirms (interactive terminals only).
+        if sys.stdin.isatty():
+            fresh_urls = []
+            for u in valid_urls:
+                dup = find_duplicate(u)
+                if dup is None:
+                    fresh_urls.append(u)
+                    continue
+                entry = dup["entry"]
+                when = entry.get("timestamp") or entry.get("added_at", "previously")
+                title = entry.get("title") or u
+                console.print(f"[yellow]Already {dup['where']}: {escape(title)} ({when})[/yellow]")
+                if Confirm.ask("Download it again anyway?", default=False):
+                    fresh_urls.append(u)
+            skipped = len(valid_urls) - len(fresh_urls)
+            if skipped:
+                console.print(f"[dim]Skipped {skipped} duplicate(s).[/dim]")
+            valid_urls = fresh_urls
+            if not valid_urls:
+                sys.exit(0)
             
         if args.audio:
             ydl_opts = {

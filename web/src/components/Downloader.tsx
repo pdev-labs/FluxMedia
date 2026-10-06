@@ -7,7 +7,7 @@ import {
   formatSpeed,
   formatEta,
 } from "../lib/api.ts";
-import type { MediaMeta } from "../lib/api.ts";
+import type { MediaMeta, DownloadStart } from "../lib/api.ts";
 import {
   newSid,
   saveSession,
@@ -49,6 +49,7 @@ export function Downloader({
   const [speed, setSpeed] = useState(0);
   const [eta, setEta] = useState(0);
   const [status, setStatus] = useState("");
+  const [duplicate, setDuplicate] = useState<DownloadStart | null>(null);
   const [termLogs, setTermLogs] = useState<string[]>([]);
   const [showTerm, setShowTerm] = useState(false);
   const termRef = useRef<HTMLDivElement | null>(null);
@@ -139,6 +140,7 @@ export function Downloader({
 
   async function runAnalyze(clean: string): Promise<void> {
     setError("");
+    setDuplicate(null);
     setPhase("analyzing");
     try {
       const data = await analyze(clean);
@@ -186,9 +188,10 @@ export function Downloader({
     await runAnalyze(clean);
   }
 
-  async function handleDownload(): Promise<void> {
+  async function handleDownload(force = false): Promise<void> {
     if (!meta || phase === "downloading") return;
     setError("");
+    setDuplicate(null);
     setProgress(0);
     setSpeed(0);
     setEta(0);
@@ -199,9 +202,15 @@ export function Downloader({
     setStatus("Starting download…");
     setPhase("downloading");
     try {
-      const jobId = await startDownload(url.trim(), quality, viaBrowser);
-      persist({ jobId });
-      attachPoll(jobId, viaBrowser);
+      const started = await startDownload(url.trim(), quality, viaBrowser, force);
+      if (!started.jobId) {
+        setPhase("ready");
+        setShowTerm(false);
+        setDuplicate(started);
+        return;
+      }
+      persist({ jobId: started.jobId });
+      attachPoll(started.jobId, viaBrowser);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start download.");
       setPhase("ready");
@@ -230,6 +239,7 @@ export function Downloader({
     setPhase("idle");
     setProgress(0);
     setError("");
+    setDuplicate(null);
     setStatus("");
     setTermLogs([]);
     setShowTerm(false);
@@ -307,7 +317,7 @@ export function Downloader({
               ))}
             </div>
 
-            {(phase === "ready" || phase === "downloading") && (
+            {(phase === "ready" || phase === "downloading" || phase === "done") && (
               <div className="progress">
                 {phase === "ready" && (
                   <label className="save-row">
@@ -342,12 +352,22 @@ export function Downloader({
                 )}
                 <button
                   className="btn btn-primary download-btn"
-                  onClick={handleDownload}
+                  onClick={() => void handleDownload(false)}
                   disabled={phase === "downloading"}
                 >
                   {phase === "downloading"
                     ? `Downloading… ${progress}%`
                     : "⬇ Download now"}
+                </button>
+              </div>
+            )}
+
+            {duplicate && (
+              <div className="success-note">
+                Already {duplicate.duplicate?.where ?? "downloaded"}
+                {duplicate.duplicate?.title ? `: ${duplicate.duplicate.title}` : ""}.{" "}
+                <button className="reset-link" onClick={() => void handleDownload(true)}>
+                  Download again anyway
                 </button>
               </div>
             )}

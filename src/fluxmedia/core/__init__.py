@@ -209,6 +209,99 @@ def get_install_info() -> Dict[str, Any]:
     return info
 
 
+TRACKING_PARAMS = frozenset({
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "utm_id", "fbclid", "gclid", "dclid", "msclkid", "mc_cid", "mc_eid",
+    "igshid", "spm", "ref", "ref_src", "ref_url", "si", "si_param",
+    "feature", "embeds_referring_euri",
+})
+
+YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com",
+                 "music.youtube.com", "youtu.be", "www.youtu.be"}
+
+
+def normalize_url(url: str) -> str:
+    """Canonical form for duplicate comparison.
+
+    Lowercases scheme/host, drops fragments and tracking params, sorts the
+    remaining query, and collapses YouTube variants (youtu.be, /shorts/,
+    /embed/, /live/, /v/) to watch?v=<id>. Returns "" for unparseable input.
+    """
+    try:
+        raw = (url or "").strip()
+        if not raw:
+            return ""
+        if "://" not in raw:
+            raw = "https://" + raw
+        parts = urllib.parse.urlsplit(raw)
+        scheme = (parts.scheme or "https").lower()
+        host = (parts.hostname or "").lower()
+        if not host:
+            return ""
+        port = parts.port
+        if port and not ((scheme == "https" and port == 443) or (scheme == "http" and port == 80)):
+            host = f"{host}:{port}"
+        path = parts.path or "/"
+        query = urllib.parse.parse_qsl(parts.query, keep_blank_values=True)
+
+        if host in YOUTUBE_HOSTS:
+            vid = ""
+            if host in ("youtu.be", "www.youtu.be"):
+                vid = path.strip("/").split("/")[0]
+            else:
+                q = dict(query)
+                vid = q.get("v", "")
+                if not vid:
+                    segs = [s for s in path.split("/") if s]
+                    if len(segs) >= 2 and segs[0] in ("shorts", "embed", "live", "v"):
+                        vid = segs[1]
+            if vid:
+                return f"https://www.youtube.com/watch?v={vid}"
+            # No video id (channel/playlist/home): generic handling below.
+
+        kept = sorted((k, v) for k, v in query
+                      if k not in TRACKING_PARAMS and not k.startswith("utm_"))
+        qs = urllib.parse.urlencode(kept, doseq=True)
+        norm_path = path if path != "/" else "/"
+        if len(norm_path) > 1:
+            norm_path = norm_path.rstrip("/")
+        out = f"{scheme}://{host}{norm_path}"
+        return f"{out}?{qs}" if qs else out
+    except Exception:
+        return (url or "").strip()
+
+
+def find_duplicate(url: str, history=None, queue=None):
+    """Returns {"where": "history"|"queue", "entry": dict} for a previously
+    seen URL, else None. Compares normalized forms, so youtu.be links,
+    /shorts/ paths and tracking parameters match the original download."""
+    want = normalize_url(url)
+    if not want:
+        return None
+    try:
+        items = list(history) if history is not None else load_history()
+    except Exception:
+        items = []
+    for entry in items:
+        try:
+            if isinstance(entry, dict) and normalize_url(entry.get("url", "")) == want:
+                return {"where": "history", "entry": entry}
+        except Exception:
+            continue
+    try:
+        pending = list(queue) if queue is not None else load_queue()
+    except Exception:
+        pending = []
+    for entry in pending:
+        try:
+            if isinstance(entry, dict) and entry.get("status") == "Pending" \
+                    and normalize_url(entry.get("url", "")) == want:
+                return {"where": "queue", "entry": entry}
+        except Exception:
+            continue
+    return None
+
+
 def is_new_version_available(current: str, latest: Optional[str]) -> bool:
     """Helper to check if a new version is actually available using semver comparison."""
     if not latest:
@@ -550,10 +643,17 @@ def add_to_queue_interactive(config: Dict[str, Any], item_type: str):
         return
     
     queue = load_queue()
-    duplicates = [item for item in queue if item["url"] == normalized and item["status"] in ("Pending", "Downloading") and item["type"] == item_type]
+    duplicates = [item for item in queue if normalize_url(item.get("url", "")) == normalize_url(normalized) and item["status"] in ("Pending", "Downloading") and item["type"] == item_type]
     if duplicates:
         console.print("[bold yellow]Warning: This URL is already in the queue as a pending/active task.[/bold yellow]")
         if not Confirm.ask("Would you still like to add it?", default=False):
+            return
+    past = find_duplicate(normalized, queue=[])
+    if past is not None and past["where"] == "history":
+        entry = past["entry"]
+        console.print(f"[yellow]Already downloaded: {escape(entry.get('title') or normalized)} "
+                      f"({entry.get('timestamp', 'previously')}).[/yellow]")
+        if not Confirm.ask("Add it to the queue anyway?", default=False):
             return
             
     next_id = max([item["id"] for item in queue], default=0) + 1

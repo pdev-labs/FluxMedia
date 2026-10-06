@@ -83,24 +83,37 @@ export async function analyze(url: string): Promise<MediaMeta> {
   return data.metadata;
 }
 
+export interface DownloadStart {
+  jobId: string | null;
+  duplicate?: { where: string; title: string | null; timestamp: string | null };
+  message?: string;
+}
+
 export async function startDownload(
   url: string,
   qualityId: string,
   viaBrowser = false,
-): Promise<string> {
-  const data = await postJson<{ status: string; job_id: string }>(
-    "/api/download",
-    {
-      url,
-      type: qualityId === "audio" ? "audio" : "video",
-      quality: qualityId,
-      browser: viaBrowser,
-    },
-  );
+  force = false,
+): Promise<DownloadStart> {
+  const data = await postJson<{
+    status: string;
+    job_id: string | null;
+    message?: string;
+    duplicate?: DownloadStart["duplicate"];
+  }>("/api/download", {
+    url,
+    type: qualityId === "audio" ? "audio" : "video",
+    quality: qualityId,
+    browser: viaBrowser,
+    force,
+  });
+  if (data.status === "duplicate") {
+    return { jobId: null, duplicate: data.duplicate, message: data.message };
+  }
   if (data.status !== "success" || !data.job_id) {
     throw new Error("Could not start the download.");
   }
-  return data.job_id;
+  return { jobId: data.job_id };
 }
 
 export async function getJob(jobId: string): Promise<JobState> {

@@ -18,7 +18,8 @@ import uuid
 import logging
 
 from fluxmedia.core import (
-    load_config, save_config, load_history, DATA_DIR, HISTORY_FILE
+    load_config, save_config, load_history, add_history_entry,
+    DATA_DIR, HISTORY_FILE
 )
 import fluxmedia.core as _core
 
@@ -283,6 +284,7 @@ class DownloadRequest(BaseModel):
     quality: Optional[str] = None
     format: Optional[str] = None
     browser: Optional[bool] = False  # True → stage file for browser download
+    force: Optional[bool] = False  # True → download even if already downloaded
 
 def run_download_job(job_id: str, req: DownloadRequest):
     finished_files: List[str] = []  # download hook candidates
@@ -418,6 +420,12 @@ def run_download_job(job_id: str, req: DownloadRequest):
                     continue
         _api_logger.info(f"[job {job_id}] completed: {req.url}")
         try:
+            _done_file = DOWNLOAD_JOBS[job_id].get("file")
+            _title = os.path.splitext(os.path.basename(_done_file))[0] if _done_file else req.url
+            add_history_entry(req.url, _title, "Success", req.type, _done_file)
+        except Exception:
+            pass
+        try:
             from fluxmedia.plugins import get_manager
             get_manager().emit("download_complete", url=req.url,
                                filepath=DOWNLOAD_JOBS[job_id].get("file"))
@@ -429,6 +437,10 @@ def run_download_job(job_id: str, req: DownloadRequest):
             DOWNLOAD_JOBS[job_id]["logs"].append(f"[error] Download failed: {str(e)}")
         _api_logger.error(f"[job {job_id}] failed: {req.url} — {e}")
         try:
+            add_history_entry(req.url, req.url, "Failed", req.type)
+        except Exception:
+            pass
+        try:
             from fluxmedia.plugins import get_manager
             get_manager().emit("download_failed", url=req.url, error=str(e))
         except Exception:
@@ -436,6 +448,18 @@ def run_download_job(job_id: str, req: DownloadRequest):
 
 @app.post("/api/download")
 def download_media(req: DownloadRequest, background_tasks: BackgroundTasks):
+    from fluxmedia.core import find_duplicate as _find_dup
+    if not req.force:
+        dup = _find_dup(req.url)
+        if dup is not None:
+            entry = dup["entry"]
+            return {
+                "status": "duplicate",
+                "job_id": None,
+                "message": f"Already {dup['where']}: {entry.get('title') or req.url}",
+                "duplicate": {"where": dup["where"], "title": entry.get("title"),
+                              "timestamp": entry.get("timestamp") or entry.get("added_at")},
+            }
     job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
     _api_logger.info(f"download queued [job {job_id}]: {req.url} (quality={req.quality}, browser={req.browser})")
     with JOBS_LOCK:
