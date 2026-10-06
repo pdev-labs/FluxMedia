@@ -293,3 +293,17 @@ desktop Python is theater. Install only from sources you trust, review
 short plugins before dropping them in (they're meant to be readable),
 and disable anything idle. FluxMedia itself never downloads or installs
 plugin code on your behalf.
+
+### Permissions & safe mode
+
+Since capabilities can't be enforced, they are **declared and consented**:
+
+```python
+PERMISSIONS = ["filesystem"]  # any of: network, filesystem, subprocess, config, web
+```
+
+- Enabling a plugin shows any not-yet-granted permissions and asks for
+  confirmation. Grants are stored per plugin in `plugins_granted` in
+  `config.json` — re-enabling a previously granted plugin stays silent.
+- Recovery: `fluxmedia --safe-mode` (or `FLUXMEDIA_SAFE_MODE=1`) loads
+  zero plugin code for the session. Use it when a plugin misbehaves.

@@ -2445,7 +2445,7 @@ def operation_plugins_menu(config: Dict[str, Any]):
         if choice == "1":
             return config
         elif choice == "2":
-            from fluxmedia.plugins import parse_multi_pick
+            from fluxmedia.plugins import parse_multi_pick, declared_permissions, granted_permissions, record_grants
             while True:
                 print_table(manager.plugins)
                 raw = Prompt.ask(
@@ -2459,7 +2459,19 @@ def operation_plugins_menu(config: Dict[str, Any]):
                     continue
                 for idx in indexes:
                     plugin = manager.plugins[idx]
-                    manager.set_enabled(plugin.name, not plugin.enabled)
+                    enabling = not plugin.enabled
+                    if enabling and not plugin.error:
+                        missing = [p for p in declared_permissions(plugin.module)
+                                   if p not in granted_permissions(config, plugin.name)]
+                        if missing:
+                            console.print(f"\n[yellow]{plugin.name} requests: {', '.join(missing)}[/yellow]")
+                            console.print("[dim]Plugins run as you — grant only what you trust.[/dim]")
+                            if not Confirm.ask(f"Grant and enable {plugin.name}?", default=False):
+                                console.print("[yellow]Skipped.[/yellow]")
+                                continue
+                            record_grants(config, plugin.name,
+                                          granted_permissions(config, plugin.name) + missing)
+                    manager.set_enabled(plugin.name, enabling)
                     console.print(f"[green]{plugin.name} {'enabled' if plugin.enabled else 'disabled'}.[/green]")
                 break
             Prompt.ask("\nPress Enter to continue...")
@@ -2532,7 +2544,13 @@ def main():
     parser.add_argument("-o", "--output", type=str, help="Destination directory")
     parser.add_argument("-w", "--web", action="store_true", help="Start the cross-platform Web UI server")
     parser.add_argument("--doctor", action="store_true", help="Print environment diagnostics and exit")
+    parser.add_argument("--safe-mode", action="store_true", help="Run with all plugins disabled (recovery)")
     args, unknown = parser.parse_known_args()
+
+    if args.safe_mode:
+        from fluxmedia.plugins import set_safe_mode
+        set_safe_mode(True)
+        print("Safe mode: plugins disabled for this session.")
 
     if args.doctor:
         print_doctor_report(load_config())

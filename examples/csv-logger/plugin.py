@@ -19,6 +19,9 @@ PLUGIN = {
     "author": "FluxMedia",
 }
 
+# Declared capabilities: shown for consent on first enable.
+PERMISSIONS = ["filesystem"]
+
 LOG_PATH = os.path.join(os.path.expanduser("~"), "fluxmedia-downloads.csv")
 
 

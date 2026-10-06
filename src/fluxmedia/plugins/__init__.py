@@ -41,6 +41,57 @@ logger = logging.getLogger(__name__)
 
 ENTRYPOINT_GROUP = "fluxmedia.plugins"
 
+# Manifest-declared capabilities a plugin may request via PERMISSIONS = [...].
+# Declarative, not enforced (desktop Python can't be sandboxed) — shown for
+# informed consent on first enable and recorded in plugins_granted.
+KNOWN_PERMISSIONS = {"network", "filesystem", "subprocess", "config", "web"}
+
+
+def declared_permissions(module: Any) -> List[str]:
+    """Normalized PERMISSIONS list from a plugin module (unknown kept as-is)."""
+    raw = getattr(module, "PERMISSIONS", []) or []
+    if not isinstance(raw, (list, tuple)):
+        return []
+    seen: List[str] = []
+    for p in raw:
+        if isinstance(p, str) and p.strip().lower() not in seen:
+            seen.append(p.strip().lower())
+    return seen
+
+
+def granted_permissions(config: Dict[str, Any], name: str) -> List[str]:
+    granted = (config or {}).get("plugins_granted", {})
+    if not isinstance(granted, dict):
+        return []
+    perms = granted.get(name, [])
+    return [p for p in perms] if isinstance(perms, list) else []
+
+
+def record_grants(config: Dict[str, Any], name: str, perms: List[str]) -> None:
+    granted = config.get("plugins_granted", {})
+    if not isinstance(granted, dict):
+        granted = {}
+    granted[name] = sorted(set(perms))
+    config["plugins_granted"] = granted
+    try:
+        from fluxmedia.core import save_config
+        save_config(config)
+    except Exception:
+        logger.error("Could not persist plugin permission grants.")
+
+
+SAFE_MODE = False
+
+
+def set_safe_mode(enabled: bool = True) -> None:
+    """Recovery switch: no plugin code loads while active."""
+    global SAFE_MODE
+    SAFE_MODE = enabled
+
+
+def safe_mode_active() -> bool:
+    return SAFE_MODE or os.environ.get("FLUXMEDIA_SAFE_MODE", "") == "1"
+
 
 def get_plugins_dir() -> str:
     from fluxmedia.core import DATA_DIR
@@ -72,6 +123,7 @@ class Plugin:
     module: Any = None
     enabled: bool = True
     error: str = ""
+    permissions: List[str] = field(default_factory=list)
 
 
 class Hooks:
@@ -194,6 +246,7 @@ class PluginManager:
             author=str(meta.get("author") or ""),
             origin=origin,
             module=module,
+            permissions=declared_permissions(module),
         )
 
     # ── activation ─────────────────────────────────────────────
@@ -221,6 +274,9 @@ class PluginManager:
 
     def load(self) -> "PluginManager":
         """discover() + register_all(), the single entry point for hosts."""
+        if safe_mode_active():
+            self.plugins = []
+            return self
         self.discover()
         self.register_all()
         return self

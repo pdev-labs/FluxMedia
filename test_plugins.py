@@ -130,6 +130,39 @@ def register(hooks):
         self.assertIsNone(parse_multi_pick("1 x", 3))  # whole input rejected
         self.assertIsNone(parse_multi_pick("abc", 3))
 
+    def test_permissions_and_safe_mode(self):
+        from fluxmedia.plugins import (
+            PluginManager, declared_permissions, granted_permissions,
+            record_grants, set_safe_mode, KNOWN_PERMISSIONS,
+        )
+        mod = type("M", (), {})()
+        mod.PERMISSIONS = ["network", " Filesystem ", 42, "network", "custom-cap"]
+        self.assertEqual(declared_permissions(mod),
+                         ["network", "filesystem", "custom-cap"])
+        self.assertEqual(declared_permissions(object()), [])
+        self.assertTrue({"network", "filesystem", "web"} <= KNOWN_PERMISSIONS)
+
+        cfg: dict = {}
+        self.assertEqual(granted_permissions(cfg, "p"), [])
+        record_grants(cfg, "p", ["network"])
+        self.assertEqual(granted_permissions(cfg, "p"), ["network"])
+        self.assertEqual(cfg["plugins_granted"], {"p": ["network"]})
+
+        set_safe_mode(True)
+        try:
+            m = PluginManager({}).load()
+            self.assertEqual(m.plugins, [])
+            self.assertEqual(m.menu_items, [])
+        finally:
+            set_safe_mode(False)
+        # env-var path
+        os.environ["FLUXMEDIA_SAFE_MODE"] = "1"
+        try:
+            m2 = PluginManager({}).load()
+            self.assertEqual(m2.plugins, [])
+        finally:
+            del os.environ["FLUXMEDIA_SAFE_MODE"]
+
     def test_vendored_dependency_importable(self):
         # A helper folder/file sitting beside the plugin (not a plugin
         # itself) must be importable without the plugin hacking sys.path.
