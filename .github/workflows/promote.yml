@@ -1,0 +1,88 @@
+name: Promote to release (auto-release on version bump)
+
+# Fully automatic release pipeline. On every main push:
+#   1. reads the version from pyproject.toml,
+#   2. skips on [skip release], existing tag, or version already on PyPI,
+#   3. waits for the CI workflow on this SHA to go green (fail-closed),
+#   4. creates the GitHub release (which fires publish.yml -> PyPI).
+# Nothing here publishes directly; publish.yml stays the single publisher.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: promote-main
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Decide whether to release
+        id: decide
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          VER=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "package version: $VER"
+          case "$MSG" in
+            *"[skip release]"*)
+              echo "skip=true" >> "$GITHUB_OUTPUT"; echo "suppressed by [skip release]"; exit 0 ;;
+          esac
+          if git rev-parse "v$VER" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "tag v$VER already exists"
+            exit 0
+          fi
+          PYPI=$(python3 -c "import urllib.request,json; print(json.load(urllib.request.urlopen('https://pypi.org/pypi/fluxmedia/json',timeout=30))['info']['version'])" 2>/dev/null || echo unknown)
+          echo "pypi version: $PYPI"
+          if [ "$PYPI" = "$VER" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "version already on PyPI"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for CI green on this SHA (fail-closed)
+        if: steps.decide.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          for i in $(seq 1 80); do
+            CONCL=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=$SHA&per_page=1" \
+              -q '.workflow_runs[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/")
+            echo "CI status: $CONCL (try $i/80)"
+            case "$CONCL" in
+              completed/success) exit 0 ;;
+              completed/*) echo "CI did not succeed: $CONCL"; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "Timed out waiting for CI"; exit 1
+
+      - name: Generate release notes
+        if: steps.decide.outputs.skip != 'true'
+        run: |
+          LAST=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LAST" ]; then
+            git log --pretty=format:'- %s' -20 > /tmp/notes.md
+          else
+            git log "$LAST"..HEAD --pretty=format:'- %s' > /tmp/notes.md
+          fi
+          cat /tmp/notes.md
+
+      - name: Create GitHub release (fires publish.yml)
+        if: steps.decide.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER="${{ steps.decide.outputs.version }}"
+          gh release create "v$VER" --title "v$VER" --notes-file /tmp/notes.md --target main

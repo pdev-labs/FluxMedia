@@ -1,0 +1,123 @@
+name: Test Build (no release)
+
+# Validates built distributions end-to-end WITHOUT publishing anything.
+# Runs on main pushes, PRs, and manual dispatch.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+      - name: Build sdist + wheel
+        run: python -m build
+      - name: Assert artifacts exist
+        run: |
+          ls dist/
+          test -n "$(ls dist/*.whl)" || (echo "no wheel built" && exit 1)
+          test -n "$(ls dist/*.tar.gz)" || (echo "no sdist built" && exit 1)
+          twine check dist/*
+      - name: Upload test builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: fluxmedia-testbuild-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+
+  install-from-wheel:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fluxmedia-testbuild-${{ github.sha }}
+          path: dist/
+      - name: Fresh venv install FROM the wheel (not -e .)
+        run: |
+          python -m venv /tmp/tvenv
+          /tmp/tvenv/bin/pip install --upgrade pip -q
+          /tmp/tvenv/bin/pip install dist/*.whl
+          /tmp/tvenv/bin/python -c "import fluxmedia.api, fluxmedia.cli.main, fluxmedia.server.classic_portal; print('imports OK')"
+      - name: Unit suites (repo tests, isolated venv)
+        run: |
+          for t in test_plugins test_bootstrap test_update_interval test_logging test_doctor test_share test_duplicates test_search test_playlist test_notify; do
+            /tmp/tvenv/bin/python $t.py || exit 1
+          done
+      - name: install.py --check
+        run: /tmp/tvenv/bin/python install.py --check
+      - name: Boot --web and probe endpoints
+        run: |
+          /tmp/tvenv/bin/python -c "
+          import fluxmedia.api as A
+          A.load_config = lambda: {'download_dir': '/tmp', 'filename_format': '%(title)s.%(ext)s'}
+          A.run_server(port=8971)" & SERVER=$!
+          for i in $(seq 1 20); do
+            curl -sf -o /dev/null http://127.0.0.1:8971/ && break || sleep 3
+          done
+          curl -sf http://127.0.0.1:8971/api/diagnostics | head -c 120; echo
+          curl -sf "http://127.0.0.1:8971/api/files?category=all" | head -c 120; echo
+          kill $SERVER
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: pip audit (fail on high/critical only)
+        run: |
+          pip install pip-audit
+          pip-audit -f json -o /tmp/pip-audit.json || true
+          python - <<'EOF'
+          import json, sys
+          report = json.load(open('/tmp/pip-audit.json'))
+          rank = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1}
+          bad = []
+          unknown = []
+          for dep in report.get('dependencies', []):
+              for vuln in dep.get('vulns', []):
+                  sev = str(vuln.get('severity', '')).split(',')[0].strip().lower()
+                  if not sev:
+                      unknown.append((dep.get('name'), vuln.get('id')))
+                  elif rank.get(sev, 0) >= 3:
+                      bad.append((dep.get('name'), vuln.get('id'), sev))
+          if unknown:
+              print('Vulnerabilities without severity data (fail-closed):')
+              for name, vid in unknown:
+                  print(f'  unknown: {name} {vid}')
+          if bad:
+              print('HIGH/CRITICAL vulnerabilities found:')
+              for name, vid, sev in bad:
+                  print(f'  {sev}: {name} {vid}')
+          if bad or unknown:
+              sys.exit(1)
+          print('pip audit: no high/critical vulnerabilities')
+          EOF
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm audit web/ and portal/
+        run: |
+          cd web && npm ci && npm audit --audit-level=high
+          cd ../portal && npm ci && npm audit --audit-level=high
