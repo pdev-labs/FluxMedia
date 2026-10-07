@@ -130,7 +130,8 @@ class SubtitleLangsTest(unittest.TestCase):
 
         orig_ydl, orig_cfg = A.yt_dlp.YoutubeDL, A.load_config
         A.yt_dlp.YoutubeDL = FakeYDL
-        A.load_config = lambda: {"download_dir": "/tmp", "filename_format": "%(t)s.%(e)s",
+        import tempfile as _tf
+        A.load_config = lambda: {"download_dir": _tf.gettempdir(), "filename_format": "%(t)s.%(e)s",
                                  "embed_subtitles": True, "subtitle_langs": "fr"}
         A.DOWNLOAD_JOBS["testjob123"] = {"status": "starting", "progress": 0,
                                          "speed": 0, "eta": 0, "logs": []}

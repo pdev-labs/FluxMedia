@@ -27,9 +27,11 @@ jobs:
         run: bandit -r src/ -ll -ii
 
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.11', '3.12', '3.13', '3.14']
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +52,52 @@ jobs:
           python test_update_interval.py
           python test_logging.py
           python test_doctor.py
+          python test_share.py
+          python test_duplicates.py
+          python test_search.py
+          python test_playlist.py
+          python test_notify.py
+
+  termux-pins:
+    # No Termux runners exist: instead, verify weekly-relevant facts —
+    # every pinned pydantic's exact core has Android wheels for its Pythons.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Verify Termux wheel coverage for pins
+        run: |
+          python - <<'EOF'
+          import re, urllib.request
+
+          # must match TERMUX_PYDANTIC_PINS + index reality in install.sh/install.py
+          pins = {(11, "pydantic==2.11.7", "2.33.2", ("cp311", "cp312")),
+                  (13, "pydantic==2.12.4", "2.41.5", ("cp313", "cp314"))}
+          index = urllib.request.urlopen(
+              "https://termux-user-repository.github.io/pypi/pydantic-core/",
+              timeout=60).read().decode()
+          have = set(re.findall(r"pydantic_core-([0-9.]+)-(cp3\d+)-", index))
+          errors = []
+          for minor, pin, core, tags in sorted(pins):
+              for tag in tags:
+                  if (core, tag) not in have:
+                      errors.append(f"py3.{minor}: {pin} needs core {core} wheel for {tag} — MISSING")
+          # each pinned pydantic must require exactly the listed core
+          import json
+          for minor, pin, core, tags in sorted(pins):
+              ver = pin.split("==")[1]
+              meta = json.load(urllib.request.urlopen(
+                  f"https://pypi.org/pypi/pydantic/{ver}/json", timeout=60))
+              reqs = [r for r in meta["info"]["requires_dist"] if "pydantic-core" in r]
+              if reqs != [f"pydantic-core=={core}"]:
+                  errors.append(f"{pin} requires {reqs}, expected core=={core}")
+          if errors:
+              print("\n".join(errors))
+              raise SystemExit(1)
+          print("Termux pins valid: all pinned cores have Android wheels")
+          EOF
 
   web-build:
     runs-on: ubuntu-latest

@@ -70,6 +70,7 @@ class LoggingTest(unittest.TestCase):
         self.assertEqual(C.current_log_file(), path)
 
 
+@unittest.skipIf(os.name == "nt", "POSIX permission bits only")
 class ConfigPermsTest(unittest.TestCase):
     def test_config_writes_are_owner_only(self):
         import stat as _stat
