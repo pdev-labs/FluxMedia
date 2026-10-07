@@ -110,6 +110,11 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
    (Check yours with `python --version`.) The automated `install.sh`
    does all of the above for you.
 
+> [!TIP]
+> On the device itself, verify everything hands-free:
+> `bash scripts/test-termux.sh` (add `--full` for a real download +
+> web boot probe). Exit code `0` means all green, no manual steps.
+
 > [!NOTE]
 > Seeing `No module named 'pydantic_core'` on `--web` means step 4 was
 > skipped: a too-new `pydantic` was installed whose core has no Android
