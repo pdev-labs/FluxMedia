@@ -73,17 +73,24 @@ jobs:
           import re, urllib.request
 
           # must match TERMUX_PYDANTIC_PINS + index reality in install.sh/install.py
-          pins = {(11, "pydantic==2.11.7", "2.33.2", ("cp311", "cp312")),
-                  (13, "pydantic==2.12.4", "2.41.5", ("cp313", "cp314"))}
+          pins = {(11, "pydantic==2.13.3", "2.46.3", ("cp311",)),
+                  (12, "pydantic==2.13.3", "2.46.3", ("cp312",)),
+                  (13, "pydantic==2.13.3", "2.46.3", ("cp313",)),
+                  (14, "pydantic==2.12.4", "2.41.5", ("cp314",))}
           index = urllib.request.urlopen(
               "https://termux-user-repository.github.io/pypi/pydantic-core/",
               timeout=60).read().decode()
-          have = set(re.findall(r"pydantic_core-([0-9.]+)-(cp3\d+)-", index))
+          index += urllib.request.urlopen(
+              "https://eutalix.github.io/android-pydantic-core/pydantic-core/",
+              timeout=60).read().decode()
+          have = set(re.findall(r"pydantic_core-([0-9.]+)-(cp3\d+)-[a-z0-9_]+-([a-z0-9_]+)\.whl", index))
           errors = []
           for minor, pin, core, tags in sorted(pins):
               for tag in tags:
-                  if (core, tag) not in have:
-                      errors.append(f"py3.{minor}: {pin} needs core {core} wheel for {tag} — MISSING")
+                  arches = {a for (c, t, a) in have if c == core and t == tag}
+                  arm = {a for a in arches if "arm" in a or "aarch64" in a}
+                  if not arm:
+                      errors.append(f"py3.{minor}: {pin} needs core {core} ARM wheel for {tag} — MISSING (have: {sorted(arches) or 'none'})")
           # each pinned pydantic must require exactly the listed core
           import json
           for minor, pin, core, tags in sorted(pins):

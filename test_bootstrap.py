@@ -10,9 +10,9 @@ from fluxmedia import utils as U
 
 class BootstrapTest(unittest.TestCase):
     def test_termux_pin_map(self):
-        self.assertEqual(U.termux_pydantic_pin(3, 11), "pydantic==2.11.7")
-        self.assertEqual(U.termux_pydantic_pin(3, 12), "pydantic==2.11.7")
-        self.assertEqual(U.termux_pydantic_pin(3, 13), "pydantic==2.12.4")
+        self.assertEqual(U.termux_pydantic_pin(3, 11), "pydantic==2.13.3")
+        self.assertEqual(U.termux_pydantic_pin(3, 12), "pydantic==2.13.3")
+        self.assertEqual(U.termux_pydantic_pin(3, 13), "pydantic==2.13.3")
         self.assertEqual(U.termux_pydantic_pin(3, 14), "pydantic==2.12.4")
         self.assertIsNone(U.termux_pydantic_pin(3, 9))
         self.assertIsNone(U.termux_pydantic_pin(3, 15))

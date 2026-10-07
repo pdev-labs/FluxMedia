@@ -100,9 +100,9 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
    `pydantic-core`, so pin `pydantic` to a release whose exact core has
    community Android wheels — install it **before** FluxMedia:
    ```bash
-   # Python 3.11 / 3.12:
-   pip install 'pydantic==2.11.7' --extra-index-url https://termux-user-repository.github.io/pypi/
-   # Python 3.13 / 3.14:
+   # Python 3.11 / 3.12 / 3.13:
+   pip install 'pydantic==2.13.3' --extra-index-url https://termux-user-repository.github.io/pypi/
+   # Python 3.14:
    pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/
    # Then:
    pip install fluxmedia

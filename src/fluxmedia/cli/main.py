@@ -2685,8 +2685,8 @@ def print_web_dep_hint():
     is_termux = "com.termux" in os.environ.get("PREFIX", "")
     if is_termux:
         console.print("[yellow]Termux fix (pydantic-core has no official Android wheels):[/yellow]")
-        console.print("  [bold cyan]pip install 'pydantic==2.11.7' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.11/3.12)")
-        console.print("  [bold cyan]pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.13/3.14)")
+        console.print("  [bold cyan]pip install 'pydantic==2.13.3' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.11-3.13)")
+        console.print("  [bold cyan]pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.14)")
         console.print("  Then re-run FluxMedia. Or run the Termux installer: [bold cyan]install.sh[/bold cyan]")
     elif _platform.system() == "Windows":
         console.print("[yellow]Windows fix:[/yellow]")

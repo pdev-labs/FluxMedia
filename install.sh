@@ -193,14 +193,14 @@ install_fluxmedia() {
         # pydantic to a release whose exact core has Android wheels, install
         # it FIRST so the fluxmedia install below cannot float past it.
         # Verified pairs (pydantic -> core with Android wheels):
-        #   py3.11/3.12 -> pydantic==2.11.7 (core 2.33.2)
-        #   py3.13/3.14 -> pydantic==2.12.4 (core 2.41.5)
+        #   py3.11/3.12/3.13 -> pydantic==2.13.3 (core 2.46.3)
+        #   py3.14           -> pydantic==2.12.4 (core 2.41.5)
         local py_minor
         py_minor=$(python3 -c 'import sys; print(sys.version_info[1])' 2>/dev/null || echo 0)
         local pyd_pin=""
-        if [ "$py_minor" -eq 11 ] || [ "$py_minor" -eq 12 ]; then
-            pyd_pin="pydantic==2.11.7"
-        elif [ "$py_minor" -eq 13 ] || [ "$py_minor" -eq 14 ]; then
+        if [ "$py_minor" -eq 11 ] || [ "$py_minor" -eq 12 ] || [ "$py_minor" -eq 13 ]; then
+            pyd_pin="pydantic==2.13.3"
+        elif [ "$py_minor" -eq 14 ]; then
             pyd_pin="pydantic==2.12.4"
         fi
         local extra="--extra-index-url https://termux-user-repository.github.io/pypi/ --extra-index-url https://eutalix.github.io/android-pydantic-core/"

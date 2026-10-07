@@ -170,9 +170,9 @@ TERMUX_EXTRA_INDEXES = [
 # Newer pydantic floats past what the community index built -> the classic
 # `No module named 'pydantic_core'` at runtime.
 TERMUX_PYDANTIC_PINS = {
-    11: "pydantic==2.11.7",  # core 2.33.2
-    12: "pydantic==2.11.7",  # core 2.33.2
-    13: "pydantic==2.12.4",  # core 2.41.5
+    11: "pydantic==2.13.3",  # core 2.46.3
+    12: "pydantic==2.13.3",  # core 2.46.3
+    13: "pydantic==2.13.3",  # core 2.46.3
     14: "pydantic==2.12.4",  # core 2.41.5
 }
 
