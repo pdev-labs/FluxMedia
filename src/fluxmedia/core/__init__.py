@@ -580,6 +580,8 @@ DEFAULT_CONFIG = {
     "subtitle_langs": "en",
     "notify_on": "both",
     "ntfy_url": "",
+    "watch_dir": "",
+    "watch_interval_seconds": 60,
     "onboarded": False
 }
 
@@ -758,6 +760,71 @@ def add_to_queue_interactive(config: Dict[str, Any], item_type: str):
     save_queue(queue)
     console.print(f"\n[bold green]Successfully added to queue (ID: {next_id})![/bold green]")
     Prompt.ask("\nPress Enter to continue...")
+
+def scan_watch_folder(config: Dict[str, Any]) -> int:
+    """One watch-folder pass: .txt files of URLs become Pending queue items.
+
+    Skips silently when watch_dir is unset/missing. Each .txt is moved to
+    done/ (URLs queued) or failed/ (nothing usable). Lines starting with #
+    are comments. Duplicate URLs are still queued (the downloader warns).
+    Returns the number of queued URLs. Never raises.
+    """
+    try:
+        from fluxmedia.utils import normalize_and_validate_url as _norm
+        watch = str((config or {}).get("watch_dir", "") or "").strip()
+        if not watch or not os.path.isdir(watch):
+            return 0
+        done_dir = os.path.join(watch, "done")
+        failed_dir = os.path.join(watch, "failed")
+        os.makedirs(done_dir, exist_ok=True)
+        os.makedirs(failed_dir, exist_ok=True)
+        queue = load_queue()
+        next_id = max([i.get("id", 0) for i in queue if isinstance(i, dict)], default=0) + 1
+        dest_dir = str(config.get("download_dir", "") or get_default_download_dir())
+        added = 0
+        for fname in sorted(os.listdir(watch)):
+            if not fname.endswith(".txt"):
+                continue
+            fpath = os.path.join(watch, fname)
+            if not os.path.isfile(fpath):
+                continue
+            try:
+                with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+                    raw_lines = f.read().splitlines()
+            except OSError:
+                continue
+            urls = []
+            for line in raw_lines:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                norm = _norm(line)
+                if norm:
+                    urls.append(norm)
+            ok = bool(urls)
+            for u in urls:
+                queue.append({
+                    "id": next_id, "url": u, "title": "",
+                    "type": "Video", "quality": str(config.get("default_quality", "best")),
+                    "dest_dir": dest_dir, "status": "Pending",
+                    "added_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                })
+                next_id += 1
+                added += 1
+            try:
+                target = os.path.join(done_dir if ok else failed_dir, fname)
+                if os.path.exists(target):
+                    os.remove(target)
+                os.rename(fpath, target)
+            except OSError:
+                pass
+        if added:
+            save_queue(queue)
+        return added
+    except Exception as e:
+        logger.error(f"Watch folder scan failed: {e}")
+        return 0
+
 
 def recover_interrupted_queue() -> int:
     """Crash recovery: tasks stuck in Downloading (killed process, crash,

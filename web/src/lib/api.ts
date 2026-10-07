@@ -217,6 +217,37 @@ export async function startConvert(
   );
 }
 
+export interface PlaylistEntry {
+  index: number;
+  title: string;
+  url: string;
+  duration: number | null;
+}
+
+export interface PlaylistInfo {
+  title: string;
+  count: number;
+  truncated: boolean;
+  entries: PlaylistEntry[];
+}
+
+export async function listPlaylist(url: string, limit = 50): Promise<PlaylistInfo> {
+  const data = await postJson<{
+    status: string;
+    title: string;
+    count: number;
+    truncated: boolean;
+    entries: PlaylistEntry[];
+  }>("/api/playlist", { url, limit });
+  if (data.status !== "success") throw new Error("Could not read playlist.");
+  return {
+    title: data.title,
+    count: data.count,
+    truncated: !!data.truncated,
+    entries: data.entries ?? [],
+  };
+}
+
 export async function getSettings(): Promise<Record<string, unknown>> {
   const data = await getJson<{ status: string; settings: Record<string, unknown> }>(
     "/api/settings",

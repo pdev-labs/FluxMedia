@@ -7,6 +7,7 @@ import { AboutPanel } from "./components/AboutPanel.tsx";
 import { ConvertPanel } from "./components/ConvertPanel.tsx";
 import { SettingsPanel } from "./components/SettingsPanel.tsx";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel.tsx";
+import { PlaylistPanel } from "./components/PlaylistPanel.tsx";
 import { tabUrl } from "./lib/session.ts";
 
 export type Tab =
@@ -17,6 +18,7 @@ export type Tab =
   | "convert"
   | "settings"
   | "diagnostics"
+  | "playlist"
   | "about";
 
 const TABS: Tab[] = [
@@ -27,6 +29,7 @@ const TABS: Tab[] = [
   "convert",
   "settings",
   "diagnostics",
+  "playlist",
   "about",
 ];
 
@@ -86,6 +89,7 @@ export default function App(): React.JSX.Element {
         {tab === "convert" && <ConvertPanel />}
         {tab === "settings" && <SettingsPanel />}
         {tab === "diagnostics" && <DiagnosticsPanel />}
+        {tab === "playlist" && <PlaylistPanel />}
         {tab === "about" && <AboutPanel />}
       </main>
       <footer className="site-footer">

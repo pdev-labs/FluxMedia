@@ -165,5 +165,50 @@ class QueueRecoveryTest(unittest.TestCase):
         self.assertEqual(self.C.recover_interrupted_queue(), 0)
 
 
+
+class WatchFolderTest(unittest.TestCase):
+    def setUp(self):
+        import fluxmedia.core as C
+        self.C = C
+        self.tmp = tempfile.mkdtemp()
+        self.orig_q = C.QUEUE_FILE
+        C.QUEUE_FILE = os.path.join(self.tmp, "queue.json")
+        self.watch = os.path.join(self.tmp, "watch")
+        os.makedirs(self.watch)
+        self.cfg = {"download_dir": self.tmp, "default_quality": "best", "watch_dir": self.watch}
+
+    def tearDown(self):
+        self.C.QUEUE_FILE = self.orig_q
+
+    def _write(self, name, body):
+        with open(os.path.join(self.watch, name), "w", encoding="utf-8") as f:
+            f.write(body)
+
+    def test_disabled_and_missing(self):
+        self.assertEqual(self.C.scan_watch_folder({}), 0)
+        self.assertEqual(self.C.scan_watch_folder({"watch_dir": "/nope/nothing"}), 0)
+
+    def test_txt_files_become_queue_items(self):
+        self._write("a.txt", "https://youtu.be/AAA\n# comment\n\nnot a url at all %%\n")
+        self._write("notes.md", "https://youtu.be/BBB\n")
+        self._write("b.txt", "https://example.com/f.pdf\n")
+        added = self.C.scan_watch_folder(self.cfg)
+        self.assertEqual(added, 2)  # garbage line rejected by validator
+        q = self.C.load_queue()
+        self.assertEqual(len(q), 2)
+        self.assertTrue(all(i["status"] == "Pending" for i in q))
+        self.assertTrue(os.path.isfile(os.path.join(self.watch, "done", "a.txt")))
+        self.assertTrue(os.path.isfile(os.path.join(self.watch, "done", "b.txt")))
+        # non-.txt untouched, second scan finds nothing new
+        self.assertTrue(os.path.isfile(os.path.join(self.watch, "notes.md")))
+        self.assertEqual(self.C.scan_watch_folder(self.cfg), 0)
+
+    def test_empty_txt_goes_to_failed(self):
+        self._write("empty.txt", "# nothing here\n\n")
+        self.assertEqual(self.C.scan_watch_folder(self.cfg), 0)
+        self.assertTrue(os.path.isfile(os.path.join(self.watch, "failed", "empty.txt")))
+        self.assertEqual(self.C.load_queue(), [])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

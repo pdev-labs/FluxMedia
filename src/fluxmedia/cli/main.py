@@ -2138,9 +2138,10 @@ def operation_download_queue(config: Dict[str, Any]):
         console.print("5. Clear Finished Tasks")
         console.print("6. View Completed Queue Tasks")
         console.print("7. Reset Failed Tasks to Pending")
-        console.print("8. Return to Main Menu")
-        
-        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5", "6", "7", "8"], default="8")
+        console.print("8. Watch Folder (auto-add URLs from .txt files)")
+        console.print("9. Return to Main Menu")
+
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5", "6", "7", "8", "9"], default="9")
         clear_screen()
         
         if choice == "1":
@@ -2158,6 +2159,22 @@ def operation_download_queue(config: Dict[str, Any]):
         elif choice == "7":
             reset_failed_tasks()
         elif choice == "8":
+            from fluxmedia.core import scan_watch_folder as _scan
+            if not config.get("watch_dir"):
+                new_watch = Prompt.ask("Watch folder path (empty cancels)",
+                                       default="").strip()
+                if new_watch and os.path.isdir(new_watch):
+                    config["watch_dir"] = os.path.abspath(new_watch)
+                    save_config(config)
+                else:
+                    if new_watch:
+                        console.print("[red]Not a directory.[/red]")
+                    Prompt.ask("\nPress Enter to continue...")
+                    continue
+            added = _scan(config)
+            console.print(f"[green]Queued {added} URL(s). Watching for more (Ctrl+C stops)...[/green]")
+            operation_watch_folder(config)
+        elif choice == "9":
             break
 
 def operation_update_fluxmedia():
@@ -2509,6 +2526,35 @@ def print_doctor_report(config: Dict[str, Any]) -> None:
     ignored = config.get("ignored_versions", []) or []
     table.add_row("[bold]Ignored versions:[/bold]", ", ".join(ignored) if ignored else "none")
     console.print(Panel(table, title="[bold white]🩺 FluxMedia Doctor[/bold white]", border_style="cyan"))
+
+
+def operation_watch_folder(config: Dict[str, Any], once: bool = False):
+    """Watch-folder worker: .txt files of URLs become queue items.
+
+    Watches config watch_dir (skips entirely when empty). Each run moves
+    found .txt files to done/ (or failed/ when nothing usable), adding one
+    Pending queue item per URL. Malformed lines are logged, never fatal.
+    With once=True processes a single pass and returns the count (for tests).
+    """
+    from fluxmedia.core import scan_watch_folder as _scan
+    while True:
+        added = _scan(config)
+        if once:
+            return added
+        if added:
+            console.print(f"[green]Queued {added} URL(s) from watch folder.[/green]")
+        import time as _time
+        interval = 60
+        try:
+            interval = max(15, int(config.get("watch_interval_seconds", 60)))
+        except Exception:
+            pass
+        console.print(f"[dim]Watching every {interval}s — Ctrl+C to stop.[/dim]")
+        try:
+            _time.sleep(interval)
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Watch stopped.[/yellow]")
+            return added
 
 
 def operation_plugins_menu(config: Dict[str, Any]):

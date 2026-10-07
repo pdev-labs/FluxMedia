@@ -278,6 +278,71 @@ def analyze_media(req: AnalyzeRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+class PlaylistRequest(BaseModel):
+    url: str
+    limit: int = 50
+
+
+def _entry_play_url(entry: Dict[str, Any]) -> str:
+    """Best-effort direct URL for a flat-extracted entry."""
+    for key in ("webpage_url", "url"):
+        val = str(entry.get(key) or "")
+        if val.startswith("http"):
+            return val
+    vid = str(entry.get("id") or "")
+    extractor = str(entry.get("ie_key") or entry.get("extractor_key") or "").lower()
+    if vid and ("youtube" in extractor or extractor in ("youtube", "youtube:tab")):
+        return f"https://www.youtube.com/watch?v={vid}"
+    return ""
+
+
+@app.post("/api/playlist")
+def list_playlist(req: PlaylistRequest):
+    """Flat-extract a playlist/channel into individually downloadable entries."""
+    try:
+        limit = max(1, min(int(req.limit or 50), 200))
+    except (TypeError, ValueError):
+        limit = 50
+    try:
+        ydl_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": True,
+            "playlist_items": f"1-{limit}",
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(req.url, download=False) or {}
+        raw_entries = info.get("entries")
+        if isinstance(raw_entries, dict):  # single video wrapped oddly
+            raw_entries = [raw_entries]
+        if not raw_entries:
+            raw_entries = [info] if info.get("id") else []
+        out = []
+        for idx, entry in enumerate(raw_entries):
+            if not isinstance(entry, dict):
+                continue
+            play_url = _entry_play_url(entry)
+            if not play_url:
+                continue
+            out.append({
+                "index": idx,
+                "title": entry.get("title") or play_url,
+                "url": play_url,
+                "duration": entry.get("duration"),
+            })
+            if len(out) >= limit:
+                break
+        return {
+            "status": "success",
+            "title": info.get("title") or req.url,
+            "count": len(out),
+            "truncated": bool(raw_entries) and len(out) >= limit,
+            "entries": out,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 class DownloadRequest(BaseModel):
     url: str
     type: str  # 'video', 'audio'

@@ -96,5 +96,54 @@ class ApiDuplicateTest(unittest.TestCase):
         self.assertEqual(resp["duplicate"]["where"], "history")
 
 
+
+class SubtitleLangsTest(unittest.TestCase):
+    def test_parser(self):
+        from fluxmedia.core import parse_subtitle_langs as p
+        self.assertEqual(p("en"), ["en"])
+        self.assertEqual(p("en,es,pt-BR"), ["en", "es", "pt-BR"])
+        self.assertEqual(p("en; es ;en"), ["en", "es"])
+        self.assertEqual(p("EN"), ["en"] if "EN" == "en" else ["en"])
+        self.assertEqual(p(""), ["en"])
+        self.assertEqual(p(None), ["en"])
+        self.assertEqual(p("eñ,toolongcode,fr"), ["fr"])
+        self.assertEqual(p("123"), ["en"])
+
+    def test_api_field_and_opts(self):
+        import fluxmedia.api as A
+        req = A.DownloadRequest(url="https://example.com/v", type="video", subtitle_langs="es,en")
+        self.assertEqual(req.subtitle_langs, "es,en")
+        captured = {}
+
+        class FakeYDL:
+            def __init__(self, opts):
+                captured.update(opts)
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+            def download(self, urls):
+                return None
+
+        orig_ydl, orig_cfg = A.yt_dlp.YoutubeDL, A.load_config
+        A.yt_dlp.YoutubeDL = FakeYDL
+        A.load_config = lambda: {"download_dir": "/tmp", "filename_format": "%(t)s.%(e)s",
+                                 "embed_subtitles": True, "subtitle_langs": "fr"}
+        A.DOWNLOAD_JOBS["testjob123"] = {"status": "starting", "progress": 0,
+                                         "speed": 0, "eta": 0, "logs": []}
+        from fluxmedia import plugins as _P
+        orig_mgr = _P.get_manager
+        _P.get_manager = lambda *a, **k: type("M", (), {"emit": lambda self, *a, **k: None})()
+        try:
+            A.run_download_job("testjob123", req)
+        finally:
+            A.yt_dlp.YoutubeDL = orig_ydl
+            A.load_config = orig_cfg
+            _P.get_manager = orig_mgr
+            A.DOWNLOAD_JOBS.pop("testjob123", None)
+        self.assertEqual(captured.get("subtitleslangs"), ["es", "en"])
+        self.assertTrue(captured.get("writesubtitles"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

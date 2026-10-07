@@ -8,6 +8,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "convert", label: "Convert" },
   { id: "settings", label: "Settings" },
   { id: "diagnostics", label: "Diagnostics" },
+  { id: "playlist", label: "Playlist" },
   { id: "about", label: "About" },
 ];
 
