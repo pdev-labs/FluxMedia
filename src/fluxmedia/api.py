@@ -1036,7 +1036,7 @@ def _lan_warning(host: str) -> bool:
     return h not in ("127.0.0.1", "localhost", "::1")
 
 
-def run_server(port: int = 8000, host: str = "127.0.0.1"):  # nosec B104: loopback default
+def run_server(port: int = 8000, host: str = "127.0.0.1"):
     print(f"Starting FluxMedia Web server on {host}:{port}...")
     if _lan_warning(host):
         print("WARNING: listening on a LAN interface — the web API has no "

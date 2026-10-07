@@ -1584,7 +1584,7 @@ def operation_settings(config: Dict[str, Any]) -> Dict[str, Any]:
                 config["last_update_check"] = 0.0
             save_config(config)
             status_str = "disabled" if iu_choice == "4" else config["update_interval"]
-            console.print(f"[green]✓ Update check interval set to: {status_str}[/green]")
+            console.print(f"[green]✓ Update check interval set to: {status_str}[/green]")  # nosec B608
             Prompt.ask("\nPress Enter to continue...")
 
         elif choice == "16":

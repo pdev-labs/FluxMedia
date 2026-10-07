@@ -371,10 +371,14 @@ def notify_event(kind: str, title: str, message: str, config=None) -> bool:
         if webhook:
             try:
                 import urllib.request as _req
+                import urllib.parse as _up
+                # Only http(s) webhooks: urlopen with file:/custom schemes is unexpected.
+                if _up.urlsplit(webhook).scheme not in ("http", "https"):
+                    return attempted
                 data = message.encode("utf-8", "replace")[:4000]
                 r = _req.Request(webhook, data=data, method="POST",
                                  headers={"Title": title[:200], "Priority": "default"})
-                with _req.urlopen(r, timeout=5):
+                with _req.urlopen(r, timeout=5):  # nosec B310
                     pass
                 attempted = True
             except Exception:

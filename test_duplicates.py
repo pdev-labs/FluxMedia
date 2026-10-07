@@ -110,8 +110,11 @@ class SubtitleLangsTest(unittest.TestCase):
         self.assertEqual(p("123"), ["en"])
 
     def test_api_field_and_opts(self):
+        import shutil as _shutil
         import fluxmedia.api as A
         req = A.DownloadRequest(url="https://example.com/v", type="video", subtitle_langs="es,en")
+        _orig_which, _shutil.which = _shutil.which, lambda cmd: "/usr/bin/ffmpeg" if cmd == "ffmpeg" else None
+        self.addCleanup(setattr, _shutil, "which", _orig_which)
         self.assertEqual(req.subtitle_langs, "es,en")
         captured = {}
 
