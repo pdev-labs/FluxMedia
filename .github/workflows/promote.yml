@@ -4,7 +4,7 @@ name: Promote to release (auto-release on version bump)
 #   1. reads the version from pyproject.toml,
 #   2. skips on [skip release], existing tag, or version already on PyPI,
 #   3. waits for the CI workflow on this SHA to go green (fail-closed),
-#   4. creates the GitHub release (which fires publish.yml -> PyPI).
+#   4. creates the GitHub release and invokes the publish job (-> PyPI).
 # Nothing here publishes directly; publish.yml stays the single publisher.
 on:
   push:
@@ -17,6 +17,8 @@ concurrency:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.created.outputs.released }}
     permissions:
       contents: write
       checks: read
@@ -79,10 +81,21 @@ jobs:
           fi
           cat /tmp/notes.md
 
-      - name: Create GitHub release (fires publish.yml)
+      - name: Create GitHub release (published by the job below)
+        id: created
         if: steps.decide.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VER="${{ steps.decide.outputs.version }}"
           gh release create "v$VER" --title "v$VER" --notes-file /tmp/notes.md --target main
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: promote
+    # Only run when promote actually created a release (not on skips).
+    if: needs.promote.outputs.released == 'true'
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      id-token: write
+      contents: read

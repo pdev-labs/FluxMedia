@@ -5,6 +5,10 @@ on:
     types: [published]
   # Alternatively, you can uncomment the lines below to run it manually from the Actions tab:
   workflow_dispatch:
+  # Called by promote.yml after it creates a release (release events fired
+  # via GITHUB_TOKEN do not start workflows, so the promoter invokes this
+  # directly instead of relying on the event above).
+  workflow_call:
 
 jobs:
   build-and-publish:
