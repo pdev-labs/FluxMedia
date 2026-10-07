@@ -52,23 +52,27 @@ jobs:
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      - name: Wait for CI green on this SHA (fail-closed)
+      - name: Wait for CI + testbuild green on this SHA (fail-closed)
         if: steps.decide.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ github.sha }}
         run: |
+          check_one() {
+            gh api "repos/${{ github.repository }}/actions/workflows/$1/runs?head_sha=$SHA&per_page=1" \
+              -q '.workflow_runs[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/"
+          }
           for i in $(seq 1 80); do
-            CONCL=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?head_sha=$SHA&per_page=1" \
-              -q '.workflow_runs[0] | "\(.status)/\(.conclusion)"' 2>/dev/null || echo "unknown/")
-            echo "CI status: $CONCL (try $i/80)"
-            case "$CONCL" in
-              completed/success) exit 0 ;;
-              completed/*) echo "CI did not succeed: $CONCL"; exit 1 ;;
+            CI=$(check_one ci.yml); TB=$(check_one testbuild.yml)
+            echo "CI: $CI | testbuild: $TB (try $i/80)"
+            case "$CI:$TB" in
+              completed/success:completed/success) exit 0 ;;
+              completed/*:completed/*)
+                echo "Gates did not all succeed."; exit 1 ;;
             esac
             sleep 30
           done
-          echo "Timed out waiting for CI"; exit 1
+          echo "Timed out waiting for gates"; exit 1
 
       - name: Generate release notes
         if: steps.decide.outputs.skip != 'true'
