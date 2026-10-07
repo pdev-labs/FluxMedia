@@ -46,7 +46,7 @@ This base64-compresses the files and updates `PORTAL_HTML_COMPRESSED`, `PORTAL_C
 ## Release Guidelines
 
 When prepping a release (adhering to project rules):
-1. Document version changes in `CHANGELOG.md`.
+1. Write release notes in the GitHub release (releases carry the changelog).
 2. Update the "Latest Release" section in `README.md`.
 3. Increment the version number inside `pyproject.toml`.
 4. Commit, push, and spawn a GitHub release tag using the GitHub CLI:
