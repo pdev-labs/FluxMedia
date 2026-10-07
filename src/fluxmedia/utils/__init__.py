@@ -403,7 +403,7 @@ def tag_audio_file(file_path: str, tags: Dict[str, Any]) -> bool:
             
     return success
 
-def verify_and_install_requirements():
+def verify_and_install_requirements(_retried=False):
     """Checks for required third-party packages, system tools, and environment permissions, offering to install/fix them."""
     global Console, Table, Panel, Align
     is_termux = "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ
@@ -457,7 +457,18 @@ def verify_and_install_requirements():
                 
     if not has_missing:
         return
-        
+
+    if _retried:
+        # Second pass after an install attempt: do not prompt or install
+        # again, just report and move on (or exit on essentials).
+        still = [req["name"] for req in requirements
+                 if req.get("status") == "Missing"]
+        if missing_essential:
+            print(f"\nStill missing essential requirements: {', '.join(still)}. Exiting.")
+            sys.exit(1)
+        print(f"\nContinuing without optional: {', '.join(still)}.\n")
+        return
+
     # Check if rich is available to render a beautiful layout
     rich_available = False
     try:
@@ -691,8 +702,9 @@ def verify_and_install_requirements():
                 print(f"  {inst_cmd}")
                 input("Press Enter to continue once you have installed FFmpeg...")
 
-    # Recursively check requirements again to ensure they are fully set up
-    verify_and_install_requirements()
+    # One re-check after the install attempt; the retry pass reports and
+    # moves on instead of prompting again (see fast-path above).
+    verify_and_install_requirements(_retried=True)
 
 def detect_os() -> str:
     """Detects the operating system details, highlighting Termux specifically."""
