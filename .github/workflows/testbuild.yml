@@ -30,7 +30,7 @@ jobs:
           test -n "$(ls dist/*.tar.gz)" || (echo "no sdist built" && exit 1)
           twine check dist/*
       - name: Upload test builds
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: fluxmedia-testbuild-${{ github.sha }}
           path: dist/
