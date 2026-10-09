@@ -48,7 +48,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Download built artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: fluxmedia-testbuild-${{ github.sha }}
           path: dist/
