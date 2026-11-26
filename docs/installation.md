@@ -132,23 +132,26 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 
 ### 5. Android (native APK)
 
-A native Kotlin + Jetpack Compose app with Material You lives in
-[`android/`](../android/README.md). It embeds the Python engine with
-Chaquopy, so you do not need Termux or a separate server.
+The native Kotlin + Jetpack Compose app with Material You lives in its own
+repository: **[pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android)**.
+It embeds the Python engine with Chaquopy, so you do not need Termux or a
+separate server.
 
-**Build requirements:** JDK 17, Python 3.12 on `PATH`, and Android SDK
-platform 35.
+Download the signed APK from the
+[releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases), or
+build it from source:
 
 ```bash
-cd android
-./build-apk.sh
-# APK: app/build/outputs/apk/debug/app-debug.apk
+git clone https://github.com/pdev-labs/Fluxmedia-Android
+cd Fluxmedia-Android/android
+./gradlew :app:assembleRelease
+# APK: app/build/outputs/apk/release/app-release.apk
 ```
 
 Install it with:
 
 ```bash
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r app-release.apk
 ```
 
 The GitHub Actions workflow `.github/workflows/android.yml` builds the APK
