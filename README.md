@@ -26,6 +26,7 @@
 * **Universal Extraction Core**: Seamlessly download high-quality videos, playlists, audio streams, channel collections, and subtitles powered by a robust wrapper around `yt-dlp`.
 * **Sync Play (Watch Party) [Beta]**: Synchronize media playback across all connected devices on your local network, perfect for hosting local watch parties.
 * **FluxMedia Web UI**: A beautiful, responsive React-based web dashboard to remotely control your downloads, manage files, and host Watch Parties directly from your browser.
+* **Native Android App**: A Kotlin + Jetpack Compose app with Material You dynamic colour, powered by the same Python downloader through Chaquopy. See [`android/README.md`](android/README.md).
 * **Built-in LAN Sharing Gateway**: Share downloaded files instantly to any device on your local network using a built-in password-protected HTTP server with QR code access.
 * **Instagram Profile Downloader [Beta]**: Batch download media directly from Instagram profiles with our new custom extraction module.
 * **Advanced Post-Processing**: Automatically extract audio (MP3/M4A/FLAC), merge separate audio/video formats, inject descriptions and tags, and embed album artwork via FFmpeg.
@@ -101,6 +102,23 @@ Or open the Textual TUI dashboard directly:
 ```bash
 fluxmedia --tui
 ```
+
+### 3. Android app
+
+A native Android GUI lives in [`android/`](android/README.md). It is written in
+Kotlin with Jetpack Compose and Material You, and embeds the FluxMedia Python
+engine with Chaquopy so downloads run entirely on the device.
+
+Build the debug APK with JDK 17, Python 3.12 and the Android SDK:
+
+```bash
+cd android
+./build-apk.sh
+```
+
+The APK is written to `android/app/build/outputs/apk/debug/app-debug.apk`.
+A GitHub Actions workflow (`.github/workflows/android.yml`) also builds it in
+the cloud and uploads the artifact.
 
 ---
 
