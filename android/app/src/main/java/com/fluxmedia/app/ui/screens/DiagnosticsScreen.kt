@@ -79,12 +79,12 @@ fun DiagnosticsScreen(
         }
 
         viewModel.diagnostics?.let { diag ->
-            val animatedScore by animateFloatAsState(
-                targetValue = diag.score / 100f,
-                animationSpec = tween(durationMillis = 700),
-                label = "diagnostics-score",
-            )
             item {
+                val animatedScore by animateFloatAsState(
+                    targetValue = diag.score / 100f,
+                    animationSpec = tween(durationMillis = 700),
+                    label = "diagnostics-score",
+                )
                 ElevatedCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
