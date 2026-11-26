@@ -47,14 +47,18 @@ object MediaMuxerHelper {
             val audioFormat = audioExtractor.getTrackFormat(audioTrack)
 
             File(outputPath).parentFile?.mkdirs()
-            muxer = MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-            val outVideo = muxer.addTrack(videoFormat)
-            val outAudio = muxer.addTrack(audioFormat)
+            val activeMuxer = MediaMuxer(
+                outputPath,
+                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
+            )
+            muxer = activeMuxer
+            val outVideo = activeMuxer.addTrack(videoFormat)
+            val outAudio = activeMuxer.addTrack(audioFormat)
 
             // Preserve portrait/landscape rotation when the container has it.
             if (videoFormat.containsKey(KEY_ROTATION)) {
                 runCatching {
-                    muxer.setOrientationHint(videoFormat.getInteger(KEY_ROTATION))
+                    activeMuxer.setOrientationHint(videoFormat.getInteger(KEY_ROTATION))
                 }
             }
 
@@ -66,10 +70,10 @@ object MediaMuxerHelper {
             val audioStart = audioExtractor.sampleTime.takeIf { it >= 0 } ?: 0L
             val origin = minOf(videoStart, audioStart)
 
-            muxer.start()
-            copySamples(videoExtractor, muxer, outVideo, origin)
-            copySamples(audioExtractor, muxer, outAudio, origin)
-            muxer.stop()
+            activeMuxer.start()
+            copySamples(videoExtractor, activeMuxer, outVideo, origin)
+            copySamples(audioExtractor, activeMuxer, outAudio, origin)
+            activeMuxer.stop()
 
             return File(outputPath).length() > 0L
         } catch (t: Throwable) {
