@@ -21,11 +21,11 @@ class FluxMediaApplication : PyApplication() {
             val downloadDir = (
                 getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
                 ).let { File(it, "FluxMedia").absolutePath }
-            val cacheDir = cacheDir.absolutePath
+            val cachePath = cacheDir.absolutePath
 
             Python.getInstance()
                 .getModule("fluxmedia_android")
-                .callAttr("init", dataDir, downloadDir, cacheDir)
+                .callAttr("init", dataDir, downloadDir, cachePath)
         }.onFailure {
             Log.e(TAG, "Python bridge initialisation failed", it)
         }
