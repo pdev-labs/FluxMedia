@@ -263,7 +263,7 @@ class FluxMediaViewModel(application: Application) : AndroidViewModel(applicatio
             if (ok) {
                 downloadMessage = "Saved ${file.name} to Downloads."
             } else {
-                libraryError = "Could not export ${file.name}."
+                downloadError = "Could not export ${file.name}."
             }
         }
     }
