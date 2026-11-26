@@ -127,3 +127,36 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 > whose core has no Android wheel. Fix: `pip install` the pinned version
 > above. (FluxMedia ≥1.13 also repairs this itself on first `--web`
 > launch by downloading the correct builds automatically.)
+
+---
+
+### 5. Android (native APK)
+
+A native Kotlin + Jetpack Compose app with Material You lives in
+[`android/`](../android/README.md). It embeds the Python engine with
+Chaquopy, so you do not need Termux or a separate server.
+
+**Build requirements:** JDK 17, Python 3.12 on `PATH`, and Android SDK
+platform 35.
+
+```bash
+cd android
+./build-apk.sh
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+Install it with:
+
+```bash
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+The GitHub Actions workflow `.github/workflows/android.yml` builds the APK
+in the cloud and uploads the `fluxmedia-debug-apk` artifact.
+
+> [!NOTE]
+> FFmpeg is not bundled on Android. The app automatically falls back to
+> pre-muxed streams; audio extraction and high-resolution video+audio
+> merging require a desktop build. Files are stored in app-scoped external
+> storage and can be exported to public `Download/FluxMedia` from the
+> Download or Library screen.
