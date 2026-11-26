@@ -92,7 +92,7 @@ class FluxMediaViewModel(application: Application) : AndroidViewModel(applicatio
 
     // ── Download actions ────────────────────────────────────────
 
-    fun setUrl(value: String) {
+    fun onUrlChange(value: String) {
         url = value
         downloadError = null
         downloadMessage = null
@@ -221,7 +221,7 @@ class FluxMediaViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun setFilesQuery(value: String) {
+    fun onFilesQueryChange(value: String) {
         filesQuery = value
         searchJob?.cancel()
         searchJob = viewModelScope.launch {

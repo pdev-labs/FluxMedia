@@ -88,7 +88,7 @@ fun DownloadScreen(
         item {
             OutlinedTextField(
                 value = viewModel.url,
-                onValueChange = viewModel::setUrl,
+                onValueChange = viewModel::onUrlChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Media URL") },
                 placeholder = { Text("https://…") },
@@ -97,7 +97,7 @@ fun DownloadScreen(
                 trailingIcon = {
                     IconButton(
                         onClick = {
-                            clipboard.getText()?.text?.let(viewModel::setUrl)
+                            clipboard.getText()?.text?.let(viewModel::onUrlChange)
                         },
                     ) {
                         Icon(Icons.Filled.ContentPaste, contentDescription = "Paste")

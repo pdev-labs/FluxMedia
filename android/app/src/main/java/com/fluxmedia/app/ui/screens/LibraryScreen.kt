@@ -64,7 +64,7 @@ fun LibraryScreen(
         ) {
             OutlinedTextField(
                 value = viewModel.filesQuery,
-                onValueChange = viewModel::setFilesQuery,
+                onValueChange = viewModel::onFilesQueryChange,
                 modifier = Modifier.weight(1f),
                 label = { Text("Search library") },
                 singleLine = true,
