@@ -4,8 +4,11 @@ name: Promote to release (auto-release on version bump)
 #   1. reads the version from pyproject.toml,
 #   2. skips on [skip release], existing tag, or version already on PyPI,
 #   3. waits for the CI workflow on this SHA to go green (fail-closed),
-#   4. creates the GitHub release and invokes the publish job (-> PyPI).
+#   4. creates the GitHub release and dispatches publish.yml (-> PyPI).
 # Nothing here publishes directly; publish.yml stays the single publisher.
+# The dispatch (instead of a reusable workflow) is required so the OIDC
+# token identifies publish.yml, which is what PyPI's Trusted Publisher
+# expects; reusable calls identify the caller (promote.yml) instead.
 on:
   push:
     branches: [main]
@@ -17,11 +20,10 @@ concurrency:
 jobs:
   promote:
     runs-on: ubuntu-latest
-    outputs:
-      released: ${{ steps.created.outputs.released }}
     permissions:
       contents: write
       checks: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,7 +87,7 @@ jobs:
           fi
           cat /tmp/notes.md
 
-      - name: Create GitHub release (published by the job below)
+      - name: Create GitHub release
         id: created
         if: steps.decide.outputs.skip != 'true'
         env:
@@ -95,11 +97,27 @@ jobs:
           gh release create "v$VER" --title "v$VER" --notes-file /tmp/notes.md --target main
           echo "released=true" >> "$GITHUB_OUTPUT"
 
-  publish:
-    needs: promote
-    # Only run when promote actually created a release (not on skips).
-    if: needs.promote.outputs.released == 'true'
-    uses: ./.github/workflows/publish.yml
-    permissions:
-      id-token: write
-      contents: read
+      - name: Publish to PyPI (dispatch publish.yml for correct OIDC identity)
+        if: steps.decide.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Reusable workflows run under the caller's identity
+          # (promote.yml), which PyPI's Trusted Publisher rejects. A
+          # workflow_dispatch run is identified as publish.yml, matching
+          # the configured publisher. GITHUB_TOKEN may dispatch workflows
+          # (unlike push/release events, which it suppresses).
+          gh workflow run publish.yml --ref main
+          for _ in $(seq 1 20); do
+            RID=$(gh run list --workflow=publish.yml --event=workflow_dispatch --limit 10 \
+              --json databaseId,headSha \
+              --jq ".[] | select(.headSha == \"$SHA\") | .databaseId" | head -1)
+            [ -n "$RID" ] && break
+            sleep 5
+          done
+          if [ -z "$RID" ]; then
+            echo "publish workflow did not start"; exit 1
+          fi
+          echo "publish run: $RID"
+          gh run watch "$RID" --exit-status --interval 15
