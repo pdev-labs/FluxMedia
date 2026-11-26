@@ -1,141 +1,61 @@
-# FluxMedia for Android
+# FluxMedia for Android (Beta)
 
-A native Android GUI for FluxMedia, written in **Kotlin** with **Jetpack
-Compose** and **Material You** (dynamic colour on Android 12+).
+> **Version 1.0.0 is the first release and is still in beta.** Features may
+> change and some sites need a JavaScript runtime that is not bundled yet.
 
-The app embeds the existing FluxMedia Python package with
-[Chaquopy](https://chaquo.com/chaquopy/). Kotlin calls the same service
-functions that power the desktop web UI — no second implementation of the
-downloader, settings, history or file manager.
+The canonical Android project lives in its own repository:
+**[pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android)**.
 
-## Screens
+This folder mirrors the Android source so the Python engine and the app can
+be developed together. Download signed APKs from the
+[releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases), or
+read the [Android guide](../docs/android.md).
 
-| Screen | What it does |
+## What it is
+
+A native Kotlin app built with **Jetpack Compose** and **Material You**. It
+embeds the FluxMedia Python engine with
+[Chaquopy](https://chaquo.com/chaquopy/), so downloads, settings, history and
+the library run entirely on the device. There is no WebView and no local HTTP
+server.
+
+## Features
+
+- Download screen with link analysis, quality picker and live progress/logs.
+- Bundled FFmpeg 7.1.1 for MP3/FLAC extraction and high-resolution
+  video+audio merging (VP9/AV1/MKV/WebM), plus subtitle and thumbnail
+  embedding.
+- Automatic saving to `Download/FluxMedia` with a toast showing the path.
+- Library with search, open, share and delete.
+- Appearance settings: system/light/dark theme, dynamic colour toggle, seven
+  accent colours and an animation toggle.
+- Interface settings: delete confirmation and download-log visibility.
+- Download, post-processing, history and update settings.
+- Health screen with the same diagnostics as `fluxmedia --doctor`.
+
+## Versions
+
+| Component | Version |
 | --- | --- |
-| **Download** | Paste a link, analyse it, pick a quality, start a download, follow live progress/logs. |
-| **Library** | Browse, search, open, share and delete downloaded files. |
-| **Settings** | Default quality, audio/video format, filename template, speed limit, metadata/thumbnail/subtitle embedding, history and update preferences. |
-| **Health** | Run the same diagnostics as `fluxmedia --doctor`, inspect the score and read recent logs. |
-| **About** | Version, library statistics, project links and Android-specific notes. |
-
-Material You dynamic colour is used automatically on Android 12+. Older
-versions fall back to a FluxMedia blue/cyan scheme.
-
-## How it works
-
-```
-┌─────────────────────────────┐
-│ Kotlin + Jetpack Compose UI │  Material You, navigation bar, cards
-└──────────────┬──────────────┘
-               │ Chaquopy (in-process, no HTTP)
-┌──────────────▼──────────────┐
-│ fluxmedia_android.py bridge │  JSON in / JSON out
-└──────────────┬──────────────┘
-               │ imports
-┌──────────────▼──────────────┐
-│ fluxmedia.api service layer │  analyse, download jobs, files,
-│ fluxmedia.core / yt-dlp     │  settings, logs, diagnostics
-└─────────────────────────────┘
-```
-
-The Python source is included directly from the repository (`srcDir("../../src")`),
-so there is only one copy of the FluxMedia logic.
+| Android app | 1.0.0 (first public beta) |
+| Python engine | 1.18.1 |
 
 ## Build
 
-### Android Studio
-
-Open the `android/` directory as a project, let Gradle sync, then run the
-`app` configuration.
-
-### Command line
-
-Requirements:
-
-- JDK 17
-- Python 3.12 on `PATH` (Chaquopy uses it as `buildPython`)
-- Android SDK with platform 35
+Requirements: JDK 17, Python 3.12 on `PATH`, Android SDK platform 35, and the
+Android NDK for the bundled FFmpeg.
 
 ```bash
 cd android
-./build-apk.sh
-# or
-./gradlew :app:assembleDebug
+./build-apk.sh              # debug
+./gradlew :app:assembleRelease
 ```
 
-The APK is written to:
+The signed release workflow and signing secrets are documented in the
+[standalone README](https://github.com/pdev-labs/Fluxmedia-Android#signing).
 
-```
-android/app/build/outputs/apk/debug/app-debug.apk
-```
+## Licence
 
-Install it with:
-
-```bash
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Cloud build
-
-The repository includes `.github/workflows/android.yml`, which builds the
-APK on GitHub Actions and uploads it as the `fluxmedia-debug-apk` artifact.
-Push the branch (or run the workflow manually from the Actions tab) and
-download the artifact when the job finishes.
-
-## Storage
-
-- **Library:** `Android/data/com.fluxmedia.app/files/Download/FluxMedia`
-  (app-scoped external storage; no storage permission needed on Android 10+).
-- **Config, history and logs:** app-private internal storage.
-- **Automatic save:** every finished download is copied into the public
-  `Download/FluxMedia` collection via `MediaStore` (Android 10+) or direct
-  file copy (Android 9 and older). A toast then shows the file name and the
-  final `Download/FluxMedia/...` path. There is no manual export button.
-
-Files are never uploaded anywhere.
-
-## Android limitations
-
-- **FFmpeg is bundled** for arm64-v8a and x86_64 as static
-  `libffmpeg.so`/`libffprobe.so`, cross-compiled in CI with the Android NDK.
-  It enables MP3/FLAC extraction, video+audio merging (including
-  VP9/AV1/MKV/WebM) and subtitle/metadata embedding. If FFmpeg is missing,
-  the app falls back to Android's `MediaMuxer` (`MediaMuxerHelper.kt`) for
-  H.264 + AAC MP4.
-- **No background service yet.** Downloads run inside the app process. If
-  Android kills the app while it is in the background, the active job stops;
-  completed files remain in the library.
-- **YouTube JS challenges** may need a JavaScript runtime that is not bundled
-  with the APK. Other supported sites and direct media URLs work normally.
-
-## Releasing
-
-Debug builds are signed with the Android debug key and are fine for local
-testing. CI builds a **signed release** APK when these repository secrets are
-present:
-
-| Secret | Purpose |
-| --- | --- |
-| `FLUXMEDIA_KEYSTORE_BASE64` | Base64-encoded PKCS#12 keystore |
-| `FLUXMEDIA_KEYSTORE_PASSWORD` | Keystore password |
-| `FLUXMEDIA_KEY_ALIAS` | Key alias (default `fluxmedia`) |
-| `FLUXMEDIA_KEY_PASSWORD` | Key password |
-
-The workflow decodes the keystore, sets `FLUXMEDIA_KEYSTORE_PATH`, and runs
-`:app:assembleRelease`; AGP signs with **v1, v2 and v3** schemes. Without the
-secrets the release build falls back to the debug key so local builds still
-work.
-
-Create a keystore with:
-
-```bash
-openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -nodes \
-  -keyout key.pem -out cert.pem \
-  -subj "/O=FluxMedia/OU=Android/CN=FluxMedia"
-openssl pkcs12 -export -in cert.pem -inkey key.pem \
-  -out release.p12 -name fluxmedia -passout pass:YOUR_PASSWORD
-base64 -w0 release.p12
-```
-
-> Because the release key differs from the debug key, uninstall any debug
-> build before installing the signed release for the first time.
+GPL-3.0. See [LICENSE](../LICENSE) and
+[THIRD_PARTY_NOTICES.md](https://github.com/pdev-labs/Fluxmedia-Android/blob/main/THIRD_PARTY_NOTICES.md)
+for the LGPL FFmpeg and libmp3lame notices.

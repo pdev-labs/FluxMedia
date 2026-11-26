@@ -1,5 +1,7 @@
 package com.fluxmedia.app.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -76,6 +79,11 @@ fun DiagnosticsScreen(
         }
 
         viewModel.diagnostics?.let { diag ->
+            val animatedScore by animateFloatAsState(
+                targetValue = diag.score / 100f,
+                animationSpec = tween(durationMillis = 700),
+                label = "diagnostics-score",
+            )
             item {
                 ElevatedCard(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
@@ -90,7 +98,7 @@ fun DiagnosticsScreen(
                         )
                         Spacer(Modifier.height(12.dp))
                         LinearProgressIndicator(
-                            progress = { diag.score / 100f },
+                            progress = { animatedScore },
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(12.dp))

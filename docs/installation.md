@@ -134,8 +134,9 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 
 The native Kotlin + Jetpack Compose app with Material You lives in its own
 repository: **[pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android)**.
-It embeds the Python engine with Chaquopy, so you do not need Termux or a
-separate server.
+Version **1.0.0** is the first release and is **still in beta**. It embeds the
+Python engine with Chaquopy, so you do not need Termux or a separate server.
+See the [Android guide](android.md) for features and known limitations.
 
 Download the signed APK from the
 [releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases), or

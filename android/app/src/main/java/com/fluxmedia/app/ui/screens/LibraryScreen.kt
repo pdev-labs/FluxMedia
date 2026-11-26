@@ -1,5 +1,9 @@
 package com.fluxmedia.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.fluxmedia.app.data.FileEntry
 import com.fluxmedia.app.ui.FluxMediaViewModel
+import com.fluxmedia.app.ui.theme.ThemePreferences
 import java.io.File
 
 @Composable
@@ -55,7 +60,11 @@ fun LibraryScreen(
 ) {
     var pendingDelete by remember { mutableStateOf<FileEntry?>(null) }
 
-    Column(modifier.fillMaxSize()) {
+    Column(
+        modifier
+            .fillMaxSize()
+            .animateContentSize(),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -76,9 +85,13 @@ fun LibraryScreen(
             }
         }
 
-        viewModel.libraryError?.let { error ->
+        AnimatedVisibility(
+            visible = viewModel.libraryError != null,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
             Text(
-                text = error,
+                text = viewModel.libraryError.orEmpty(),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
@@ -109,9 +122,16 @@ fun LibraryScreen(
                     items(viewModel.files, key = { it.path }) { entry ->
                         LibraryRow(
                             entry = entry,
+                            modifier = Modifier.animateItem(),
                             onOpen = { viewModel.openFile(File(entry.path)) },
                             onShare = { viewModel.shareFile(File(entry.path)) },
-                            onDelete = { pendingDelete = entry },
+                            onDelete = {
+                                if (ThemePreferences.confirmDelete) {
+                                    pendingDelete = entry
+                                } else {
+                                    viewModel.deleteFile(entry)
+                                }
+                            },
                         )
                     }
                 }
@@ -145,9 +165,10 @@ private fun LibraryRow(
     onOpen: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onOpen),
     ) {
