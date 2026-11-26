@@ -82,10 +82,10 @@ object FileActions {
             val uri = resolver.insert(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                 values,
-            ) ?: return false
+            ) ?: return@runCatching false
             resolver.openOutputStream(uri)?.use { output ->
                 file.inputStream().use { input -> input.copyTo(output) }
-            } ?: return false
+            } ?: return@runCatching false
         } else {
             @Suppress("DEPRECATION")
             val directory = File(

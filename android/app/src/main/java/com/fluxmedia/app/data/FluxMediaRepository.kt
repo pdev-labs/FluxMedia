@@ -108,7 +108,9 @@ class FluxMediaRepository {
 
     suspend fun updateSettings(updates: Map<String, Any?>): AppSettings =
         withContext(Dispatchers.IO) {
-            val payload = JSONObject(updates).toString()
+            val payload = JSONObject().apply {
+                updates.forEach { (key, value) -> put(key, value) }
+            }.toString()
             val json = JSONObject(FluxMediaBridge.updateSettings(payload))
             ensureSuccess(json, "Could not save settings.")
             parseSettings(json.getJSONObject("settings"))
