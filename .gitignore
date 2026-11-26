@@ -23,3 +23,6 @@ dist/
 *.egg-info/
 node_modules/
 .agents/
+# Built Android packages (downloaded artifacts)
+*.apk
+*.aab
