@@ -127,3 +127,41 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 > whose core has no Android wheel. Fix: `pip install` the pinned version
 > above. (FluxMedia ≥1.13 also repairs this itself on first `--web`
 > launch by downloading the correct builds automatically.)
+
+---
+
+### 5. Android (native APK)
+
+The native Kotlin + Jetpack Compose app with Material You lives in its own
+repository: **[pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android)**.
+Version **1.0.0** is the first release and is **still in beta**. It embeds the
+Python engine with Chaquopy, so you do not need Termux or a separate server.
+See the [Android guide](android.md) for features and known limitations.
+
+Download the signed APK from the
+[releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases), or
+build it from source:
+
+```bash
+git clone https://github.com/pdev-labs/Fluxmedia-Android
+cd Fluxmedia-Android/android
+./gradlew :app:assembleRelease
+# APK: app/build/outputs/apk/release/app-release.apk
+```
+
+Install it with:
+
+```bash
+adb install -r app-release.apk
+```
+
+The standalone repository builds a signed release APK in the cloud and
+publishes it on its
+[releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases).
+
+> [!NOTE]
+> FFmpeg 7.1.1 is bundled for arm64-v8a and x86_64, so MP3/FLAC extraction,
+> video+audio merging (including VP9/AV1/MKV/WebM) and subtitle embedding
+> work on-device. If FFmpeg cannot handle a source, the app falls back to
+> Android's `MediaMuxer`. Finished downloads are saved automatically to
+> `Download/FluxMedia`.

@@ -46,6 +46,9 @@ impersonate = ["curl_cffi>=0.7.4"]
 
 [project.urls]
 Homepage = "https://github.com/pdev-labs/FluxMedia"
+Android = "https://github.com/pdev-labs/Fluxmedia-Android"
+"Android Releases" = "https://github.com/pdev-labs/Fluxmedia-Android/releases"
+Issues = "https://github.com/pdev-labs/FluxMedia/issues"
 
 [project.scripts]
 fluxmedia = "fluxmedia.main:main"
