@@ -25,7 +25,13 @@ class FluxMediaApplication : PyApplication() {
 
             Python.getInstance()
                 .getModule("fluxmedia_android")
-                .callAttr("init", dataDir, downloadDir, cachePath)
+                .callAttr(
+                    "init",
+                    dataDir,
+                    downloadDir,
+                    cachePath,
+                    applicationInfo.nativeLibraryDir,
+                )
         }.onFailure {
             Log.e(TAG, "Python bridge initialisation failed", it)
         }

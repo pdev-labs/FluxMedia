@@ -19,7 +19,7 @@ from typing import Any
 _initialized = False
 
 
-def init(data_dir: str, download_dir: str, cache_dir: str) -> bool:
+def init(data_dir: str, download_dir: str, cache_dir: str, ffmpeg_dir: str = "") -> bool:
     """Configure Android storage paths before ``fluxmedia.core`` is imported."""
     global _initialized
     if _initialized:
@@ -32,6 +32,12 @@ def init(data_dir: str, download_dir: str, cache_dir: str) -> bool:
     os.environ["TMPDIR"] = cache_dir
     os.environ["TEMP"] = cache_dir
     os.environ["TMP"] = cache_dir
+
+    # Static FFmpeg is shipped as libffmpeg.so in the APK's native lib dir.
+    if ffmpeg_dir:
+        bundled = os.path.join(ffmpeg_dir, "libffmpeg.so")
+        if os.path.isfile(bundled):
+            os.environ["FLUXMEDIA_FFMPEG"] = bundled
 
     for path in (data_dir, download_dir, cache_dir):
         try:

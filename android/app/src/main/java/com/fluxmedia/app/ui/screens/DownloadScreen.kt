@@ -236,8 +236,7 @@ fun DownloadScreen(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "Finished downloads are saved automatically to Download/FluxMedia. " +
-                            "High-resolution video is muxed on-device; audio extraction " +
-                            "still needs a desktop build with FFmpeg.",
+                            "FFmpeg is bundled for merging, MP3 extraction and subtitle embedding.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

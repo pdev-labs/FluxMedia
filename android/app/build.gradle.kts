@@ -79,6 +79,11 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            // FFmpeg ships as libffmpeg.so/libffprobe.so and is executed from
+            // the extracted native library directory, so it must be extracted.
+            useLegacyPackaging = true
+        }
     }
 }
 

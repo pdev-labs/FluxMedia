@@ -362,6 +362,23 @@ class DownloadRequest(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────
+#  FFmpeg resolution
+# ─────────────────────────────────────────────────────────────
+
+def _ffmpeg_binary() -> Optional[str]:
+    """Return the FFmpeg executable to use.
+
+    Android bundles a static FFmpeg as ``libffmpeg.so`` inside the APK's
+    native library directory and exposes it through ``FLUXMEDIA_FFMPEG``.
+    Desktop installs keep using ``PATH``.
+    """
+    override = os.environ.get("FLUXMEDIA_FFMPEG")
+    if override and os.path.isfile(override):
+        return override
+    return shutil.which("ffmpeg")
+
+
+# ─────────────────────────────────────────────────────────────
 #  On-device high-resolution muxing (Android, no FFmpeg)
 # ─────────────────────────────────────────────────────────────
 
@@ -635,10 +652,13 @@ def run_download_job(job_id: str, req: DownloadRequest):
         'outtmpl': os.path.join(dest_dir, config.get("filename_format", "%(title)s.%(ext)s")),
     }
     
-    # Embedded Android builds (and minimal desktop installs) have no FFmpeg.
-    # In that case only pre-muxed streams work: video+audio merging, MP3
-    # extraction and subtitle embedding all need FFmpeg.
-    ffmpeg_available = shutil.which("ffmpeg") is not None
+    # Android may bundle FFmpeg as libffmpeg.so; desktop installs use PATH.
+    # Without FFmpeg only pre-muxed streams work: video+audio merging, MP3
+    # extraction and subtitle embedding all need it.
+    ffmpeg_bin = _ffmpeg_binary()
+    ffmpeg_available = ffmpeg_bin is not None
+    if ffmpeg_bin:
+        ydl_opts['ffmpeg_location'] = ffmpeg_bin
 
     max_h = None
     if req.type == 'audio':
@@ -978,11 +998,11 @@ def _check_internet() -> dict:
         return {"name": "Internet Connection", "status": "fail", "desc": "No internet connection detected."}
 
 def _check_ffmpeg() -> dict:
-    ffmpeg_path = shutil.which("ffmpeg")
+    ffmpeg_path = _ffmpeg_binary()
     if ffmpeg_path:
         try:
             result = subprocess.run(
-                ["ffmpeg", "-version"],
+                [ffmpeg_path, "-version"],
                 capture_output=True, text=True, timeout=5
             )
             version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg found"
@@ -1155,7 +1175,7 @@ def convert_media(req: ConvertRequest, background_tasks: BackgroundTasks):
     Validates inputs and enqueues a real FFmpeg conversion as a background task.
     Returns a job ID immediately; progress tracking will be added in a future phase.
     """
-    ffmpeg_path = shutil.which("ffmpeg")
+    ffmpeg_path = _ffmpeg_binary()
     if not ffmpeg_path:
         raise HTTPException(
             status_code=503,
@@ -1172,7 +1192,7 @@ def convert_media(req: ConvertRequest, background_tasks: BackgroundTasks):
     job_id = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
 
     def run_ffmpeg():
-        cmd = ["ffmpeg", "-y", "-i", req.input_path]
+        cmd = [ffmpeg_path, "-y", "-i", req.input_path]
 
         # Time trimming
         if req.start_time:
@@ -1222,11 +1242,11 @@ def convert_media(req: ConvertRequest, background_tasks: BackgroundTasks):
 @app.get("/api/convert/check")
 def check_ffmpeg():
     """Checks if FFmpeg is available and returns version info."""
-    ffmpeg_path = shutil.which("ffmpeg")
+    ffmpeg_path = _ffmpeg_binary()
     if not ffmpeg_path:
         return {"available": False, "version": None, "path": None}
     try:
-        result = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run([ffmpeg_path, "-version"], capture_output=True, text=True, timeout=5)
         version_line = result.stdout.splitlines()[0] if result.stdout else "ffmpeg"
         return {"available": True, "version": version_line, "path": ffmpeg_path}
     except Exception:
