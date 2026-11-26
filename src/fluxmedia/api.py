@@ -524,6 +524,9 @@ def _try_android_mux_download(url, dest_dir, max_h, job_id, logger, progress_hoo
 
         title = (info.get("title") or "video").strip() or "video"
         safe = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "_", title).strip(" .") or "video"
+        # Keep the basename under the 255-byte filesystem limit even when the
+        # title contains multi-byte characters.
+        safe = safe[:120]
         final_path = os.path.join(dest_dir, f"{safe}.mp4")
         stem, ext = os.path.splitext(final_path)
         counter = 1
