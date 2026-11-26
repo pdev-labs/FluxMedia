@@ -64,7 +64,12 @@ chaquopy {
             // functions directly through Chaquopy. These versions are
             // deliberately pinned to pure-Python wheels so no Rust or C
             // toolchain is required on Android.
-            install("pydantic==1.10.15")
+            //
+            // pydantic must be >= 1.10.16: earlier 1.10.x releases call
+            // ForwardRef._evaluate() positionally, but Python 3.12.4+ made
+            // `recursive_guard` keyword-only, which crashes on import with
+            // "missing 1 required keyword-only argument: 'recursive_guard'".
+            install("pydantic==1.10.24")
             install("fastapi==0.110.0")
 
             // FluxMedia runtime dependencies (all pure Python).

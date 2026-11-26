@@ -95,9 +95,14 @@ Files are never uploaded anywhere.
 
 ## Android limitations
 
-- **FFmpeg is not bundled.** yt-dlp therefore uses pre-muxed streams. Audio
-  extraction (MP3/M4A/FLAC) and high-resolution video+audio merging require
-  a desktop build with FFmpeg. The app detects this automatically.
+- **FFmpeg is not bundled.** Audio extraction (MP3/FLAC) still requires a
+  desktop build with FFmpeg. High-resolution video works differently: the app
+  downloads the best H.264 video stream and AAC audio stream separately and
+  remuxes them into one MP4 on-device with Android's `MediaMuxer`
+  (`MediaMuxerHelper.kt`). This typically reaches **1080p**, where the best
+  pre-muxed stream is often only 360p–720p. Streams that are only available
+  as VP9/AV1 (e.g. 1440p/4K on YouTube) fall back to the best pre-muxed
+  stream. The app detects all of this automatically.
 - **No background service yet.** Downloads run inside the app process. If
   Android kills the app while it is in the background, the active job stops;
   completed files remain in the library.

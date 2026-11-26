@@ -156,7 +156,9 @@ in the cloud and uploads the `fluxmedia-debug-apk` artifact.
 
 > [!NOTE]
 > FFmpeg is not bundled on Android. The app automatically falls back to
-> pre-muxed streams; audio extraction and high-resolution video+audio
-> merging require a desktop build. Files are stored in app-scoped external
+> pre-muxed streams, and for higher-resolution video it downloads H.264 video
+> and AAC audio separately and remuxes them on-device with Android's
+> `MediaMuxer` (typically up to 1080p). Audio extraction (MP3/FLAC) still
+> requires a desktop build with FFmpeg. Files are stored in app-scoped external
 > storage and can be exported to public `Download/FluxMedia` from the
 > Download or Library screen.

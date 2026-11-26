@@ -5,10 +5,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 import os
+import re
 import json
 import shutil
 import sys
 import datetime
+import tempfile
 import subprocess
 import platform
 import threading
@@ -358,6 +360,188 @@ class DownloadRequest(BaseModel):
     force: Optional[bool] = False  # True → download even if already downloaded
     subtitle_langs: Optional[str] = None  # e.g. "en,es"; defaults to config
 
+
+# ─────────────────────────────────────────────────────────────
+#  On-device high-resolution muxing (Android, no FFmpeg)
+# ─────────────────────────────────────────────────────────────
+
+def _android_muxer():
+    """Return the Kotlin MediaMuxer helper, or None when unavailable.
+
+    Only Android (Chaquopy) exposes the ``java`` module; desktop installs
+    always have FFmpeg and never reach this path.
+    """
+    if os.environ.get("FLUXMEDIA_ANDROID") != "1":
+        return None
+    try:
+        from java import jclass  # type: ignore[import-not-found]
+
+        helper = jclass("com.fluxmedia.app.media.MediaMuxerHelper")
+        return helper if helper.isSupported() else None
+    except Exception:
+        return None
+
+
+def _pick_android_streams(info: dict, max_h: Optional[int]):
+    """Pick a MediaMuxer-compatible H.264 + AAC pair.
+
+    Returns ``(video_format, audio_format, best_premuxed_height)``. The
+    video/audio entries are yt-dlp format dicts, or ``None`` when no
+    compatible pair exists.
+    """
+    formats = info.get("formats") or []
+    videos = []
+    audios = []
+    premuxed_heights = []
+    for f in formats:
+        vcodec = (f.get("vcodec") or "none").lower()
+        acodec = (f.get("acodec") or "none").lower()
+        ext = (f.get("ext") or "").lower()
+        has_video = vcodec != "none"
+        has_audio = acodec != "none"
+
+        if has_video and has_audio:
+            premuxed_heights.append(f.get("height") or 0)
+        elif has_video:
+            # MediaMuxer writes MP4; keep H.264 for broad playback support.
+            if ext != "mp4" or not vcodec.startswith("avc"):
+                continue
+            height = f.get("height") or 0
+            if max_h and height > max_h:
+                continue
+            videos.append(f)
+        elif has_audio:
+            if ext not in ("m4a", "mp4"):
+                continue
+            audios.append(f)
+
+    best_premuxed = max(premuxed_heights) if premuxed_heights else 0
+    if not videos or not audios:
+        return None, None, best_premuxed
+    video = max(videos, key=lambda f: (f.get("height") or 0, f.get("tbr") or 0))
+    audio = max(audios, key=lambda f: f.get("abr") or f.get("tbr") or 0)
+    return video, audio, best_premuxed
+
+
+def _download_stream(url, format_id, outtmpl, logger, progress_hook,
+                     job_id, lo, hi):
+    """Download one format id and return the resulting path (or None)."""
+    def scaled_hook(d):
+        progress_hook(d)
+        if d.get("status") == "downloading":
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+            if total:
+                pct = int(d.get("downloaded_bytes", 0) / total * 100)
+                with JOBS_LOCK:
+                    job = DOWNLOAD_JOBS.get(job_id)
+                    if job:
+                        job["progress"] = lo + int(pct * (hi - lo) / 100)
+
+    opts = {
+        "logger": logger,
+        "progress_hooks": [scaled_hook],
+        "outtmpl": outtmpl,
+        "format": format_id,
+        "noplaylist": True,
+        "quiet": True,
+        "no_warnings": True,
+    }
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        candidates = [ydl.prepare_filename(info), info.get("filepath")]
+        for item in info.get("requested_downloads") or []:
+            candidates.append(item.get("filepath"))
+        for candidate in candidates:
+            if candidate and os.path.isfile(candidate):
+                return candidate
+    return None
+
+
+def _try_android_mux_download(url, dest_dir, max_h, job_id, logger, progress_hook):
+    """Download separate H.264 + AAC streams and mux them on-device.
+
+    Returns the final file path on success, or None so the caller can fall
+    back to yt-dlp's best pre-muxed stream.
+    """
+    helper = _android_muxer()
+    if helper is None:
+        return None
+
+    def log(level, message):
+        with JOBS_LOCK:
+            if job_id in DOWNLOAD_JOBS:
+                DOWNLOAD_JOBS[job_id]["logs"].append(f"[{level}] {message}")
+
+    try:
+        with yt_dlp.YoutubeDL({
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "logger": logger,
+        }) as probe:
+            info = probe.extract_info(url, download=False)
+    except Exception as exc:
+        log("warning", f"High-resolution probe failed: {exc}")
+        return None
+
+    video_fmt, audio_fmt, best_premuxed = _pick_android_streams(info, max_h)
+    if not video_fmt or not audio_fmt:
+        log("info", "No muxable H.264/AAC pair; using best pre-muxed stream.")
+        return None
+
+    height = video_fmt.get("height") or 0
+    if height <= best_premuxed:
+        log("info", f"Pre-muxed {best_premuxed}p stream is as good as the "
+                    f"muxable {height}p; skipping on-device mux.")
+        return None
+
+    log("info", f"High-resolution path: {height}p H.264 + AAC "
+                f"(muxing on device, no FFmpeg).")
+
+    tmpdir = None
+    try:
+        tmpdir = tempfile.mkdtemp(prefix="fm_mux_")
+        video_path = _download_stream(
+            url, video_fmt["format_id"],
+            os.path.join(tmpdir, "video.%(ext)s"),
+            logger, progress_hook, job_id, 0, 75)
+        audio_path = _download_stream(
+            url, audio_fmt["format_id"],
+            os.path.join(tmpdir, "audio.%(ext)s"),
+            logger, progress_hook, job_id, 75, 100)
+        if not video_path or not audio_path:
+            log("warning", "Could not download both streams; falling back.")
+            return None
+
+        title = (info.get("title") or "video").strip() or "video"
+        safe = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "_", title).strip(" .") or "video"
+        final_path = os.path.join(dest_dir, f"{safe}.mp4")
+        stem, ext = os.path.splitext(final_path)
+        counter = 1
+        while os.path.exists(final_path):
+            final_path = f"{stem} ({counter}){ext}"
+            counter += 1
+
+        log("info", "Muxing video and audio tracks...")
+        with JOBS_LOCK:
+            if job_id in DOWNLOAD_JOBS:
+                DOWNLOAD_JOBS[job_id]["status"] = "processing"
+        if not helper.mux(video_path, audio_path, final_path):
+            log("warning", "On-device mux failed; falling back to best stream.")
+            return None
+        if not os.path.isfile(final_path) or os.path.getsize(final_path) == 0:
+            log("warning", "Muxed file is empty; falling back to best stream.")
+            return None
+        log("success", f"Muxed {height}p video to {os.path.basename(final_path)}")
+        return final_path
+    except Exception as exc:
+        log("warning", f"High-resolution mux failed: {exc}")
+        return None
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def run_download_job(job_id: str, req: DownloadRequest):
     finished_files: List[str] = []  # download hook candidates
     final_files: List[str] = []     # postprocessor (merged/converted) results
@@ -444,6 +628,7 @@ def run_download_job(job_id: str, req: DownloadRequest):
     # extraction and subtitle embedding all need FFmpeg.
     ffmpeg_available = shutil.which("ffmpeg") is not None
 
+    max_h = None
     if req.type == 'audio':
         ydl_opts['format'] = 'bestaudio/best'
         if ffmpeg_available:
@@ -493,8 +678,16 @@ def run_download_job(job_id: str, req: DownloadRequest):
         })
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([req.url])
+        muxed_path = None
+        if req.type != 'audio' and not ffmpeg_available:
+            muxed_path = _try_android_mux_download(
+                req.url, dest_dir, max_h, job_id,
+                ydl_opts['logger'], progress_hook)
+        if muxed_path:
+            final_files.append(muxed_path)
+        else:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([req.url])
         with JOBS_LOCK:
             DOWNLOAD_JOBS[job_id]["status"] = "completed"
             DOWNLOAD_JOBS[job_id]["logs"].append("[success] Job completed successfully.")
