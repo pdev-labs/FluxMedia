@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import uvicorn
 from typing import Dict, Any, Optional, List
 import os
 import json
@@ -230,6 +229,13 @@ def _build_quality_options(info: Dict[str, Any]) -> List[Dict[str, Any]]:
                     "id": label, "label": label, "tag": tag,
                     "size": _human_size(best_size),
                 })
+        # Direct media URLs (e.g. a plain .mp4) often have no height
+        # metadata, so the bucket loop above yields nothing. Offer a
+        # generic "Best" video choice so those links stay downloadable.
+        if not any(opt["id"] != "audio" for opt in options):
+            options.insert(0, {
+                "id": "best", "label": "Best", "tag": "Video", "size": None,
+            })
         # Audio-only option
         audio_size = 0
         for f in formats:
@@ -433,13 +439,23 @@ def run_download_job(job_id: str, req: DownloadRequest):
         'outtmpl': os.path.join(dest_dir, config.get("filename_format", "%(title)s.%(ext)s")),
     }
     
+    # Embedded Android builds (and minimal desktop installs) have no FFmpeg.
+    # In that case only pre-muxed streams work: video+audio merging, MP3
+    # extraction and subtitle embedding all need FFmpeg.
+    ffmpeg_available = shutil.which("ffmpeg") is not None
+
     if req.type == 'audio':
         ydl_opts['format'] = 'bestaudio/best'
-        ydl_opts['postprocessors'] = [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }]
+        if ffmpeg_available:
+            ydl_opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
+        else:
+            # Keep the native audio stream (m4a/webm) instead of failing
+            # during MP3 extraction.
+            ydl_opts['postprocessors'] = []
     else:
         # Honor the quality picked in the web UI (e.g. "480p").
         # Falls back to best when no (or an unknown) quality is given.
@@ -452,16 +468,22 @@ def run_download_job(job_id: str, req: DownloadRequest):
             # Trailing unfiltered fallback: buckets are advisory (a video
             # may have no streams at that height), so never fail hard —
             # degrade to best instead of erroring out.
-            ydl_opts['format'] = (
-                f"bestvideo[height<={max_h}]+bestaudio/"
-                f"best[height<={max_h}]/bestvideo+bestaudio/best"
-            )
+            if ffmpeg_available:
+                ydl_opts['format'] = (
+                    f"bestvideo[height<={max_h}]+bestaudio/"
+                    f"best[height<={max_h}]/bestvideo+bestaudio/best"
+                )
+            else:
+                ydl_opts['format'] = f"best[height<={max_h}]/best"
         else:
-            ydl_opts['format'] = 'bestvideo+bestaudio/best'
-        ydl_opts['merge_output_format'] = 'mp4'
+            ydl_opts['format'] = (
+                'bestvideo+bestaudio/best' if ffmpeg_available else 'best'
+            )
+        if ffmpeg_available:
+            ydl_opts['merge_output_format'] = 'mp4'
 
     # Subtitles for web downloads (honors per-request override, else config).
-    if req.type != 'audio' and config.get("embed_subtitles", False) and shutil.which("ffmpeg"):
+    if req.type != 'audio' and config.get("embed_subtitles", False) and ffmpeg_available:
         from fluxmedia.core import parse_subtitle_langs as _parse_langs
         ydl_opts.update({
             'writesubtitles': True,
@@ -1036,11 +1058,8 @@ def _lan_warning(host: str) -> bool:
     return h not in ("127.0.0.1", "localhost", "::1")
 
 
-def run_server(port: int = 8000, host: str = "127.0.0.1"):
-    print(f"Starting FluxMedia Web server on {host}:{port}...")
-    if _lan_warning(host):
-        print("WARNING: listening on a LAN interface — the web API has no "
-              "authentication. Use only on trusted networks.")
+def prepare_server():
+    """Run one-time startup work shared by desktop and embedded servers."""
     try:
         session_log = _core.setup_file_logging()
         print(f"Session log: {session_log}")
@@ -1053,6 +1072,18 @@ def run_server(port: int = 8000, host: str = "127.0.0.1"):
         _pm.emit("startup", config=load_config())
     except Exception as e:
         print(f"Plugin initialization skipped: {e}")
+
+
+def run_server(port: int = 8000, host: str = "127.0.0.1"):
+    # Imported lazily so the embedded Android bridge (which calls the
+    # service functions directly) does not need uvicorn installed.
+    import uvicorn
+
+    print(f"Starting FluxMedia Web server on {host}:{port}...")
+    if _lan_warning(host):
+        print("WARNING: listening on a LAN interface — the web API has no "
+              "authentication. Use only on trusted networks.")
+    prepare_server()
     uvicorn.run(app, host=host, port=port, log_level="info")
 
 if __name__ == "__main__":

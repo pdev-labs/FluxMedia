@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- getExternalFilesDir(DIRECTORY_DOWNLOADS)/FluxMedia -->
+    <external-files-path
+        name="downloads"
+        path="Download/FluxMedia/" />
+    <!-- Fallback when external storage is unavailable. -->
+    <files-path
+        name="internal_downloads"
+        path="FluxMedia/" />
+    <!-- App-private FluxMedia data/config/logs. -->
+    <files-path
+        name="internal"
+        path="fluxmedia/" />
+</paths>

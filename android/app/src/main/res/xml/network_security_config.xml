@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The embedded backend listens on loopback only. Cleartext is allowed
+     because http://127.0.0.1 is how the WebView talks to it. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

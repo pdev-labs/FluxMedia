@@ -42,6 +42,10 @@ def run_ydl_download(*args, **kwargs):
 import platform
 
 def get_data_dir():
+    # Embedded Android builds set this before importing fluxmedia.core.
+    override = os.environ.get("FLUXMEDIA_DATA_DIR")
+    if override:
+        return os.path.abspath(os.path.expanduser(override))
     if platform.system() == "Windows":
         return os.path.join(os.environ.get("APPDATA", ""), "FluxMedia")
     elif platform.system() == "Darwin":
@@ -524,6 +528,13 @@ def check_fluxmedia_update_sync(config: Dict[str, Any]):
 
 def get_default_download_dir() -> str:
     """Get a sensible default downloads directory, supporting Termux/Android specific paths."""
+    # Embedded Android builds pass an app-scoped external folder. This must
+    # win over the Termux checks below, because a normal Android app cannot
+    # write to /sdcard without scoped-storage permissions.
+    override = os.environ.get("FLUXMEDIA_DOWNLOAD_DIR")
+    if override:
+        return os.path.abspath(os.path.expanduser(override))
+
     home = os.path.expanduser("~")
     
     # Check if we are in Termux (Android)

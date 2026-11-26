@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="flux_background">#09090B</color>
+    <color name="flux_accent">#00F2FE</color>
+    <color name="flux_text_muted">#A1A1AA</color>
+    <color name="ic_launcher_background">#09090B</color>
+</resources>

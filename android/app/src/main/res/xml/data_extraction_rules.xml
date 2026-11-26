@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="fluxmedia/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="fluxmedia/" />
+        <include domain="external" path="Download/FluxMedia/" />
+    </device-transfer>
+</data-extraction-rules>
