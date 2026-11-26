@@ -221,7 +221,6 @@ fun DownloadScreen(
                     file = file,
                     onOpen = viewModel::openFile,
                     onShare = viewModel::shareFile,
-                    onExport = viewModel::exportFile,
                 )
             }
         }
@@ -236,8 +235,9 @@ fun DownloadScreen(
                     Text("Android notes", style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "FFmpeg is not bundled on Android, so FluxMedia uses pre-muxed streams. " +
-                            "Audio extraction and high-resolution merging need a desktop build.",
+                        "Finished downloads are saved automatically to Download/FluxMedia. " +
+                            "High-resolution video is muxed on-device; audio extraction " +
+                            "still needs a desktop build with FFmpeg.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -363,7 +363,6 @@ private fun CompletedCard(
     file: File,
     onOpen: (File) -> Unit,
     onShare: (File) -> Unit,
-    onExport: (File) -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -378,7 +377,6 @@ private fun CompletedCard(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(onClick = { onOpen(file) }) { Text("Open") }
                 OutlinedButton(onClick = { onShare(file) }) { Text("Share") }
-                OutlinedButton(onClick = { onExport(file) }) { Text("Save to Downloads") }
             }
         }
     }

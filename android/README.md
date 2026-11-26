@@ -13,7 +13,7 @@ downloader, settings, history or file manager.
 | Screen | What it does |
 | --- | --- |
 | **Download** | Paste a link, analyse it, pick a quality, start a download, follow live progress/logs. |
-| **Library** | Browse, search, open, share, delete and export downloaded files. |
+| **Library** | Browse, search, open, share and delete downloaded files. |
 | **Settings** | Default quality, audio/video format, filename template, speed limit, metadata/thumbnail/subtitle embedding, history and update preferences. |
 | **Health** | Run the same diagnostics as `fluxmedia --doctor`, inspect the score and read recent logs. |
 | **About** | Version, library statistics, project links and Android-specific notes. |
@@ -87,9 +87,10 @@ download the artifact when the job finishes.
 - **Library:** `Android/data/com.fluxmedia.app/files/Download/FluxMedia`
   (app-scoped external storage; no storage permission needed on Android 10+).
 - **Config, history and logs:** app-private internal storage.
-- **Export:** the “Save to Downloads” action copies a file into the public
+- **Automatic save:** every finished download is copied into the public
   `Download/FluxMedia` collection via `MediaStore` (Android 10+) or direct
-  file copy (Android 9 and older).
+  file copy (Android 9 and older). A toast then shows the file name and the
+  final `Download/FluxMedia/...` path. There is no manual export button.
 
 Files are never uploaded anywhere.
 
@@ -112,6 +113,31 @@ Files are never uploaded anywhere.
 ## Releasing
 
 Debug builds are signed with the Android debug key and are fine for local
-testing. For a Play Store or shareable release build, create a keystore and
-add a `release` signing config in `app/build.gradle.kts` (or use Android
-Studio's **Build → Generate Signed App Bundle / APK**).
+testing. CI builds a **signed release** APK when these repository secrets are
+present:
+
+| Secret | Purpose |
+| --- | --- |
+| `FLUXMEDIA_KEYSTORE_BASE64` | Base64-encoded PKCS#12 keystore |
+| `FLUXMEDIA_KEYSTORE_PASSWORD` | Keystore password |
+| `FLUXMEDIA_KEY_ALIAS` | Key alias (default `fluxmedia`) |
+| `FLUXMEDIA_KEY_PASSWORD` | Key password |
+
+The workflow decodes the keystore, sets `FLUXMEDIA_KEYSTORE_PATH`, and runs
+`:app:assembleRelease`; AGP signs with **v1, v2 and v3** schemes. Without the
+secrets the release build falls back to the debug key so local builds still
+work.
+
+Create a keystore with:
+
+```bash
+openssl req -x509 -newkey rsa:2048 -sha256 -days 10000 -nodes \
+  -keyout key.pem -out cert.pem \
+  -subj "/O=FluxMedia/OU=Android/CN=FluxMedia"
+openssl pkcs12 -export -in cert.pem -inkey key.pem \
+  -out release.p12 -name fluxmedia -passout pass:YOUR_PASSWORD
+base64 -w0 release.p12
+```
+
+> Because the release key differs from the debug key, uninstall any debug
+> build before installing the signed release for the first time.

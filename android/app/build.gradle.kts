@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -24,6 +26,25 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // CI decodes the PKCS#12 keystore into this path and passes the
+            // credentials as environment variables. Local builds without the
+            // keystore fall back to the debug key below.
+            val storePath = System.getenv("FLUXMEDIA_KEYSTORE_PATH")
+            if (!storePath.isNullOrBlank() && File(storePath).exists()) {
+                storeFile = File(storePath)
+                storePassword = System.getenv("FLUXMEDIA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("FLUXMEDIA_KEY_ALIAS") ?: "fluxmedia"
+                keyPassword = System.getenv("FLUXMEDIA_KEY_PASSWORD")
+                storeType = "PKCS12"
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -31,6 +52,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            val storePath = System.getenv("FLUXMEDIA_KEYSTORE_PATH")
+            signingConfig = if (!storePath.isNullOrBlank() && File(storePath).exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

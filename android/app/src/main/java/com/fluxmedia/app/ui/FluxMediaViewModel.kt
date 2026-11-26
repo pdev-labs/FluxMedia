@@ -1,6 +1,7 @@
 package com.fluxmedia.app.ui
 
 import android.app.Application
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -175,7 +176,9 @@ class FluxMediaViewModel(application: Application) : AndroidViewModel(applicatio
                                     ?.takeIf { it.isNotBlank() }
                                     ?: runCatching { repo.downloadDir() }.getOrNull()
                                 if (directory != null) {
-                                    completedFile = File(directory, relative)
+                                    val file = File(directory, relative)
+                                    completedFile = file
+                                    autoSaveCompleted(file)
                                 }
                             }
                             break
@@ -244,26 +247,41 @@ class FluxMediaViewModel(application: Application) : AndroidViewModel(applicatio
     fun openFile(file: File) {
         runCatching { FileActions.open(app, file) }
             .onFailure {
-                libraryError = it.message ?: "No app can open this file."
+                val message = it.message ?: "No app can open this file."
+                libraryError = message
+                Toast.makeText(app, message, Toast.LENGTH_SHORT).show()
             }
     }
 
     fun shareFile(file: File) {
         runCatching { FileActions.share(app, file) }
             .onFailure {
-                libraryError = it.message ?: "Could not share this file."
+                val message = it.message ?: "Could not share this file."
+                libraryError = message
+                Toast.makeText(app, message, Toast.LENGTH_SHORT).show()
             }
     }
 
-    fun exportFile(file: File) {
+    /**
+     * Downloads are saved into the app's library folder automatically. This
+     * also copies the finished file into the public Download/FluxMedia
+     * collection and shows a toast with the final path.
+     */
+    private fun autoSaveCompleted(file: File) {
         viewModelScope.launch {
-            val ok = withContext(Dispatchers.IO) {
+            val savedPath = withContext(Dispatchers.IO) {
                 FileActions.exportToDownloads(app, file)
             }
-            if (ok) {
-                downloadMessage = "Saved ${file.name} to Downloads."
+            val message = if (savedPath != null) {
+                "${file.name} saved to $savedPath"
             } else {
-                downloadError = "Could not export ${file.name}."
+                "Could not save ${file.name} to Downloads."
+            }
+            Toast.makeText(app, message, Toast.LENGTH_LONG).show()
+            if (savedPath != null) {
+                downloadMessage = message
+            } else {
+                downloadError = message
             }
         }
     }
