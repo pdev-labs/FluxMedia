@@ -481,12 +481,16 @@ def _try_android_mux_download(url, dest_dir, max_h, job_id, logger, progress_hoo
         with yt_dlp.YoutubeDL({
             "quiet": True,
             "no_warnings": True,
-            "noplaylist": True,
+            "playlist_items": "1",
             "logger": logger,
         }) as probe:
             info = probe.extract_info(url, download=False)
     except Exception as exc:
         log("warning", f"High-resolution probe failed: {exc}")
+        return None
+
+    if info.get("_type") == "playlist":
+        log("info", "Playlist detected; using the standard download path.")
         return None
 
     video_fmt, audio_fmt, best_premuxed = _pick_android_streams(info, max_h)
