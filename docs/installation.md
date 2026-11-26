@@ -154,14 +154,13 @@ Install it with:
 adb install -r app-release.apk
 ```
 
-The GitHub Actions workflow `.github/workflows/android.yml` builds the APK
-in the cloud and uploads the `fluxmedia-debug-apk` artifact.
+The standalone repository builds a signed release APK in the cloud and
+publishes it on its
+[releases page](https://github.com/pdev-labs/Fluxmedia-Android/releases).
 
 > [!NOTE]
-> FFmpeg is not bundled on Android. The app automatically falls back to
-> pre-muxed streams, and for higher-resolution video it downloads H.264 video
-> and AAC audio separately and remuxes them on-device with Android's
-> `MediaMuxer` (typically up to 1080p). Audio extraction (MP3/FLAC) still
-> requires a desktop build with FFmpeg. Files are stored in app-scoped external
-> storage and can be exported to public `Download/FluxMedia` from the
-> Download or Library screen.
+> FFmpeg 7.1.1 is bundled for arm64-v8a and x86_64, so MP3/FLAC extraction,
+> video+audio merging (including VP9/AV1/MKV/WebM) and subtitle embedding
+> work on-device. If FFmpeg cannot handle a source, the app falls back to
+> Android's `MediaMuxer`. Finished downloads are saved automatically to
+> `Download/FluxMedia`.
