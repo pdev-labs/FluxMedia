@@ -119,6 +119,8 @@ build_abi() {
             --disable-shared \
             --disable-doc \
             --disable-ffplay \
+            --disable-avdevice \
+            --disable-mediacodec \
             --disable-debug \
             --disable-symver \
             --disable-iconv \
