@@ -401,7 +401,12 @@ def _pick_android_streams(info: dict, max_h: Optional[int]):
         has_audio = acodec != "none"
 
         if has_video and has_audio:
-            premuxed_heights.append(f.get("height") or 0)
+            # Only count pre-muxed streams the user actually asked for, so a
+            # 480p request can still be improved by muxing a 480p H.264
+            # stream even when a 720p pre-muxed format exists.
+            premuxed_height = f.get("height") or 0
+            if not max_h or premuxed_height <= max_h:
+                premuxed_heights.append(premuxed_height)
         elif has_video:
             # MediaMuxer writes MP4; keep H.264 for broad playback support.
             if ext != "mp4" or not vcodec.startswith("avc"):
