@@ -57,7 +57,12 @@ jobs:
           python -m venv /tmp/tvenv
           /tmp/tvenv/bin/pip install --upgrade pip -q
           /tmp/tvenv/bin/pip install dist/*.whl
-          /tmp/tvenv/bin/python -c "import fluxmedia.api, fluxmedia.cli.main, fluxmedia.server.classic_portal; print('imports OK')"
+          /tmp/tvenv/bin/python -c "import fluxmedia.cli.main, fluxmedia.server.classic_portal; print('base imports OK')"
+      - name: Install the [web] extra from the wheel
+        run: |
+          WHL=$(ls dist/*.whl)
+          /tmp/tvenv/bin/pip install "${WHL}[web]"
+          /tmp/tvenv/bin/python -c "import fluxmedia.api; print('web imports OK')"
       - name: Unit suites (repo tests, isolated venv)
         run: |
           for t in test_plugins test_bootstrap test_update_interval test_logging test_doctor test_share test_duplicates test_search test_playlist test_notify; do

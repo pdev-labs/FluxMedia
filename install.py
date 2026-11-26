@@ -238,7 +238,7 @@ def install_fluxmedia(force=False):
     print_color("\nInstalling FluxMedia Core...", CYAN)
     
     os_name = get_os_info()
-    pip_cmd = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia"]
+    pip_cmd = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia[web]"]
     
     if os_name == 'Termux':
         # Android has no official pydantic-core wheels; the community index
@@ -246,13 +246,13 @@ def install_fluxmedia(force=False):
         # whose exact core has Android wheels, installed FIRST so fluxmedia
         # cannot float past it. Verified pairs:
         #   py3.11/3.12/3.13 -> pydantic==2.13.3 (core 2.46.3)
-        #   py3.14           -> pydantic==2.12.4 (core 2.41.5)
+        #   py3.14           -> pydantic==2.14.3 (core 2.50.4)
         minor = sys.version_info[1]
         pin = None
         if minor in (11, 12, 13):
             pin = "pydantic==2.13.3"
         elif minor == 14:
-            pin = "pydantic==2.12.4"
+            pin = "pydantic==2.14.3"
         extra = ["--extra-index-url", "https://termux-user-repository.github.io/pypi/",
                  "--extra-index-url", "https://eutalix.github.io/android-pydantic-core/"]
         if pin is not None:

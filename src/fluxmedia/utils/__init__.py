@@ -155,11 +155,10 @@ def install_python_package(pkg_name: str) -> bool:
         return False
 
 # --- Self-healing web dependencies -------------------------------------
-# Plain `pip install fluxmedia` cannot cover every platform: PyPI ships no
-# Android wheels for pydantic-core, and pip cannot learn about community
-# indexes from package metadata. So the first `--web` launch verifies the
-# web stack imports and, if not, installs the correct builds itself
-# (Termux-aware: pinned pydantic + community indexes).
+# fastapi/uvicorn are an optional extra (see pyproject.toml) because
+# pydantic-core has no Android wheels on PyPI. The first `--web` launch
+# verifies the web stack imports and, if not, installs the correct builds
+# itself (Termux-aware: pinned pydantic + community indexes).
 
 TERMUX_EXTRA_INDEXES = [
     "https://termux-user-repository.github.io/pypi/",
@@ -173,7 +172,7 @@ TERMUX_PYDANTIC_PINS = {
     11: "pydantic==2.13.3",  # core 2.46.3
     12: "pydantic==2.13.3",  # core 2.46.3
     13: "pydantic==2.13.3",  # core 2.46.3
-    14: "pydantic==2.12.4",  # core 2.41.5
+    14: "pydantic==2.14.3",  # core 2.50.4
 }
 
 

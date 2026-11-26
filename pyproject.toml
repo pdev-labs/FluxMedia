@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fluxmedia"
-version = "1.18.0"
+version = "1.18.1"
 description = "A powerful, cross-platform media portal and processing toolkit."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -22,8 +22,13 @@ dependencies = [
     "textual>=0.50.0",
     "mutagen>=1.47.0",
     "instaloader>=4.11.0",
-    "fastapi>=0.100.0",
-    "uvicorn>=0.23.0",
+    # NOTE: fastapi/uvicorn are intentionally NOT hard dependencies.
+    # fastapi pulls pydantic -> pydantic-core, a Rust extension with no
+    # Android/Termux wheels on PyPI. Making it required means a plain
+    # `pip install fluxmedia` on Termux tries to compile pydantic-core and
+    # fails. The CLI/TUI work without it; `fluxmedia --web` installs the
+    # web stack on first launch via fluxmedia.utils.ensure_web_deps().
+    # Desktop installers opt in with the `[web]` extra below.
     # NOTE: quickjs and curl_cffi are intentionally NOT hard dependencies.
     # Both are pure optimizations for yt-dlp (JS challenges, TLS
     # impersonation) with no Windows/Termux wheels, and neither is imported
@@ -32,6 +37,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Web UI: pip install "fluxmedia[web]"
+web = ["fastapi>=0.100.0", "uvicorn>=0.23.0"]
 # YouTube JS-challenge support without Node.js: pip install "fluxmedia[js]"
 js = ["quickjs>=1.19.2"]
 # TLS impersonation for anti-bot protection: pip install "fluxmedia[impersonate]"

@@ -96,19 +96,25 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
    ```bash
    termux-setup-storage
    ```
-4. Install FluxMedia. PyPI has **no official Android wheels** for
-   `pydantic-core`, so pin `pydantic` to a release whose exact core has
-   community Android wheels — install it **before** FluxMedia:
+4. Install FluxMedia (CLI + TUI — no Rust build required):
+   ```bash
+   pip install fluxmedia
+   ```
+   The optional web UI (`fluxmedia --web`) needs `pydantic-core`, which
+   PyPI has **no official Android wheels** for. Pin `pydantic` to a
+   release whose exact core has community Android wheels **before**
+   adding the `web` extra:
    ```bash
    # Python 3.11 / 3.12 / 3.13:
    pip install 'pydantic==2.13.3' --extra-index-url https://termux-user-repository.github.io/pypi/
    # Python 3.14:
-   pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/
+   pip install 'pydantic==2.14.3' --extra-index-url https://termux-user-repository.github.io/pypi/
    # Then:
-   pip install fluxmedia
+   pip install 'fluxmedia[web]'
    ```
-   (Check yours with `python --version`.) The automated `install.sh`
-   does all of the above for you.
+   (Check yours with `python --version`.) You can also skip the extra —
+   `fluxmedia --web` installs the correct builds on first launch. The
+   automated `install.sh` does all of the above for you.
 
 > [!TIP]
 > On the device itself, verify everything hands-free:
@@ -116,8 +122,8 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercon
 > web boot probe). Exit code `0` means all green, no manual steps.
 
 > [!NOTE]
-> Seeing `No module named 'pydantic_core'` on `--web` means step 4 was
-> skipped: a too-new `pydantic` was installed whose core has no Android
-> wheel. Fix: `pip install` the pinned version above, then reinstall
-> FluxMedia. (FluxMedia ≥1.13 also repairs this itself on first `--web`
+> Seeing `No module named 'pydantic_core'` on `--web` means the web
+> stack was installed without the pin: a too-new `pydantic` was pulled in
+> whose core has no Android wheel. Fix: `pip install` the pinned version
+> above. (FluxMedia ≥1.13 also repairs this itself on first `--web`
 > launch by downloading the correct builds automatically.)

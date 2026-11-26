@@ -228,7 +228,7 @@ function Install-FluxMedia {
         } catch {}
     }
     Run-WithSpinner -Message "Upgrading Pip" -FilePath $pyCmd -ArgumentList @("-m", "pip", "install", "--upgrade", "pip", "-q")
-    Run-WithSpinner -Message "Installing FluxMedia Core" -FilePath $pyCmd -ArgumentList @("-m", "pip", "install", "-U", "fluxmedia", "-q")
+    Run-WithSpinner -Message "Installing FluxMedia Core" -FilePath $pyCmd -ArgumentList @("-m", "pip", "install", "-U", "fluxmedia[web]", "-q")
 }
 
 function Uninstall-FluxMedia {

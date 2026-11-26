@@ -43,7 +43,7 @@ if [ -n "$FREE_KB" ] && [ "$FREE_KB" -gt 500000 ]; then pass "disk space ${FREE_
 step "2/7 pydantic pin table"
 case "$PYV" in
   3.11|3.12|3.13) WANT_PIN="pydantic==2.13.3"; WANT_CORE="2.46.3" ;;
-  3.14)           WANT_PIN="pydantic==2.12.4"; WANT_CORE="2.41.5" ;;
+  3.14)           WANT_PIN="pydantic==2.14.3"; WANT_CORE="2.50.4" ;;
   *)              WANT_PIN=""; WANT_CORE="" ;;
 esac
 if [ "$IS_TERMUX" -ne 1 ]; then

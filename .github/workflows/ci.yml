@@ -42,7 +42,7 @@ jobs:
       - name: Install package
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e '.[web]'
       - name: Compile check
         run: python -m compileall -q src install.py
       - name: Unit tests
@@ -76,7 +76,7 @@ jobs:
           pins = {(11, "pydantic==2.13.3", "2.46.3", ("cp311",)),
                   (12, "pydantic==2.13.3", "2.46.3", ("cp312",)),
                   (13, "pydantic==2.13.3", "2.46.3", ("cp313",)),
-                  (14, "pydantic==2.12.4", "2.41.5", ("cp314",))}
+                  (14, "pydantic==2.14.3", "2.50.4", ("cp314",))}
           index = urllib.request.urlopen(
               "https://termux-user-repository.github.io/pypi/pydantic-core/",
               timeout=60).read().decode()

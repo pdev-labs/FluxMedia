@@ -194,14 +194,14 @@ install_fluxmedia() {
         # it FIRST so the fluxmedia install below cannot float past it.
         # Verified pairs (pydantic -> core with Android wheels):
         #   py3.11/3.12/3.13 -> pydantic==2.13.3 (core 2.46.3)
-        #   py3.14           -> pydantic==2.12.4 (core 2.41.5)
+        #   py3.14           -> pydantic==2.14.3 (core 2.50.4)
         local py_minor
         py_minor=$(python3 -c 'import sys; print(sys.version_info[1])' 2>/dev/null || echo 0)
         local pyd_pin=""
         if [ "$py_minor" -eq 11 ] || [ "$py_minor" -eq 12 ] || [ "$py_minor" -eq 13 ]; then
             pyd_pin="pydantic==2.13.3"
         elif [ "$py_minor" -eq 14 ]; then
-            pyd_pin="pydantic==2.12.4"
+            pyd_pin="pydantic==2.14.3"
         fi
         local extra="--extra-index-url https://termux-user-repository.github.io/pypi/ --extra-index-url https://eutalix.github.io/android-pydantic-core/"
         local pindl=""
@@ -210,14 +210,14 @@ install_fluxmedia() {
             pindl="pip install $pyd_pin $extra -q &&"
         fi
         # shellcheck disable=SC2086
-        cmd="pip install --upgrade pip -q && $pindl pip install -U fluxmedia -q"
+        cmd="pip install --upgrade pip -q && $pindl pip install -U 'fluxmedia[web]' -q"
     elif [ "$OS" = "Darwin" ]; then
-        cmd="pip install --upgrade pip -q && pip install -U fluxmedia -q"
+        cmd="pip install --upgrade pip -q && pip install -U 'fluxmedia[web]' -q"
     else
         if command -v pipx &> /dev/null; then
-            cmd="pipx install fluxmedia --force && pipx ensurepath"
+            cmd="pipx install 'fluxmedia[web]' --force && pipx ensurepath"
         else
-            cmd="pip3 install --upgrade pip -q && pip3 install -U fluxmedia -q || pip3 install -U fluxmedia --break-system-packages -q"
+            cmd="pip3 install --upgrade pip -q && pip3 install -U 'fluxmedia[web]' -q || pip3 install -U 'fluxmedia[web]' --break-system-packages -q"
         fi
     fi
     run_with_spinner "Fetching fluxmedia" bash -c "$cmd"

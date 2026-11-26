@@ -81,7 +81,7 @@ Alternatively, you can install directly via `pip`:
 ```bash
 pip install fluxmedia
 ```
-*(**Android/Termux Users:** Pydantic-core requires compilation. See the [Installation Guide](docs/installation.md) for the correct pip command.)*
+*(**Android/Termux Users:** the command above installs the CLI/TUI with no compilation. The optional Web UI needs `pydantic-core`; see the [Installation Guide](docs/installation.md) for the correct extra/pin.)*
 
 *For detailed, OS-specific manual installation instructions, please check the **[Installation Guide](docs/installation.md)**.*
 

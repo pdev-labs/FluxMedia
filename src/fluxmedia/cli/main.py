@@ -2247,10 +2247,9 @@ def operation_update_fluxmedia():
         return
     console.print("\nRunning: [bold cyan]pip install -U fluxmedia[/bold cyan]...")
     try:
+        # Web deps are an optional extra now, so upgrading the core package
+        # never touches pydantic-core (which has no Termux wheels on PyPI).
         pip_args = [sys.executable, "-m", "pip", "install", "-U", "fluxmedia"]
-        if "ANDROID_ROOT" in os.environ or "TERMUX_VERSION" in os.environ:
-            pip_args.extend(["--extra-index-url", "https://eutalix.github.io/android-pydantic-core/"])
-            
         result = subprocess.run(pip_args, capture_output=True, text=True)
         if result.returncode != 0 and "externally-managed-environment" in result.stderr:
             pip_args.append("--break-system-packages")
@@ -2686,14 +2685,14 @@ def print_web_dep_hint():
     if is_termux:
         console.print("[yellow]Termux fix (pydantic-core has no official Android wheels):[/yellow]")
         console.print("  [bold cyan]pip install 'pydantic==2.13.3' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.11-3.13)")
-        console.print("  [bold cyan]pip install 'pydantic==2.12.4' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.14)")
+        console.print("  [bold cyan]pip install 'pydantic==2.14.3' --extra-index-url https://termux-user-repository.github.io/pypi/[/bold cyan]  (Python 3.14)")
         console.print("  Then re-run FluxMedia. Or run the Termux installer: [bold cyan]install.sh[/bold cyan]")
     elif _platform.system() == "Windows":
         console.print("[yellow]Windows fix:[/yellow]")
-        console.print("  [bold cyan]pip install -U fluxmedia[/bold cyan] (quickjs/curl_cffi are optional since 1.12 — no Build Tools needed)")
+        console.print("  [bold cyan]pip install -U 'fluxmedia[web]'[/bold cyan] (quickjs/curl_cffi are optional since 1.12 — no Build Tools needed)")
     else:
         console.print("[yellow]Fix:[/yellow]")
-        console.print("  [bold cyan]pip install -U fluxmedia fastapi uvicorn[/bold cyan]")
+        console.print("  [bold cyan]pip install -U 'fluxmedia[web]'[/bold cyan]")
 
 
 def main():
@@ -2734,7 +2733,7 @@ def main():
             try:
                 print_web_dep_hint()
             except Exception:
-                print("Fix: pip install -U fluxmedia fastapi uvicorn")
+                print("Fix: pip install -U 'fluxmedia[web]'")
             sys.exit(1)
         return
         

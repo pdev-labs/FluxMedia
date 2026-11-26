@@ -13,7 +13,7 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(U.termux_pydantic_pin(3, 11), "pydantic==2.13.3")
         self.assertEqual(U.termux_pydantic_pin(3, 12), "pydantic==2.13.3")
         self.assertEqual(U.termux_pydantic_pin(3, 13), "pydantic==2.13.3")
-        self.assertEqual(U.termux_pydantic_pin(3, 14), "pydantic==2.12.4")
+        self.assertEqual(U.termux_pydantic_pin(3, 14), "pydantic==2.14.3")
         self.assertIsNone(U.termux_pydantic_pin(3, 9))
         self.assertIsNone(U.termux_pydantic_pin(3, 15))
         self.assertIsNone(U.termux_pydantic_pin(2, 7))
