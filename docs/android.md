@@ -10,7 +10,7 @@ the same Python engine as the desktop app through
 no WebView shell.
 
 > [!IMPORTANT]
-> **Version 1.0.0 is the first release and is still in beta.** Features may
+> **Version 1.0.1 is the current beta release.** Features may
 > change, some sites need a JavaScript runtime that is not bundled yet, and
 > downloads run inside the app process rather than a background service.
 > Please report problems in the
@@ -52,7 +52,7 @@ The Android app and the Python engine are versioned separately:
 
 | Component | Version |
 | --- | --- |
-| Android app | 1.0.0 (first public beta) |
+| Android app | 1.0.1 (beta) |
 | Python engine | 1.18.1 |
 
 The About screen shows both.
