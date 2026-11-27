@@ -1,5 +1,7 @@
 # FluxMedia brand assets
 
+![FluxMedia brand board](brand-board.png)
+
 The logo kit for FluxMedia. Guidelines: [BRAND_GUIDELINES.md](BRAND_GUIDELINES.md).
 
 ## Quick picks
