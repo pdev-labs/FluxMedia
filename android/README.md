@@ -37,7 +37,7 @@ server.
 
 | Component | Version |
 | --- | --- |
-| Android app | 1.0.0 (first public beta) |
+| Android app | 1.0.1 (beta) |
 | Python engine | 1.18.1 |
 
 ## Build

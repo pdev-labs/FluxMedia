@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="72dp"
-        android:height="72dp"
-        android:gravity="center">
-        <bitmap
-            android:src="@drawable/logo"
-            android:gravity="fill" />
-    </item>
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 28.90 25.00 L 79.13 54.00 L 71.31 58.51 C 56.45 54.73 41.95 63.79 28.90 69.22 Z" />
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M 28.90 76.47 C 41.95 72.12 54.63 68.14 63.70 62.91 L 28.90 83.00 Z" />
+</vector>

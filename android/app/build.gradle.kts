@@ -15,10 +15,10 @@ android {
         applicationId = "com.fluxmedia.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        // First public Android release. The Python engine keeps its own
-        // version (reported on the About screen).
-        versionName = "1.0.0"
+        versionCode = 2
+        // Icon refresh release. The Python engine keeps its own version
+        // (reported on the About screen).
+        versionName = "1.0.1"
 
         // Python 3.12 is 64-bit only. arm64-v8a covers real devices;
         // x86_64 covers the standard Android Studio emulator.
