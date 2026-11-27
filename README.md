@@ -140,6 +140,7 @@ read the [Android guide](docs/android.md).
 Detailed user guides and developer docs are organized in the `docs/` folder:
 
 * 📥 **[Installation Guide](docs/installation.md)** — Step-by-step setup guides for Windows, macOS, Linux, and Android (Termux).
+* 🎨 **[Brand Assets](brand/README.md)** — Logo files, colour palette, app icon, favicon and usage guidelines.
 * 🤖 **[Android App Guide](docs/android.md)** — The native Kotlin app, first beta release, APK install and build instructions.
 * ⚙️ **[Configuration Guide](docs/configuration.md)** — Explanations of config options, directories, and customization schemas.
 * 📦 **[Downloader Engine](docs/downloader.md)** — Internals on formatting flags, post-processors, and download strategies.

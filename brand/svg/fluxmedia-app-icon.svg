@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+  <title id="title">FluxMedia app icon</title>
+  <rect width="512" height="512" rx="112" fill="#071A2F"/>
+  <g transform="translate(15.4 16) scale(1.875)">
+    <path fill="#FFFFFF" d="M59 48 L197.56 128 L176 140.45 C135 130 95 155 59 170 Z"/>
+    <path fill="#00D4FF" d="M59 190 C95 178 130 167 155 152.57 L59 208 Z"/>
+  </g>
+</svg>
