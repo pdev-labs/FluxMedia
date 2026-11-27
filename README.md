@@ -28,9 +28,8 @@ The native Android app now has its own repository:
 
 It is a Kotlin + Jetpack Compose app with Material You dynamic colour, and it
 embeds this same Python engine through Chaquopy, so downloads, settings and
-the library run entirely on the device. **Version 1.0.0 is the first release
-and is still in beta** — expect rough edges, and please report issues in the
-Android repository.
+the library run entirely on the device. **Version 1.0.1 is the current beta release** — expect rough edges, and
+please report issues in the Android repository.
 
 - [Download the latest APK](https://github.com/pdev-labs/Fluxmedia-Android/releases)
 - [Read the Android guide](docs/android.md)
@@ -43,7 +42,7 @@ Android repository.
 * **Universal Extraction Core**: Seamlessly download high-quality videos, playlists, audio streams, channel collections, and subtitles powered by a robust wrapper around `yt-dlp`.
 * **Sync Play (Watch Party) [Beta]**: Synchronize media playback across all connected devices on your local network, perfect for hosting local watch parties.
 * **FluxMedia Web UI**: A beautiful, responsive React-based web dashboard to remotely control your downloads, manage files, and host Watch Parties directly from your browser.
-* **Native Android App [Beta]**: A Kotlin + Jetpack Compose app with Material You dynamic colour, powered by the same Python downloader through Chaquopy. Version 1.0.0 is the first release and is still in beta. See [pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android).
+* **Native Android App [Beta]**: A Kotlin + Jetpack Compose app with Material You dynamic colour, powered by the same Python downloader through Chaquopy. Version 1.0.1 is the current beta release. See [pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android).
 * **Built-in LAN Sharing Gateway**: Share downloaded files instantly to any device on your local network using a built-in password-protected HTTP server with QR code access.
 * **Instagram Profile Downloader [Beta]**: Batch download media directly from Instagram profiles with our new custom extraction module.
 * **Advanced Post-Processing**: Automatically extract audio (MP3/M4A/FLAC), merge separate audio/video formats, inject descriptions and tags, and embed album artwork via FFmpeg.
@@ -124,7 +123,7 @@ fluxmedia --tui
 
 The native Android GUI now lives in its own repository:
 **[pdev-labs/Fluxmedia-Android](https://github.com/pdev-labs/Fluxmedia-Android)**.
-Version **1.0.0** is the first release and is still in beta. It is written in
+Version **1.0.1** is the current beta release. It is written in
 Kotlin with Jetpack Compose and Material You, embeds the FluxMedia Python
 engine with Chaquopy, and ships a signed release APK.
 

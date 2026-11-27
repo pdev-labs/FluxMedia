@@ -1,6 +1,6 @@
 # FluxMedia for Android (Beta)
 
-> **Version 1.0.0 is the first release and is still in beta.** Features may
+> **Version 1.0.1 is the current beta release.** Features may
 > change and some sites need a JavaScript runtime that is not bundled yet.
 
 The canonical Android project lives in its own repository:
